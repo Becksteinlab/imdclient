@@ -20,5 +20,6 @@ _data_ref = resources.files("imdclient.data")
 
 LAMMPS_TOPOL = (_data_ref / "lammps_topol.data").as_posix()
 LAMMPS_IN = (_data_ref / "lammps_v3.in").as_posix()
+LAMMPS_TRAJ = (_data_ref / "lammps_trj.dcd").as_posix()
 
 del resources

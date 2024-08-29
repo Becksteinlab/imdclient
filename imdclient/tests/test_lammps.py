@@ -6,7 +6,7 @@ import os
 import logging
 from .utils import run_sim_and_wait, get_free_port
 from .base import IMDv3IntegrationTest
-from .datafiles import LAMMPS_IN, LAMMPS_TOPOL
+from .datafiles import LAMMPS_IN, LAMMPS_TOPOL, LAMMPS_TRAJ
 
 # NOTE: removeme
 from imdclient.IMDREADER import IMDReader
@@ -37,11 +37,8 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         return LAMMPS_TOPOL
 
     @pytest.fixture()
-    def traj_path(self):
-        """Relative path of the trajectory file within `tmp_dir`.
-        Allows comparison of large trajectory files without storing them in the repo.
-        """
-        return Path("trj.dump")
+    def true_trajectory(self):
+        return LAMMPS_TRAJ
 
     @pytest.fixture()
     def universe_kwargs(self):
