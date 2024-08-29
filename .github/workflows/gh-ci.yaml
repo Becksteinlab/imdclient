@@ -1,0 +1,167 @@
+name: GH Actions CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Weekly tests at midnight on Sundays run on main by default:
+    #   Scheduled workflows run on the latest commit on the default or base branch.
+    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
+    - cron: "0 0 * * 0"
+
+concurrency:
+  # Specific group naming so CI is only cancelled
+  # within same PR or on merge to main
+  group: ${{ github.ref }}-${{ github.head_ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0} 
+
+jobs:
+  environment-config:
+    runs-on: ubuntu-latest
+    outputs:
+      stable-python-version: ${{ steps.get-compatible-python.outputs.stable-python }}
+      python-matrix: ${{ steps.get-compatible-python.outputs.python-versions }}
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - id: get-compatible-python
+        uses: MDAnalysis/mdanalysis-compatible-python@main
+        with:
+          release: "latest"
+
+  main-tests:
+    needs: environment-config
+    runs-on: ${{ matrix.os }}
+    strategy:
+        fail-fast: false
+        matrix:
+          os: [macOS-latest, ubuntu-latest]
+          python-version: ["3.10", "3.11", "3.12"]
+          mdanalysis-version: ["latest", "develop"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build information
+      run: |
+        uname -a
+        df -h
+        ulimit -a
+
+    - name: Set architecture
+      id: set-arch
+      run: echo "ARCHITECTURE=$(if [[ '${{ matrix.os }}' == 'macOS-latest' ]]; then echo 'arm64'; else echo 'x64'; fi)" >> $GITHUB_ENV
+
+    # More info on options: https://github.com/conda-incubator/setup-miniconda
+    - name: Install conda dependencies
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        environment-file: devtools/conda-envs/test_env.yaml
+        add-pip-as-python-dependency: true
+        architecture: ${{ env.ARCHITECTURE }}
+
+        channels: conda-forge, defaults
+
+        activate-environment: imdclient-test
+        auto-update-conda: true
+        auto-activate-base: false
+        show-channel-urls: true
+        miniconda-version: latest
+
+
+    - name: Install MDAnalysis version
+      uses: MDAnalysis/install-mdanalysis@main
+      with:
+        version: ${{ matrix.mdanalysis-version }}
+        install-tests: true
+        installer: conda
+        shell: bash -l {0} 
+      
+    - name: Install package
+      run: |
+        python --version
+        python -m pip install .  --no-deps 
+
+    - name: Python information
+      run: |
+        which python
+        which pip
+        pip list
+        conda info
+        conda list
+
+
+    - name: Run tests
+      run: |
+        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
+
+    - name: codecov
+      if: github.event_name != 'schedule'
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage.xml
+        name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+        verbose: True
+
+
+  pylint_check:
+    needs: environment-config
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ needs.environment-config.outputs.stable-python-version }}
+
+    - name: Install Pylint
+      run: |
+        which pip
+        which python
+        pip install pylint mdanalysis
+
+    - name: Run Pylint
+      env:
+        PYLINTRC: .pylintrc
+      run: |
+        pylint imdclient
+
+
+  pypi_check:
+    needs: environment-config
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ needs.environment-config.outputs.stable-python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ needs.environment-config.outputs.stable-python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install pipx twine
+
+    - name: Build package
+      run: |
+        python -m pipx run build --sdist
+
+    - name: Check package build
+      run: |
+        DISTRIBUTION=$(ls -t1 dist/imdclient-*.tar.gz | head -n 1)
+        test -n "${DISTRIBUTION}" || { echo "no distribution dist/imdclient-*.tar.gz found"; exit 1; }
+        echo "twine check $DISTRIBUTION"
+        twine check $DISTRIBUTION
