@@ -1,0 +1,94 @@
+[build-system]
+requires = [
+  "setuptools >=61.2",
+  "versioningit",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imdclient"
+description = "Receiver for IMD v2 and v3 data from simulation engines like Gromacs, LAMMPS, and NAMD"
+license = {file = "LICENSE" }
+authors = [
+    {name = "Lawson", email = "ljwoods2@asu.edu"},
+]
+maintainers = [
+    {name = "Lawson", email = "ljwoods2@asu.edu"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "MDAnalysis>=2.7.0",
+]
+keywords = [
+    "molecular simulations",
+]
+dynamic = [
+    "version",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "pytest-xdist>=2.5",
+    "pytest-cov>=3.0",
+]
+doc = [
+    "sphinx",
+    "sphinx_rtd_theme",
+]
+
+# [project.urls]
+# source = "https://github.com/becksteinlab/imdreader"
+# documentation = "https://imdreader.readthedocs.io"
+
+[tool.setuptools]
+packages = ["imdclient"]
+
+# Installs tests datafiles
+[tool.setuptools.package-data]
+"imdreader" = ["data/*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "imdreader/tests",
+]
+
+[tool.black]
+line-length = 80
+
+[tool.versioningit]
+default-version = "1+unknown"
+
+[tool.versioningit.vcs]
+method = "git"
+match = ["v*"]
+
+[tool.versioningit.format]
+distance = "{base_version}+{distance}.{vcs}{rev}"
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+
+[tool.coverage.run]
+omit = [
+    # Omit the tests
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 80
+
+[tool.yapf]
+COLUMN_LIMIT = 80
+INDENT_WIDTH = 4
+USE_TABS = false

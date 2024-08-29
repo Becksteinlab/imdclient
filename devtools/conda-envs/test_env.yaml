@@ -1,0 +1,23 @@
+name: imdclient-test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Base depends
+  - python
+  - pip
+
+  # MDAnalysis
+  - MDAnalysis>=2.7.0
+
+  # Testing
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - codecov
+  - MDAnalysisTests>=2.7.0
+
+  # Pip-only installs
+  #- pip:
+  #  - codecov
+
