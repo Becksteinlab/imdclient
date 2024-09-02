@@ -4,6 +4,7 @@ import os
 from .utils import run_sim_and_wait
 import MDAnalysis as mda
 from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_almost_equal
 
 import logging
 
@@ -19,6 +20,7 @@ class IMDv3IntegrationTest:
         p = run_sim_and_wait(command, match_string)
         yield p
         os.chdir(old_cwd)
+        # NOTE: fixme
         p.kill()
         logger.debug("Killed simulation process")
         p.wait()
@@ -33,13 +35,6 @@ class IMDv3IntegrationTest:
         return u
 
     @pytest.fixture()
-    def store_imd_traj(self, universe):
-        timesteps = []
-        for ts in universe.trajectory:
-            timesteps.append(ts.copy())
-        return timesteps
-
-    @pytest.fixture()
     def true_universe(self, topology, true_trajectory, universe_kwargs):
         return mda.Universe(
             topology,
@@ -47,8 +42,11 @@ class IMDv3IntegrationTest:
             **universe_kwargs,
         )
 
-    def test_compare_imd_to_true_traj(self, store_imd_traj, true_universe):
-        for i in range(len(true_universe.trajectory)):
-            assert_timestep_almost_equal(
-                true_universe.trajectory[i], store_imd_traj[i], decimal=3
-            )
+    def test_compare_imd_to_true_traj(self, universe, true_universe):
+        assert len(true_universe.trajectory) == 1001
+        i = 0
+        for i, ts_imd in enumerate(universe.trajectory):
+            assert_timestep_almost_equal(ts_imd, true_universe.trajectory[i])
+
+            i += 1
+        assert i == 1000

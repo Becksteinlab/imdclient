@@ -52,8 +52,8 @@ velocity all create 300 102939 dist gaussian mom yes rot yes
 fix 1 all nve 
 # <Dump all the atoms to the file dump.min>
 # DCD lines are commented. These lines were used to create the true trajectory
-# dump dcd1 all dcd 1 lammps_trj.dcd 
-# dump_modify dcd1 unwrap yes
+# dump xtc1 all xtc 1 lammps_trj.xtc 
+# dump_modify xtc1 unwrap yes
 
 ## IMD settings
 # https://docs.lammps.org/fix_imd.html
@@ -62,7 +62,7 @@ fix 2 all imd 8888 version 3 unwrap on nowait off time on
 ## Run MD sim
 # run with active settings as many runs as required. timestep*No. of. steps =10ps
 run 1000 
-# undump dcd1 # Stop dumping information to the dump file.
+# undump xtc1 # Stop dumping information to the dump file.
 unfix 1
 # Unfix the NVE. Additional lines if any will assume that this fix is off.
 #End
