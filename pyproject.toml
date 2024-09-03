@@ -18,7 +18,6 @@ maintainers = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "MDAnalysis>=2.7.0",
 ]
 keywords = [
     "molecular simulations",
@@ -32,6 +31,7 @@ test = [
     "pytest>=6.0",
     "pytest-xdist>=2.5",
     "pytest-cov>=3.0",
+    "MDAnalysis>=2.7.0",
 ]
 doc = [
     "sphinx",
