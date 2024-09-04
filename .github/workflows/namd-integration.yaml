@@ -15,7 +15,7 @@ defaults:
 
 
 jobs:
-  gromacs-tests:
+  namd-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,14 +59,14 @@ jobs:
           conda info
           conda list
 
-      - name: Clone gromacs fork
+      - name: Clone namd fork
         uses: actions/checkout@v4
         with:
-          repository: HeydenLabASU/imd-test
+          repository: amruthesht/namd-3.0
           ref: heekun_testruns
-          path: gromacs
+          path: namd
 
-      - name: Build gromacs
+      - name: Build namd
         run: |
           cd gromacs/gromacs-2023.5
           mkdir build
@@ -77,6 +77,6 @@ jobs:
           sudo make install
           source /usr/local/gromacs/bin/GMXRC
 
-      - name: Run gromacs tests
+      - name: Run namd tests
         run: |
-          pytest -n auto -v --color=yes imdclient/tests/test_gromacs.py
+          pytest -n auto -v --color=yes imdclient/tests/test_namd.py
