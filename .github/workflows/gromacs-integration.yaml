@@ -13,8 +13,9 @@ defaults:
     shell: bash -l {0} 
 
 
+
 jobs:
-  lammps-tests:
+  gromacs-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,23 +59,24 @@ jobs:
           conda info
           conda list
 
-      - name: Clone lammps fork
+      - name: Clone gromacs fork
         uses: actions/checkout@v4
         with:
-          repository: ljwoods2/lammps
-          ref: imd-v3
-          path: lammps
+          repository: HeydenLabASU/imd-test
+          ref: heekun_testruns
+          path: gromacs
 
       - name: Build lammps
         run: |
-          cd lammps
+          cd gromacs/gromacs-2023.5
           mkdir build
           cd build
-          cmake ../cmake/ -D PKG_MISC=yes
-          cmake --build .
-          make install
-          lmp -h
+          cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON
+          make
+          make check
+          sudo make install
+          source /usr/local/gromacs/bin/GMXRC
 
       - name: Run lammps tests
         run: |
-          pytest -n auto -v --color=yes imdclient/tests/test_lammps.py
+          pytest -n auto -v --color=yes imdclient/tests/test_gromacs.py
