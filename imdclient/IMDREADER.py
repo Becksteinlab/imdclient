@@ -159,6 +159,7 @@ class IMDReader(ReaderBase):
             self.ts.time = imdf.time
             # NOTE: timestep.pyx "dt" method is suspicious bc it uses "new" keyword for a float
             self.ts.data["dt"] = imdf.dt
+            self.ts.data["step"] = imdf.step
         if imdf.energies is not None:
             self.ts.data.update(imdf.energies)
         if imdf.box is not None:

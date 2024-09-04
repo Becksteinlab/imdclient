@@ -7,7 +7,6 @@ from imdclient.IMDProtocol import (
     IMDHeaderType,
     create_header_bytes,
     create_energy_bytes,
-    create_imdv3_session_info_bytes,
     IMDHEADERSIZE,
 )
 import logging
@@ -47,7 +46,7 @@ class InThreadIMDServer:
 
     def _accept_handshake(self, first_frame):
         """Accepts the connection and sends the handshake, imdsessioninfo (in the case of v3),
-        teh first frame (if first_frame is `True`), and expects IMD_GO"""
+        the first frame (if first_frame is `True`), and expects IMD_GO"""
         waited = 0
 
         if sock_contains_data(self.listen_socket, 5):
@@ -120,7 +119,10 @@ class InThreadIMDServer:
         if self.imdsinfo.time:
             time_header = create_header_bytes(IMDHeaderType.IMD_TIME, 1)
             time = struct.pack(
-                f"{endianness}ff", self.traj[i].dt, self.traj[i].time
+                f"{endianness}ddQ",
+                self.traj[i].dt,
+                self.traj[i].time,
+                self.traj[i].frame,
             )
 
             self.conn.sendall(time_header + time)

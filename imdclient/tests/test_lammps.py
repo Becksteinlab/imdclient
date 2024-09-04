@@ -4,7 +4,8 @@ import subprocess
 from pathlib import Path
 import os
 import logging
-from .utils import run_sim_and_wait, get_free_port
+
+from .utils import get_free_port
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_IN, LAMMPS_TOPOL, LAMMPS_TRAJ
 
@@ -33,17 +34,10 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         return "Waiting for IMD connection on port 8888"
 
     @pytest.fixture()
-    def topology(self):
-        return LAMMPS_TOPOL
-
-    @pytest.fixture()
-    def true_trajectory(self):
-        return LAMMPS_TRAJ
-
-    @pytest.fixture()
-    def universe_kwargs(self):
-        """Simulation-engine specific keyword arguments for the Universe."""
-        return {
-            "atom_style": "id type x y z",
-            "timeout": 10,
-        }
+    def universe(self):
+        return mda.Universe(
+            LAMMPS_TOPOL,
+            LAMMPS_TRAJ,
+            atom_style="id type x y z",
+            convert_units=False,
+        )

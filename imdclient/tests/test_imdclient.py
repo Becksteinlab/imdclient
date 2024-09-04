@@ -20,6 +20,7 @@ from MDAnalysisTests.coordinates.base import (
     BaseReference,
     BaseWriterTest,
     assert_timestep_almost_equal,
+    assert_allclose,
 )
 from MDAnalysisTests.coordinates.test_xdr import TRRReference
 import numpy as np
@@ -66,7 +67,7 @@ class TestIMDClientV3:
         return create_default_imdsinfo_v3()
 
     @pytest.fixture
-    def server_client(self, universe, imdsinfo, port):
+    def server_client_two_frame_buf(self, universe, imdsinfo, port):
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", port, first_frame=False)
@@ -81,8 +82,38 @@ class TestIMDClientV3:
         client.stop()
         server.cleanup()
 
-    def test_pause_resume_continue(self, server_client):
+    @pytest.fixture(params=[">", "<"])
+    def server_client(self, universe, imdsinfo, port, request):
+        server = InThreadIMDServer(universe.trajectory)
+        imdsinfo.endianness = request.param
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            port,
+            universe.trajectory.n_atoms,
+        )
+        yield server, client
+        client.stop()
+        server.cleanup()
+
+    def test_traj_unchanged(self, server_client, universe):
         server, client = server_client
+        server.send_frames(0, 5)
+        for i in range(5):
+            imdf = client.get_imdframe()
+            assert_allclose(universe.trajectory[i].time, imdf.time)
+            assert_allclose(universe.trajectory[i].dt, imdf.dt)
+            assert_allclose(universe.trajectory[i].data["step"], imdf.step)
+            assert_allclose(universe.trajectory[i].positions, imdf.positions)
+            assert_allclose(universe.trajectory[i].velocities, imdf.velocities)
+            assert_allclose(universe.trajectory[i].forces, imdf.forces)
+            assert_allclose(
+                universe.trajectory[i].triclinic_dimensions, imdf.box
+            )
+
+    def test_pause_resume_continue(self, server_client_two_frame_buf):
+        server, client = server_client_two_frame_buf
         server.send_frames(0, 2)
         # Client's buffer is filled. client should send pause
         server.expect_packet(IMDHeaderType.IMD_PAUSE)
@@ -95,10 +126,10 @@ class TestIMDClientV3:
         server.send_frame(1)
         client.get_imdframe()
 
-    def test_pause_resume_disconnect(self, server_client):
+    def test_pause_resume_disconnect(self, server_client_two_frame_buf):
         """Client pauses because buffer is full, empties buffer and attempt to resume, but
         finds that simulation has already ended and raises EOF"""
-        server, client = server_client
+        server, client = server_client_two_frame_buf
         server.send_frames(0, 2)
         server.expect_packet(IMDHeaderType.IMD_PAUSE)
         client.get_imdframe()
@@ -110,11 +141,11 @@ class TestIMDClientV3:
         with pytest.raises(EOFError):
             client.get_imdframe()
 
-    def test_pause_resume_no_disconnect(self, server_client):
+    def test_pause_resume_no_disconnect(self, server_client_two_frame_buf):
         """Client pauses because buffer is full, empties buffer and attempt to resume, but
         finds that simulation has already ended (but has not yet disconnected) and raises EOF
         """
-        server, client = server_client
+        server, client = server_client_two_frame_buf
         server.send_frames(0, 2)
         server.expect_packet(IMDHeaderType.IMD_PAUSE)
         client.get_imdframe()

@@ -100,8 +100,13 @@ def read_into_buf(sock, buf):
                 "read_into_buf excepting because socket timeout is 0 and no bytes are available to read"
             )
             raise BlockingIOError
+        except OSError:
+            logger.debug(
+                "read_into_buf excepting because socket was closed elsewhere"
+            )
+            raise OSError
         except Exception as e:
-            logger.debug(f"read_into_buf excepting due to {e}")
+            logger.debug(f"read_into_buf excepting due to: {e}")
             raise e
         total_received += received
 

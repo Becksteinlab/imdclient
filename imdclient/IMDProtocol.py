@@ -9,6 +9,7 @@ import numpy as np
 IMDHEADERSIZE = 8
 IMDENERGYPACKETLENGTH = 40
 IMDBOXPACKETLENGTH = 36
+IMDTIMEPACKETLENGTH = 24
 IMDVERSIONS = {2, 3}
 IMDAWAITGOTIME = 1
 
@@ -102,7 +103,7 @@ class IMDTime:
     """Convenience class to represent the body of time packet"""
 
     def __init__(self, data, endianness):
-        self.dt, self.time = struct.unpack(f"{endianness}ff", data)
+        self.dt, self.time, self.step = struct.unpack(f"{endianness}ddQ", data)
 
 
 @dataclass
@@ -147,19 +148,6 @@ def parse_imdv3_session_info(data, end):
     )
     logger.debug(f"parse_imdv3_session_info3: {data}")
     return imdsinfo
-
-
-def create_imdv3_session_info_bytes(imdsinfo: IMDSessionInfo):
-    """Creates the session information packet of an IMD v3 connection"""
-    body = 0
-    body |= imdsinfo.time << 0
-    body |= imdsinfo.energies << 1
-    body |= imdsinfo.box << 2
-    body |= imdsinfo.positions << 3
-    body |= imdsinfo.velocities << 4
-    body |= imdsinfo.forces << 5
-    body |= imdsinfo.wrapped_coords << 6
-    return struct.pack("!i", body)
 
 
 def create_header_bytes(msg_type: IMDHeaderType, length: int):

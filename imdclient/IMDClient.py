@@ -225,7 +225,8 @@ class IMDClient:
             logger.debug("IMDClient: Disconnected from server")
         except (ConnectionResetError, BrokenPipeError, Exception) as e:
             logger.debug(
-                f"IMDProducer: Attempted to disconnect but server already terminated the connection: %s", e
+                f"IMDProducer: Attempted to disconnect but server already terminated the connection: %s",
+                e,
             )
         finally:
             self._conn.close()
@@ -364,6 +365,7 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
             self._buf.notify_producer_finished()
+            return
 
     def _expect_header(self, expected_type, expected_value=None):
 
@@ -390,7 +392,8 @@ class BaseIMDProducer(threading.Thread):
         except (ConnectionError, TimeoutError, BlockingIOError, Exception):
             # ConnectionError: Server is definitely done sending frames, socket is closed
             # TimeoutError: Server is *likely* done sending frames.
-            # BlockingIOError: # Occurs when timeout is 0 in place of a TimeoutError. Server is *likely* done sending frames
+            # BlockingIOError: Occurs when timeout is 0 in place of a TimeoutError. Server is *likely* done sending frames
+            # OSError: Occurs when main thread disconnects from the server and closes the socket, but producer thread attempts to read another frame
             # Exception: Something unexpected happened
             raise EOFError
 
@@ -506,6 +509,8 @@ class IMDProducerV3(BaseIMDProducer):
         xvf_bytes = 12 * n_atoms
         if self._imdsinfo.energies:
             self._energies = bytearray(IMDENERGYPACKETLENGTH)
+        if self._imdsinfo.time:
+            self._time = bytearray(IMDTIMEPACKETLENGTH)
         if self._imdsinfo.box:
             self._box = bytearray(IMDBOXPACKETLENGTH)
         if self._imdsinfo.positions:
@@ -550,13 +555,14 @@ class IMDProducerV3(BaseIMDProducer):
             self._expect_header(IMDHeaderType.IMD_TIME, expected_value=1)
             # use header buf to hold time data sicnce it is also
             # 8 bytes
-            self._read(self._header)
-            t = IMDTime(self._header, self._imdsinfo.endianness)
+            self._read(self._time)
+            t = IMDTime(self._time, self._imdsinfo.endianness)
             self._imdf.dt = t.dt
             self._imdf.time = t.time
+            self._imdf.step = t.step
 
             logger.debug(
-                f"IMDProducer: Time: {self._imdf.time}, dt: {self._imdf.dt}"
+                f"IMDProducer: Time: {self._imdf.time}, dt: {self._imdf.dt}, step: {self._imdf.step}"
             )
 
         if self._imdsinfo.energies:
@@ -806,9 +812,11 @@ class IMDFrame:
         if imdsinfo.time:
             self.time = 0.0
             self.dt = 0.0
+            self.step = 0.0
         else:
             self.time = None
             self.dt = None
+            self.step = None
         if imdsinfo.energies:
             self.energies = {
                 "step": 0,
@@ -848,7 +856,7 @@ def imdframe_memsize(n_atoms, imdsinfo) -> int:
     """
     memsize = 0
     if imdsinfo.time:
-        memsize += 4 * 2
+        memsize += 8 * 3
     if imdsinfo.energies:
         memsize += 4 * 10
     if imdsinfo.box:
