@@ -1,0 +1,23 @@
+# Note that you can select an IMD index group in the .mdp file if a subset of the atoms suffices.
+# This file was created Sat Jun  8 18:48:17 2024
+# Created by:
+#                      :-) GROMACS - gmx mdrun, 2023.3 (-:
+# 
+# Executable:   /nfs/packages/opt/Linux_x86_64/gromacs/2023.3/cuda12.3/gnu-11.4.0/avx2/bare/bin/gmx
+# Data prefix:  /nfs/packages/opt/Linux_x86_64/gromacs/2023.3/cuda12.3/gnu-11.4.0/avx2/bare
+# Working dir:  /nfs/homes3/ljwoods2/workspace/imdreader
+# Command line:
+#   gmx mdrun -s example/slurm_example/md.tpr -deffnm example/slurm_example/md -nt 16 -imdwait -maxh 0.03
+# gmx mdrun is part of G R O M A C S:
+#
+# Green Red Orange Magenta Azure Cyan Skyblue
+#
+@    title "IMD Pull Forces"
+@    xaxis  label "Time (ps)"
+@    yaxis  label "# of Forces / Atom IDs / Forces (kJ/mol)"
+# Can display and manipulate 146237 (of a total of 146237) atoms via IMD.
+# column 1    : time (ps)
+# column 2    : total number of atoms feeling an IMD pulling force at that time
+# cols. 3.-6  : global atom number of pulled atom, x-force, y-force, z-force (kJ/mol)
+# then follow : atom-ID, f[x], f[y], f[z] for more atoms in case the force on multiple atoms is changed simultaneously.
+# Note that the force on any atom is always equal to the last value for that atom-ID found in the data.

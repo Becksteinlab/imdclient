@@ -1,7 +1,7 @@
 title                   = PRODUCTION IN NPT
 ; Run parameters
 integrator              = md        ; leap-frog integrator
-nsteps                  = 1000    ; 1 * 1000 = 1 ps
+nsteps                  = 100    ; 1 * 1000 = 1 ps
 dt                      = 0.001     ; 1 fs
 ; Output control
 nstxout                 = 1      ; save coordinates every 1 fs
