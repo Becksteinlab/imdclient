@@ -20,6 +20,6 @@ LAMMPS_IN = (_data_ref / "lammps_v3.in").as_posix()
 LAMMPS_TRAJ = (_data_ref / "lammps_trj.h5md").as_posix()
 GROMACS_TRAJ = (_data_ref / "gromacs_trj.trr").as_posix()
 GROMACS_TOPOL = (_data_ref / "gromacs_topol.tpr").as_posix()
-
+NAMD_TOPOL = (_data_ref / "namd_topol.pdb").as_posix()
 
 del resources
