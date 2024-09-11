@@ -131,7 +131,7 @@ class IMDSessionInfo:
 def parse_imdv3_session_info(data, end):
     """Parses the session information packet of an IMD v3 connection"""
     logger.debug(f"parse_imdv3_session_info: {data}")
-    time, energies, box, positions, velocties, forces, wrapped_coords = (
+    time, box, positions, wrapped_coords, velocties, forces, energies = (
         struct.unpack(f"{end}BBBBBBB", data)
     )
     logger.debug(f"parse_imdv3_session_info2 : {data}")
@@ -139,12 +139,12 @@ def parse_imdv3_session_info(data, end):
         version=3,
         endianness=end,
         time=(time == 1),
-        energies=(energies == 1),
         box=(box == 1),
         positions=(positions == 1),
+        wrapped_coords=(wrapped_coords == 1),
         velocities=(velocties == 1),
         forces=(forces == 1),
-        wrapped_coords=(wrapped_coords == 1),
+        energies=(energies == 1),
     )
     logger.debug(f"parse_imdv3_session_info3: {data}")
     return imdsinfo

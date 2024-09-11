@@ -88,12 +88,12 @@ class InThreadIMDServer:
         sinfo += struct.pack(
             f"{self.imdsinfo.endianness}BBBBBBB",
             time,
-            energies,
             box,
             positions,
+            wrapped_coords,
             velocities,
             forces,
-            wrapped_coords,
+            energies,
         )
         logger.debug(f"InThreadIMDServer: Sending session info")
         self.conn.sendall(sinfo)
@@ -126,23 +126,6 @@ class InThreadIMDServer:
             )
 
             self.conn.sendall(time_header + time)
-
-        if self.imdsinfo.energies:
-            energy_header = create_header_bytes(IMDHeaderType.IMD_ENERGIES, 1)
-            energies = create_energy_bytes(
-                i,
-                i + 1,
-                i + 2,
-                i + 3,
-                i + 4,
-                i + 5,
-                i + 6,
-                i + 7,
-                i + 8,
-                i + 9,
-                endianness,
-            )
-            self.conn.sendall(energy_header + energies)
 
         if self.imdsinfo.box:
             box_header = create_header_bytes(IMDHeaderType.IMD_BOX, 1)
@@ -182,6 +165,23 @@ class InThreadIMDServer:
             ).tobytes()
 
             self.conn.sendall(force_header + force)
+
+        if self.imdsinfo.energies:
+            energy_header = create_header_bytes(IMDHeaderType.IMD_ENERGIES, 1)
+            energies = create_energy_bytes(
+                i,
+                i + 1,
+                i + 2,
+                i + 3,
+                i + 4,
+                i + 5,
+                i + 6,
+                i + 7,
+                i + 8,
+                i + 9,
+                endianness,
+            )
+            self.conn.sendall(energy_header + energies)
 
     def expect_packet(self, packet_type, expected_length=None):
         head_buf = bytearray(IMDHEADERSIZE)

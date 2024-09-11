@@ -102,26 +102,50 @@ class IMDv3IntegrationTest:
         yield client
         client.stop()
 
-    def test_compare_imd_to_true_traj(self, universe, client):
-        assert len(universe.trajectory) == 1001
+    def test_compare_imd_to_true_traj(self, universe, client, first_frame):
         imdsinfo = client.get_imdsessioninfo()
-        imdf = client.get_imdframe()
-        if imdsinfo.time:
-            assert_allclose(imdf.time, universe.trajectory[1].time)
-            assert_allclose(imdf.step, universe.trajectory[1].data["step"])
-        if imdsinfo.box:
-            assert_allclose_with_logging(
-                imdf.box, universe.trajectory[1].triclinic_dimensions
-            )
-        if imdsinfo.positions:
-            assert_allclose_with_logging(
-                imdf.positions, universe.trajectory[0].positions, rtol=1
-            )
-        if imdsinfo.velocities:
-            assert_allclose_with_logging(
-                imdf.velocities, universe.trajectory[1].velocities, rtol=1
-            )
-        if imdsinfo.forces:
-            assert_allclose_with_logging(
-                imdf.forces, universe.trajectory[1].forces, rtol=1e-03
-            )
+
+        for ts in universe.trajectory[first_frame:]:
+            imdf = client.get_imdframe()
+            if imdsinfo.time:
+                assert_allclose(imdf.time, ts.time)
+                assert_allclose(imdf.step, ts.data["step"])
+            if imdsinfo.box:
+                assert_allclose_with_logging(
+                    imdf.box,
+                    ts.triclinic_dimensions,
+                    atol=1e-02,
+                )
+            if imdsinfo.positions:
+                assert_allclose_with_logging(
+                    imdf.positions, ts.positions, atol=1e-02
+                )
+            if imdsinfo.velocities:
+                assert_allclose_with_logging(
+                    imdf.velocities, ts.velocities, atol=1e-02
+                )
+            if imdsinfo.forces:
+                assert_allclose_with_logging(imdf.forces, ts.forces, atol=1e-02)
+
+        # imdf = client.get_imdframe()
+        # if imdsinfo.time:
+        #     assert_allclose(imdf.time, universe.trajectory[1].time)
+        #     assert_allclose(imdf.step, universe.trajectory[1].data["step"])
+        # if imdsinfo.box:
+        #     assert_allclose_with_logging(
+        #         imdf.box,
+        #         universe.trajectory[1].triclinic_dimensions,
+        #         atol=1e-03,
+        #     )
+        # if imdsinfo.positions:
+        #     assert_allclose_with_logging(
+        #         imdf.positions, universe.trajectory[1].positions, atol=1e-03
+        #     )
+        # if imdsinfo.velocities:
+        #     assert_allclose_with_logging(
+        #         imdf.velocities, universe.trajectory[1].velocities, atol=1e-03
+        #     )
+        # if imdsinfo.forces:
+        #     assert_allclose_with_logging(
+        #         imdf.forces, universe.trajectory[1].forces, atol=1e-03
+        #     )

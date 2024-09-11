@@ -1,9 +1,6 @@
 import MDAnalysis as mda
 import pytest
-from pathlib import Path
 import logging
-
-from .utils import get_free_port
 from .base import IMDv3IntegrationTest
 from .datafiles import GROMACS_TOPOL, GROMACS_TRAJ
 
@@ -26,6 +23,10 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
     @pytest.fixture()
     def match_string(self):
         return "IMD: Will wait until I have a connection and IMD_GO orders."
+
+    @pytest.fixture()
+    def first_frame(self):
+        return 0
 
     @pytest.fixture()
     def universe(self):

@@ -68,14 +68,25 @@ jobs:
 
       - name: Build namd
         run: |
-          cd gromacs/gromacs-2023.5
-          mkdir build
-          cd build
-          cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON
+          cd namd/namd-3.0
+          tar xf charm-8.0.0.tar
+          cd charm-8.0.0
+          ./build charm++ ucx-linux-x86_64 ompipmix --with-production
+          cd ucx-linux-x86_64-ompipmix/tests/charm++/megatest
           make
-          make check
-          sudo make install
-          source /usr/local/gromacs/bin/GMXRC
+          cd ../../../../..
+          wget http://www.ks.uiuc.edu/Research/namd/libraries/fftw-linux-x86_64.tar.gz
+          tar xzf fftw-linux-x86_64.tar.gz
+          mv linux-x86_64 fftw
+          wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64.tar.gz
+          wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+          tar xzf tcl8.6.13-linux-x86_64.tar.gz
+          tar xzf tcl8.6.13-linux-x86_64-threaded.tar.gz
+          mv tcl8.6.13-linux-x86_64 tcl
+          mv tcl8.6.13-linux-x86_64-threaded tcl-threaded
+          ./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-ompipmix
+          cd Linux-x86_64-g++
+          make
 
       - name: Run namd tests
         run: |

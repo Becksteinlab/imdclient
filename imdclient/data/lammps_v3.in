@@ -50,19 +50,22 @@ timestep  0.001
 velocity all create 300 102939 dist gaussian mom yes rot yes
 # this is equlibration process.
 fix 1 all nve 
-# <Dump all the atoms to the file dump.min>
-# DCD lines are commented. These lines were used to create the true trajectory
-# dump xtc1 all xtc 1 lammps_trj.xtc 
-# dump_modify xtc1 unwrap yes
+
+# Create source of truth trajectory
+# dump h5md1 all h5md 1 lammps_trj.h5md position velocity force box yes
+# dump_modify h5md1 unwrap on
 
 ## IMD settings
 # https://docs.lammps.org/fix_imd.html
-fix 2 all imd 8888 version 3 unwrap on nowait off time on
+fix 2 all imd 8888 version 3 unwrap on nowait off
 
 ## Run MD sim
-# run with active settings as many runs as required. timestep*No. of. steps =10ps
-run 1000 
-# undump xtc1 # Stop dumping information to the dump file.
-unfix 1
+run 100
+
+# Stop dumping information to the dump file.
+# undump h5md1 
+
 # Unfix the NVE. Additional lines if any will assume that this fix is off.
+unfix 1
+
 #End

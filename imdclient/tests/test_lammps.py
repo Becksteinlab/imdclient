@@ -1,9 +1,6 @@
 import MDAnalysis as mda
 import pytest
-from pathlib import Path
 import logging
-
-from .utils import get_free_port
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_IN, LAMMPS_TOPOL, LAMMPS_TRAJ
 
@@ -26,6 +23,10 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
     @pytest.fixture()
     def match_string(self):
         return "Waiting for IMD connection on port 8888"
+
+    @pytest.fixture()
+    def first_frame(self):
+        return 1
 
     @pytest.fixture()
     def universe(self):
