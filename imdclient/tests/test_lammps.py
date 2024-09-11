@@ -1,17 +1,11 @@
 import MDAnalysis as mda
 import pytest
-import subprocess
 from pathlib import Path
-import os
 import logging
 
 from .utils import get_free_port
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_IN, LAMMPS_TOPOL, LAMMPS_TRAJ
-
-# NOTE: removeme
-from imdclient.IMDREADER import IMDReader
-
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
