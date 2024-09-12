@@ -1,12 +1,11 @@
-import ctypes as ct
 import MDAnalysis as mda
 from scipy.fft import rfft, fft
 import numpy as np
 from MDAnalysis.analysis.base import (
     AnalysisBase,
 )
-import awkward as ak
 from MDAnalysis.lib.log import ProgressBar
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -160,24 +159,40 @@ class VDOS(StreamFriendlyAnalysisBase):
         # initialize counter for normalization
         self.corrCnt = 0
 
+        # # If residues can have different num atoms, use list
+        # self.atMassLists = []
+        # for res in self.sel.residues:
+        #     self.atMassLists.append(
+        #         res.atoms.masses[:, np.newaxis].astype("float64")
+        #     )
+
+        self.atMassLists = np.empty(
+            (len(self.sel.residues), len(self.sel.residues[0].atoms), 1),
+            dtype=np.float64,
+        )
+        for i, res in enumerate(self.sel.residues):
+            self.atMassLists[i] = res.atoms.masses[:, np.newaxis].astype(
+                "float64"
+            )
+
     def _single_frame(self):
         idx = self._ts.frame % self.nCorr
 
         if self._ts.frame < self.nCorr:
             self.results.tau[idx] = self._ts.time
 
-        r = 0
-        # compute center of mass position and velocity
-        # can be parallelized
-        for res in self.sel.residues:
-            pos = res.atoms.positions.astype("float64")
-            vel = res.atoms.velocities.astype("float64")
+        atMassLists = self.atMassLists
+        sel = self.sel
+        masses = sel.residues.masses
+        COMvelBuffer = self.COMvelBuffer
 
-            self.COMvelBuffer[idx, r] = (
-                np.sum(res.atoms.masses[:, np.newaxis] * vel, axis=0)
-                / self.sel.residues.masses[r]
+        # # compute center of mass position and velocity
+        for i in range(self.nRes):
+            vel = sel.residues[i].atoms.velocities.astype("float64")
+            COMvelBuffer[idx, i] = (
+                np.sum(atMassLists[i] * vel, axis=0) / masses[i]
             )
-            r += 1
+
         # if sufficient data is available in buffers, compute correlation functions
         if self._ts.frame >= self.nCorr - 1:
             self._calcCorr(self._ts.frame + 1)
@@ -186,12 +201,14 @@ class VDOS(StreamFriendlyAnalysisBase):
         """compute correlation functions for all data in buffers"""
         # compute time correlation function for COM translation (for each residue)
         # can be parallelized
-        for i in range(self.nCorr):
-            j = start % self.nCorr
-            k = (j + i) % self.nCorr
-            self.results.trCorr[i] += np.sum(
-                self.COMvelBuffer[j] * self.COMvelBuffer[k], axis=1
-            )
+        trCorr = self.results.trCorr
+        COMvelBuffer = self.COMvelBuffer
+        nCorr = self.nCorr
+
+        for i in range(nCorr):
+            j = start % nCorr
+            k = (j + i) % nCorr
+            trCorr[i] += np.sum(COMvelBuffer[j] * COMvelBuffer[k], axis=1)
         self.corrCnt += 1
 
     def _conclude(self):
@@ -199,33 +216,15 @@ class VDOS(StreamFriendlyAnalysisBase):
         and calculate compute vibrational density of states from time correlation functions
         """
         # Normalization
+        # multiply by mass to convert velocity -> momentum
         self.results.trCorr[:] *= self.sel.residues.masses[:] / self.corrCnt
-        # Calculate VDoS
+        ##  Calculate VDoS
         period = (self.results.tau[1] - self.results.tau[0]) * (
             2 * self.nCorr - 1
         )
         wn0 = (1.0 / period) * 33.35641
         self.results.wavenumber = np.arange(0, self.nCorr) * wn0
-
-        tmp1 = np.zeros(2 * self.nCorr - 1, dtype=np.float64)
-        for i in range(self.nRes):
-            for j in range(self.nCorr):
-                tmp1[j] = self.results.trCorr[j][i]
-            for j in range(1, self.nCorr):
-                k = 2 * self.nCorr - j - 1
-                tmp1[k] = tmp1[j]
-            tmp1 = fft(tmp1)
-            for j in range(self.nCorr):
-                self.results.trVDoS[j][i] = tmp1[j].real
-
-        # # make the time correlation function symmetric
-        # tmp1 = np.zeros((2 * self.nCorr - 1, self.nRes), dtype=np.float64)
-        # tmp1[: self.nCorr] = self.results.trCorr[:]
-        # tmp1[self.nCorr - 1 :] = tmp1[: self.nCorr][::-1]
-
-        # # Fourier transform
-        # tmp1 = fft(tmp1, axis=0)
-        # for i in range(self.nRes):
-        #     for j in range(self.nCorr):
-        #         self.results.trVDoS[j][i] = tmp1[j][i].real
-        # # self.results.trVDoS[:] = tmp1[:].real
+        tmp1 = np.zeros((2 * self.nCorr - 1, self.nRes), dtype=np.float64)
+        tmp1[: self.nCorr] = self.results.trCorr[:]
+        tmp1[self.nCorr :] = tmp1[1 : self.nCorr][::-1]
+        self.results.trVDoS = rfft(tmp1, axis=0)

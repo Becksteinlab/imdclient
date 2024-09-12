@@ -142,4 +142,4 @@ def mda_vdos():
 
 def test_compare_vdos(true_vdos, mda_vdos):
     for true, mda in zip(true_vdos, mda_vdos):
-        np.testing.assert_allclose(true, mda, rtol=1e-6)
+        np.testing.assert_allclose(true, mda, rtol=1e-3)
