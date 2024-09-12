@@ -88,7 +88,6 @@ class vdos:
         """normalize correlation functions by number of data points"""
         if self.normalized == 0:
             for i in range(self.nRes):
-                # cancel out mass term so more massive residues don't dominate
                 self.trCorr[:, i] *= self.resMassList[i] / self.corrCnt[i]
             self.normalized = 1
 
@@ -115,7 +114,7 @@ def true_vdos():
     sel = u.select_atoms("resname POPC")
     true_vdos = vdos(sel, 200)
     tStep = 0
-    for ts in ProgressBar(u.trajectory[:1000]):
+    for ts in ProgressBar(u.trajectory[:400]):
         true_vdos.processStep(tStep, ts.time)
         tStep += 1
     true_vdos.normalize()
@@ -132,7 +131,7 @@ def true_vdos():
 def mda_vdos():
     u = mda.Universe(TOPOL, TRAJ)
     sel = u.select_atoms("resname POPC")
-    vdos = VDOS(u.trajectory, sel, nCorr=200).run(stop=1000)
+    vdos = VDOS(u.trajectory, sel, nCorr=200).run(stop=400)
     yield (
         vdos.results.trCorr,
         vdos.results.trVDoS,
