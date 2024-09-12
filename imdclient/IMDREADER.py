@@ -71,6 +71,7 @@ class IMDReader(ReaderBase):
     """
 
     format = "IMD"
+    one_pass = True
 
     @store_init_arguments
     def __init__(
