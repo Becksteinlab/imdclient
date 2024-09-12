@@ -365,7 +365,6 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
             self._buf.notify_producer_finished()
-            return
 
     def _expect_header(self, expected_type, expected_value=None):
 

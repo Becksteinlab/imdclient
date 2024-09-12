@@ -53,11 +53,11 @@ fix 1 all nve
 
 # Create source of truth trajectory
 # dump h5md1 all h5md 1 lammps_trj.h5md position velocity force box yes
-# dump_modify h5md1 unwrap on
+# dump_modify h5md1 unwrap no
 
 ## IMD settings
 # https://docs.lammps.org/fix_imd.html
-fix 2 all imd 8888 version 3 unwrap on nowait off
+fix 2 all imd 8888 version 3 unwrap off nowait off
 
 ## Run MD sim
 run 100
