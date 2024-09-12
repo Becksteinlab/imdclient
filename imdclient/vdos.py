@@ -1,16 +1,11 @@
 import ctypes as ct
 import MDAnalysis as mda
-from scipy.fft import fft, ifft, dct, idct
+from scipy.fft import fft
 import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-from typing import Iterable, Union
-
 from MDAnalysis.analysis.base import (
     AnalysisBase,
-    AnalysisFromFunction,
-    analysis_class,
 )
+import awkward as ak
 from MDAnalysis.lib.log import ProgressBar
 import logging
 
@@ -22,8 +17,10 @@ class StreamFriendlyAnalysisBase(AnalysisBase):
 
     def __init__(self, trajectory, verbose=False, **kwargs):
         super().__init__(trajectory, verbose=verbose, **kwargs)
-        if trajectory.one_pass:
+        if hasattr(trajectory, "one_pass") and trajectory.one_pass:
             self._one_pass = True
+        else:
+            self._one_pass = False
 
     def run(
         self,
@@ -141,19 +138,6 @@ class VDOS(StreamFriendlyAnalysisBase):
         self.nRes = selection.residues.n_residues
 
     def _prepare(self):
-        # initialize lists and arrays
-        # Note: atMassLists are lists of numpy arrays
-        #      => they are not a numpy arrays themselves
-        self.atMassLists = (
-            []
-        )  # list of numpy arrays of atomic masses for each residue
-        for res in self.sel.residues:
-            # Note: np.newaxis is used to make the array 2D
-            self.atMassLists.append(
-                res.atoms.masses[:, np.newaxis].astype("float64")
-            )
-        # numpy array of residue masses from MDAnalysis
-        self.resMassList = self.sel.residues.masses
         # numpy array buffers for COM position, COM velocity, angular momentum, and (sorted) moments of inertia
         self.COMposBuffer = np.zeros(
             (self.nCorr, self.nRes, 3), dtype=np.float64
@@ -161,6 +145,7 @@ class VDOS(StreamFriendlyAnalysisBase):
         self.COMvelBuffer = np.zeros(
             (self.nCorr, self.nRes, 3), dtype=np.float64
         )
+
         # time and frequency axes for correlation functions and VDoS
         self.results["tau"] = np.zeros(self.nCorr, dtype=np.float64)
         self.results["wavenumber"] = np.zeros(self.nCorr, dtype=np.float64)
@@ -173,27 +158,30 @@ class VDOS(StreamFriendlyAnalysisBase):
             (self.nCorr, self.nRes), dtype=np.float64
         )
         # initialize counter for normalization
-        self.corrCnt = np.zeros(self.nRes, dtype=int)
+        self.corrCnt = 0
 
     def _single_frame(self):
         idx = self._ts.frame % self.nCorr
+
         if self._ts.frame < self.nCorr:
-            self.results.tau[self._ts.frame] = self._ts.time
-        pos = []
-        vel = []
+            self.results.tau[idx] = self._ts.time
+
         r = 0
         # compute center of mass position and velocity
         for res in self.sel.residues:
-            pos.append(res.atoms.positions.astype("float64"))
-            vel.append(res.atoms.velocities.astype("float64"))
-            # self.COMposBuffer[idx,r] = res.atoms.center_of_mass() # => too slow & no equivalent for velocity
+            pos = res.atoms.positions.astype("float64")
+            vel = res.atoms.velocities.astype("float64")
+
             self.COMposBuffer[idx, r] = (
-                np.sum(self.atMassLists[r] * pos[-1], axis=0)
-                / self.resMassList[r]
+                # sum all (x_i * m_i), (y_i * m_i), (z_i * m_i) for all i atoms in residue
+                # then divide by sum of all m_i
+                # yields x, y, z of center of mass
+                np.sum(res.atoms.masses[:, np.newaxis] * pos, axis=0)
+                / self.sel.residues.masses[r]
             )
             self.COMvelBuffer[idx, r] = (
-                np.sum(self.atMassLists[r] * vel[-1], axis=0)
-                / self.resMassList[r]
+                np.sum(res.atoms.masses[:, np.newaxis] * vel, axis=0)
+                / self.sel.residues.masses[r]
             )
             r += 1
         # if sufficient data is available in buffers, compute correlation functions
@@ -217,7 +205,9 @@ class VDOS(StreamFriendlyAnalysisBase):
         """
         # Normalization
         for i in range(self.nRes):
-            self.results.trCorr[:, i] *= self.resMassList[i] / self.corrCnt[i]
+            self.results.trCorr[:, i] *= (
+                self.sel.residues.masses[i] / self.corrCnt
+            )
         # Calculate VDoS
         period = (self.results.tau[1] - self.results.tau[0]) * (
             2 * self.nCorr - 1

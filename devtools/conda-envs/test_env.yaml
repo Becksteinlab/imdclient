@@ -8,14 +8,14 @@ dependencies:
   - pip
 
   # MDAnalysis
-  - MDAnalysis>=2.7.0
+  - MDAnalysis
 
   # Testing
   - pytest
   - pytest-cov
   - pytest-xdist
   - codecov
-  - MDAnalysisTests>=2.7.0
+  - MDAnalysisTests
 
   # Pip-only installs
   #- pip:
