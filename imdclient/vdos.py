@@ -1,6 +1,6 @@
 import ctypes as ct
 import MDAnalysis as mda
-from scipy.fft import fft
+from scipy.fft import rfft, fft
 import numpy as np
 from MDAnalysis.analysis.base import (
     AnalysisBase,
@@ -168,17 +168,11 @@ class VDOS(StreamFriendlyAnalysisBase):
 
         r = 0
         # compute center of mass position and velocity
+        # can be parallelized
         for res in self.sel.residues:
             pos = res.atoms.positions.astype("float64")
             vel = res.atoms.velocities.astype("float64")
 
-            self.COMposBuffer[idx, r] = (
-                # sum all (x_i * m_i), (y_i * m_i), (z_i * m_i) for all i atoms in residue
-                # then divide by sum of all m_i
-                # yields x, y, z of center of mass
-                np.sum(res.atoms.masses[:, np.newaxis] * pos, axis=0)
-                / self.sel.residues.masses[r]
-            )
             self.COMvelBuffer[idx, r] = (
                 np.sum(res.atoms.masses[:, np.newaxis] * vel, axis=0)
                 / self.sel.residues.masses[r]
@@ -191,6 +185,7 @@ class VDOS(StreamFriendlyAnalysisBase):
     def _calcCorr(self, start):
         """compute correlation functions for all data in buffers"""
         # compute time correlation function for COM translation (for each residue)
+        # can be parallelized
         for i in range(self.nCorr):
             j = start % self.nCorr
             k = (j + i) % self.nCorr
@@ -204,16 +199,14 @@ class VDOS(StreamFriendlyAnalysisBase):
         and calculate compute vibrational density of states from time correlation functions
         """
         # Normalization
-        for i in range(self.nRes):
-            self.results.trCorr[:, i] *= (
-                self.sel.residues.masses[i] / self.corrCnt
-            )
+        self.results.trCorr[:] *= self.sel.residues.masses[:] / self.corrCnt
         # Calculate VDoS
         period = (self.results.tau[1] - self.results.tau[0]) * (
             2 * self.nCorr - 1
         )
         wn0 = (1.0 / period) * 33.35641
         self.results.wavenumber = np.arange(0, self.nCorr) * wn0
+
         tmp1 = np.zeros(2 * self.nCorr - 1, dtype=np.float64)
         for i in range(self.nRes):
             for j in range(self.nCorr):
@@ -224,3 +217,15 @@ class VDOS(StreamFriendlyAnalysisBase):
             tmp1 = fft(tmp1)
             for j in range(self.nCorr):
                 self.results.trVDoS[j][i] = tmp1[j].real
+
+        # # make the time correlation function symmetric
+        # tmp1 = np.zeros((2 * self.nCorr - 1, self.nRes), dtype=np.float64)
+        # tmp1[: self.nCorr] = self.results.trCorr[:]
+        # tmp1[self.nCorr - 1 :] = tmp1[: self.nCorr][::-1]
+
+        # # Fourier transform
+        # tmp1 = fft(tmp1, axis=0)
+        # for i in range(self.nRes):
+        #     for j in range(self.nCorr):
+        #         self.results.trVDoS[j][i] = tmp1[j][i].real
+        # # self.results.trVDoS[:] = tmp1[:].real
