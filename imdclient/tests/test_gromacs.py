@@ -2,7 +2,7 @@ import MDAnalysis as mda
 import pytest
 import logging
 from .base import IMDv3IntegrationTest
-from .datafiles import GROMACS_TOPOL, GROMACS_TRAJ
+from .datafiles import GROMACS_TOPOL, GROMACS_TRAJ, GROMACS_TPR
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
@@ -18,7 +18,7 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def command(self):
-        return f"gmx mdrun -s {GROMACS_TOPOL} -nt 1 -deffnm run -imdport 8888 -imdwait"
+        return f"gmx mdrun -s {GROMACS_TPR} -nt 1 -deffnm run -imdport 8888 -imdwait"
 
     @pytest.fixture()
     def match_string(self):

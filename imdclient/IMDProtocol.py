@@ -131,7 +131,7 @@ class IMDSessionInfo:
 def parse_imdv3_session_info(data, end):
     """Parses the session information packet of an IMD v3 connection"""
     logger.debug(f"parse_imdv3_session_info: {data}")
-    time, box, positions, wrapped_coords, velocties, forces, energies = (
+    time, energies, box, positions, wrapped_coords, velocties, forces = (
         struct.unpack(f"{end}BBBBBBB", data)
     )
     logger.debug(f"parse_imdv3_session_info2 : {data}")
