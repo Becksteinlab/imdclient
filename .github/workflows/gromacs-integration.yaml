@@ -67,18 +67,17 @@ jobs:
       - name: Clone gromacs fork
         uses: actions/checkout@v4
         with:
-          repository: HeydenLabASU/imd-test
-          ref: heekun_testruns
+          repository: hcho38/gromacs
+          ref: imd-v3
           path: gromacs
 
       - name: Build gromacs
         run: |
-          cd gromacs/gromacs-2023.5
+          cd gromacs
           mkdir build
           cd build
           cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON
           make
-          make check
           sudo make install
           source /usr/local/gromacs/bin/GMXRC
 
