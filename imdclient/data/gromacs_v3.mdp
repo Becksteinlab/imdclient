@@ -46,3 +46,12 @@ pbc                     = xyz       ; 3-D PBC
 ; Velocity generation
 gen_vel                 = no
 IMD-group               = System
+IMD-nst                 = 1
+IMD-version             = 3
+IMD-time                = yes
+IMD-box                 = yes
+IMD-coords              = no
+IMD-wrap                = no
+IMD-vels                = yes
+IMD-forces              = no
+IMD-energies            = yes
