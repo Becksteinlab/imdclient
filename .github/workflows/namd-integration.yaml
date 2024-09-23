@@ -51,6 +51,11 @@ jobs:
           installer: conda
           shell: bash -l {0} 
         
+      - name: Install package
+        run: |
+          python --version
+          python -m pip install .  --no-deps 
+          
       - name: Python information
         run: |
           which python
@@ -68,7 +73,7 @@ jobs:
 
       - name: Build namd
         run: |
-          cd namd/namd-3.0
+          cd namd
           tar xf charm-8.0.0.tar
           cd charm-8.0.0
           ./build charm++ ucx-linux-x86_64 ompipmix --with-production

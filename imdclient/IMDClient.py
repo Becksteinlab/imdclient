@@ -365,7 +365,6 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
             self._buf.notify_producer_finished()
-            return
 
     def _expect_header(self, expected_type, expected_value=None):
 
@@ -564,6 +563,12 @@ class IMDProducerV3(BaseIMDProducer):
             logger.debug(
                 f"IMDProducer: Time: {self._imdf.time}, dt: {self._imdf.dt}, step: {self._imdf.step}"
             )
+        if self._imdsinfo.energies:
+            self._expect_header(IMDHeaderType.IMD_ENERGIES, expected_value=1)
+            self._read(self._energies)
+            self._imdf.energies.update(
+                parse_energy_bytes(self._energies, self._imdsinfo.endianness)
+            )
         if self._imdsinfo.box:
             self._expect_header(IMDHeaderType.IMD_BOX, expected_value=1)
             self._read(self._box)
@@ -602,13 +607,6 @@ class IMDProducerV3(BaseIMDProducer):
                 np.frombuffer(
                     self._forces, dtype=f"{self._imdsinfo.endianness}f"
                 ).reshape((self._n_atoms, 3)),
-            )
-
-        if self._imdsinfo.energies:
-            self._expect_header(IMDHeaderType.IMD_ENERGIES, expected_value=1)
-            self._read(self._energies)
-            self._imdf.energies.update(
-                parse_energy_bytes(self._energies, self._imdsinfo.endianness)
             )
 
     def __del__(self):

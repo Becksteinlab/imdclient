@@ -50,6 +50,11 @@ jobs:
           install-tests: true
           installer: conda
           shell: bash -l {0} 
+
+      - name: Install package
+        run: |
+          python --version
+          python -m pip install .  --no-deps 
         
       - name: Python information
         run: |

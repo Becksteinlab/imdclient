@@ -41,7 +41,6 @@ jobs:
           show-channel-urls: true
           miniconda-version: latest
 
-
       - name: Install MDAnalysis version
         uses: MDAnalysis/install-mdanalysis@main
         with:
@@ -49,6 +48,11 @@ jobs:
           install-tests: true
           installer: conda
           shell: bash -l {0} 
+
+      - name: Install package
+        run: |
+          python --version
+          python -m pip install .  --no-deps 
         
       - name: Python information
         run: |
