@@ -93,7 +93,6 @@ jobs:
           ./config Linux-x86_64-g++.simple --charm-arch multicore-linux-x86_64 --fftw-prefix "/usr/local"
           cd Linux-x86_64-g++.simple
           make
-          sudo make install
           sudo ln -s namd3 /usr/local/bin/namd3
 
       - name: Run namd tests
