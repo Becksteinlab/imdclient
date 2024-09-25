@@ -1,0 +1,47 @@
+# This is a test namd configuration file
+
+timestep	0.5
+numsteps	10
+structure	alanin.psf
+parameters	alanin.params
+coordinates	alanin.pdb
+exclude		scaled1-4
+1-4scaling	0.4
+outputname 	output[myReplica]
+margin		1.0
+stepspercycle   3
+temperature	0
+
+switching 	on
+switchdist	7.0
+cutoff		8.0
+pairlistdist 	9.0
+
+dcdfile	alanin.dcd
+dcdfreq	1
+
+#restartname	alanin.restart
+#restartfreq	10
+
+#langevin	on
+#langevinTemp	300.0
+#langevincol	O
+
+#constraints	on
+
+#fma		on
+
+seed		12345
+
+IMDon		yes
+IMDport		8888
+IMDfreq		1
+IMDwait		on
+IMDversion     3
+IMDsendPositions        yes
+IMDsendEnergies     yes
+#IMDsendTime        yes
+#IMDsendBoxDimensions       yes
+IMDsendVelocities       yes
+#IMDsendForces      yes
+IMDwrapPositions       yes
