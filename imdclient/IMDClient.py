@@ -660,7 +660,9 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError("unpause_empty_proportion must be between 0 and 1")
+            raise ValueError(
+                "unpause_empty_proportion must be between 0 and 1"
+            )
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -727,7 +729,9 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
+            logger.debug(
+                f"IMDProducer: Error waiting for space in buffer: {e}"
+            )
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -773,7 +777,9 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while self._full_q.qsize() == 0 and not self._producer_finished:
+                while (
+                    self._full_q.qsize() == 0 and not self._producer_finished
+                ):
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:
