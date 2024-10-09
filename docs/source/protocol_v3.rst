@@ -1,9 +1,29 @@
 IMDv3 Protocol
 ==============
 
-IMDv3 is a protocol for communicating molecular simulation data through a socket. 
-It allows for two-way communication: via IMDv3, a simulation engine sends data to a receiver 
+IMD (Interactive Molecular Dynamics) is a protocol for communicating molecular simulation 
+data through a socket. 
+It allows for two-way communication: via IMD, a simulation engine sends data to a receiver 
 and the receiver can send forces and certain requests back to the simulation engine.
+
+Version numbers in IMD are monotonically increasing integers. 
+IMDv3, the protocol version described in this document, builds upon IMDv2, the protocol version
+implemented at the time of writing in NAMD, VMD, HOOMD, GROMACS, and LAMMPS. IMDv2 is itself 
+a modification of the original IMD protocol published in 2001 [IMDv1]_.
+
+.. list-table::
+   :widths: 10 30
+   :header-rows: 1
+
+   * - IMD Version
+     - Protocol specification
+   * - 1
+     - [IMDv1]_
+   * - 2
+     - No official specification, but sample protocol and API implementation available [IMDv2]_.
+       Some characteristics of the IMDv2 protocol mentioned in this document are inferred from commonalities in existing IMDv2 implementations.
+   * - 3
+     - This specification
 
 Terms
 -----
@@ -11,7 +31,8 @@ Terms
 
 **Receiver**: The receiver of simulation data, connects to listening simulation engine and receives simulation data through a socket
 
-**IMD frame**: A simulation frame in which IMD data will be sent from the simulation engine to the receiver
+**IMD frame**: A simulation integration step in which IMD data will be sent from the simulation engine to the receiver. The IMD 
+transmission rate defines which integration steps are IMD frames.
 
 **IMD system**: The subset of all atoms in the simulation for which the simulation engine can output IMD data
 and for which the receiver can send forces to the simulation engine to apply to.
@@ -61,43 +82,60 @@ This table lists all header types available in IMDv3. Below, each header type
 and its associated body packet (if present) is described in detail.
 
 .. list-table::
-   :widths: 10 10
+   :widths: 10 10 10
    :header-rows: 1
 
    * - Header type
      - 32-bit integer enum value
+     - Present in IMDv2
    * - Disconnect
      - 0
+     - Yes
    * - Energies
      - 1
+     - Yes
    * - Coordinates
      - 2
+     - Yes
    * - Go
      - 3 
+     - Yes
    * - Handshake
      - 4
+     - Yes
    * - Kill
      - 5
+     - Yes
    * - MD Communication
      - 6
+     - Yes
    * - Pause
      - 7 
+     - Yes, but acts as toggle in IMDv2. See `Pause`_
    * - Transmission rate
      - 8
+     - Yes
    * - IO Error
      - 9
+     - Yes
    * - Session info
      - 10
+     - No
    * - Resume
      - 11
+     - No
    * - Time
      - 12
+     - No
    * - Box
      - 13
+     - No
    * - Velocities
      - 14
+     - No
    * - Forces
      - 15
+     - No
 
 Disconnect
 ^^^^^^^^^^
@@ -242,7 +280,7 @@ Pause
 
 Sent from the receiver to the simulation engine any time after the `Session info`_
 has been sent to request that the simulation
-engine blocks execution until a `Resume`_ packet is sent. Unlike in IMDv2, pause is idempotent,
+engine pauses execution of the simulation until a `Resume`_ packet is sent. Unlike in IMDv2, pause is idempotent,
 meaning sending a pause packet multiple times in a row will not toggle the 
 state of the simulation. Instead, subsequent pause packets sent after the first one will have no effect.
 
@@ -369,7 +407,7 @@ velocities were previously specified for this session in `Session info`_.
       <array> (float32[n_atoms * 3]) X, Y, and Z components of the velocities 
                                      of each atom in the 
                                      IMD system encoded in the order 
-                                     [X1, Y1, Z1, ..., Xn, Yn, Zn]
+                                     [Vx1, Vy1, Vz1, ..., Vxn, Vyn, Vzn]
 
 Forces
 ^^^^^^
@@ -387,15 +425,15 @@ forces were previously specified for this session in `Session info`_.
       <array> (float32[n_atoms * 3]) X, Y, and Z components of the forces 
                                      of each atom in the 
                                      IMD system encoded in the order 
-                                     [X1, Y1, Z1, ..., Xn, Yn, Zn]
+                                     [Fx1, Fy1, Fz1, ..., Fxn, Fyn, Fzn]
 
 Packet order
 ------------
 
 After the simulation engine sends the `Handshake`_ and `Session info`_
-to the receiver and gets back a `Go`_ signal, it beings sending 
-IMD frames. The data within each IMD frame is always sent in the same, fixed order
-in IMDv3:
+to the receiver and gets back a `Go`_ signal, it begins sending simulation data via
+IMD. The data within each IMD frame is always sent in the same, fixed order
+in IMDv3. This is a break from IMDv2 in which any packet order is acceptable.
 
 1. Time
 2. Energy block
@@ -411,7 +449,7 @@ remaining packets in the session.
 Units
 -----
 
-The units in IMDv3 are fixed. The simulation engine must convert 
+Like in IMDv2, the units in IMDv3 are fixed. The simulation engine must convert 
 values into these units before sending them through the socket. 
 The receiver must also convert forces it sends back to the simulation 
 engine into these units.
@@ -434,4 +472,8 @@ engine into these units.
    * - Energy
      - kilojoules/mol
 
+References
+----------
 
+.. [IMDv1] https://doi.org/10.1145/364338.364398
+.. [IMDv2] https://www.ks.uiuc.edu/Research/vmd/imd/
