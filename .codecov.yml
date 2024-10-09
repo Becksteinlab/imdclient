@@ -14,3 +14,4 @@ comment:
   paths: null
 ignore:
   - "imdclient/_version.py"
+  - "imdclient/data"
