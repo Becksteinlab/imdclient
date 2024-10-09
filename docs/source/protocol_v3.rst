@@ -502,7 +502,7 @@ remaining packets in the session.
    and IMD frames in the same session don't have to contain the same data packets.
    For example, an IMD frame in which only energies are sent can be followed by 
    an IMD frame in which only coordinates are sent. In IMDv3, all packets 
-   specified in the session info must be sent in the same order and for every IMD frame.
+   specified in the session info must be sent for every IMD frame and in the same order.
 
 Units
 -----
