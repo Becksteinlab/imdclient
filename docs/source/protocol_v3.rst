@@ -8,8 +8,8 @@ and the receiver can send forces and certain requests back to the simulation eng
 
 Version numbers in IMD are monotonically increasing integers. 
 IMDv3, the protocol version described in this document, builds upon IMDv2, which is implemented 
-at the time of writing in NAMD, VMD, HOOMD, GROMACS, and LAMMPS. IMDv2 is itself 
-a modification of the original IMD protocol published in 2001 [IMDv1]_.
+at the time of writing in NAMD, VMD, GROMACS, and LAMMPS. IMDv2 is itself 
+a modification of the original IMD protocol published in 2001 :cite:p:`IMDv1:2001`.
 
 .. list-table::
    :widths: 10 30
@@ -18,9 +18,9 @@ a modification of the original IMD protocol published in 2001 [IMDv1]_.
    * - IMD version
      - Protocol specification
    * - 1
-     - [IMDv1]_
+     - *A system for interactive molecular dynamics simulation* :cite:p:`IMDv1:2001`
    * - 2
-     - No official specification, but sample protocol and API implementation available [IMDv2]_.
+     - No official specification, but sample protocol and API implementation available :cite:p:`IMDv2`
    * - 3
      - This document
 
@@ -298,7 +298,7 @@ be combined before being sent to the simulation engine to be applied.
 
 .. note:: 
    
-   Though this packet is sent by the reciever, the rule that all body packets are 
+   Though this packet is sent by the receiver, the rule that all body packets are 
    sent in the native endianness of the machine running the simulation engine
    still applies here. The receiver must use the endianness it gets from 
    the :ref:`handshake` and swap the endianness of the indices and forces 
@@ -542,5 +542,4 @@ engine into these units.
 References
 ----------
 
-.. [IMDv1] https://doi.org/10.1145/364338.364398
-.. [IMDv2] https://www.ks.uiuc.edu/Research/vmd/imd/
+.. bibliography::
