@@ -7,35 +7,42 @@ It allows for two-way communication: via IMD, a simulation engine sends data to 
 and the receiver can send forces and certain requests back to the simulation engine.
 
 Version numbers in IMD are monotonically increasing integers. 
-IMDv3, the protocol version described in this document, builds upon IMDv2, the protocol version
-implemented at the time of writing in NAMD, VMD, HOOMD, GROMACS, and LAMMPS. IMDv2 is itself 
+IMDv3, the protocol version described in this document, builds upon IMDv2, which is implemented 
+at the time of writing in NAMD, VMD, HOOMD, GROMACS, and LAMMPS. IMDv2 is itself 
 a modification of the original IMD protocol published in 2001 [IMDv1]_.
 
 .. list-table::
    :widths: 10 30
    :header-rows: 1
 
-   * - IMD Version
+   * - IMD version
      - Protocol specification
    * - 1
      - [IMDv1]_
    * - 2
      - No official specification, but sample protocol and API implementation available [IMDv2]_.
-       Some characteristics of the IMDv2 protocol mentioned in this document are inferred from commonalities in existing IMDv2 implementations.
    * - 3
-     - This specification
+     - This document
+
+.. note:: 
+
+   Because IMDv2 has no official specification, characteristics of the IMDv2 protocol mentioned in this document are inferred from 
+   the sample implementation and commonalities in existing IMDv2 implementations.
 
 Terms
 -----
-**Simulation engine**: The producer of simulation data which listens for a receiver connection and sends it simulation data
+**Simulation engine**: The producer of simulation data which listens for a receiver connection and sends it simulation data.
 
-**Receiver**: The receiver of simulation data, connects to listening simulation engine and receives simulation data through a socket
+**Receiver**: The receiver of simulation data, connects to listening simulation engine and receives simulation data through a socket.
 
 **IMD frame**: A simulation integration step in which IMD data will be sent from the simulation engine to the receiver. The IMD 
 transmission rate defines which integration steps are IMD frames.
 
 **IMD system**: The subset of all atoms in the simulation for which the simulation engine can output IMD data
 and for which the receiver can send forces to the simulation engine to apply to.
+
+**IMD energy block**: A data structure specific to IMD which contains the simulation integration step and information
+on the energy of the simulated system (not just the IMD system).
 
 Example
 -------
@@ -88,54 +95,56 @@ and its associated body packet (if present) is described in detail.
    * - Header type
      - 32-bit integer enum value
      - Present in IMDv2
-   * - Disconnect
+   * - :ref:`disconnect`
      - 0
      - Yes
-   * - Energies
+   * - :ref:`energies`
      - 1
      - Yes
-   * - Coordinates
+   * - :ref:`coordinates`
      - 2
      - Yes
-   * - Go
+   * - :ref:`go`
      - 3 
      - Yes
-   * - Handshake
+   * - :ref:`handshake`
      - 4
      - Yes
-   * - Kill
+   * - :ref:`kill`
      - 5
      - Yes
-   * - MD Communication
+   * - :ref:`md-communication`
      - 6
      - Yes
-   * - Pause
+   * - :ref:`pause`
      - 7 
-     - Yes, but acts as toggle in IMDv2. See `Pause`_
-   * - Transmission rate
+     - Yes
+   * - :ref:`transmission-rate`
      - 8
      - Yes
-   * - IO Error
+   * - :ref:`io-error`
      - 9
      - Yes
-   * - Session info
+   * - :ref:`session-info`
      - 10
      - No
-   * - Resume
+   * - :ref:`resume`
      - 11
      - No
-   * - Time
+   * - :ref:`time`
      - 12
      - No
-   * - Box
+   * - :ref:`box`
      - 13
      - No
-   * - Velocities
+   * - :ref:`velocities`
      - 14
      - No
-   * - Forces
+   * - :ref:`forces`
      - 15
      - No
+
+.. _disconnect:
 
 Disconnect
 ^^^^^^^^^^
@@ -151,6 +160,7 @@ made is an implementation decision.
       0 (int32) Disconnect
       <val> (no type) Unused slot, any value acceptable
 
+.. _energies:
 
 Energies
 ^^^^^^^^
@@ -160,7 +170,7 @@ energies were previously specified for this session in `Session info`_.
 
 .. note:: 
   While the integration step is included in this
-  packet, this is a result of inheriting the IMD energy block from IMDv2. It is reccomended
+  packet, this is a result of inheriting the IMD energy block from IMDv2. It is recommended
   to make use of the 64-bit integer integration step value from the time packet 
   in analysis code instead.
 
@@ -182,6 +192,7 @@ energies were previously specified for this session in `Session info`_.
       <val> (float32) Dihedrals energy
       <val> (float32) Improper dihedrals energy
 
+.. _coordinates:
 
 Coordinates
 ^^^^^^^^^^^
@@ -200,6 +211,8 @@ coordinates were previously specified for this session in `Session info`_.
                                      IMD system encoded in the order 
                                      [X1, Y1, Z1, ..., Xn, Yn, Zn]
 
+.. _go:
+
 Go
 ^^
 
@@ -217,6 +230,7 @@ exits or accepts another connection after this is an implementation decision.
       3 (int32) Go
       <val> (no type) Unused slot, any value acceptable
 
+.. _handshake:
 
 Handshake
 ^^^^^^^^^
@@ -237,6 +251,8 @@ by the simulation engine before being sent, speeding up execution.
       4 (int32) Handshake
       3 (int32, unswapped byte order) IMD version used in session
 
+.. _kill:
+
 Kill
 ^^^^
 
@@ -251,6 +267,8 @@ honors this request is an implementation decision.
       5 (int32) Kill
       <val> (no type) Unused slot, any value acceptable
 
+.. _md-communication:
+
 MD Communication
 ^^^^^^^^^^^^^^^^
 
@@ -263,26 +281,28 @@ Whether or not the simulation engine honors this request is an implementation de
 
    Header:
       6 (int32) MD Communication
-      <n_forces> (int32) Number of forces to be applied to the simulation engine
+      <n_atoms> (int32) Number of atoms in the IMD system to apply forces to
 
    Body:
-      <array> (int32[n_forces]) Indices of atoms in the IMD system to apply forces to
-      <array> (float32[n_forces * 3]) The X, Y, and Z components of forces to be applied to
-                                      the atoms at the indices specified in the above array
+      <array> (int32[n_atoms]) Indices of atoms in the IMD system to apply forces to
+      <array> (float32[n_atoms * 3]) The X, Y, and Z components of forces to be applied to
+                                     the atoms at the indices specified in the above array
      
 The array of IMD system indices does not need to be monotonically increasing, meaning 
-the indices can be "out of order". However, indices cannot be duplicated, i.e. 
-the index array cannot contain index "2" twice. In this case, the force vectors should 
+the indices can be "out of order". However, the index array cannot contain any index twice. 
+Force vectors acting on the same index should 
 be combined before being sent to the simulation engine to be applied.
+
+.. _pause:
 
 Pause
 ^^^^^
 
 Sent from the receiver to the simulation engine any time after the `Session info`_
 has been sent to request that the simulation
-engine pauses execution of the simulation until a `Resume`_ packet is sent. Unlike in IMDv2, pause is idempotent,
-meaning sending a pause packet multiple times in a row will not toggle the 
-state of the simulation. Instead, subsequent pause packets sent after the first one will have no effect.
+engine pauses execution of the simulation until a `Resume`_ packet is sent.
+Pause is idempotent, meaning subsequent pause packets sent after the first one will have no effect.
+
 
 .. code-block:: none
 
@@ -290,6 +310,13 @@ state of the simulation. Instead, subsequent pause packets sent after the first 
       7 (int32) Pause
       <val> (no type) Unused slot, any value acceptable
 
+.. versionchanged:: 3
+
+   In IMDv2, pause acted as a toggle, meaning sending a pause packet twice 
+   would pause and then resume the simulation's execution. In IMDv3, the `Resume`_
+   packet is required to resume a paused simulation since pausing is idempotent.
+
+.. _transmission-rate:
 
 Transmission rate
 ^^^^^^^^^^^^^^^^^
@@ -307,6 +334,8 @@ be an IMD frame.
                     the transmission rate to its default value (configured
                     by the simulation engine)
 
+.. _io-error:
+
 IO Error
 ^^^^^^^^
 
@@ -319,6 +348,7 @@ by the simulation engine or receiver to indicate an error has occurred.
       9 (int32) IO Error
       <val> (no type) Unused slot, any value acceptable
 
+.. _session-info:
 
 Session info
 ^^^^^^^^^^^^
@@ -344,6 +374,10 @@ whether coordinates will be wrapped into the simulation box if present.
       <val> (int8) Nonzero if velocity packets sent in each IMD frame 
       <val> (int8) Nonzero if force packets sent in each IMD frame 
 
+.. versionadded:: 3
+
+.. _resume:
+
 Resume
 ^^^^^^
 
@@ -356,6 +390,10 @@ if it is in a paused state. Like `Pause`_, resume is idempotent.
    Header:
       11 (int32) Resume
       <val> (no type) Unused slot, any value acceptable
+
+.. versionadded:: 3
+
+.. _time:
 
 Time
 ^^^^
@@ -374,6 +412,10 @@ time packets were previously specified for this session in `Session info`_.
       <val> (unsigned float64) Current time of the simulation
       <val> (unsigned int64) Current integration step of the simulation
 
+.. versionadded:: 3
+
+.. _box:
+
 Box
 ^^^
 
@@ -390,6 +432,9 @@ box packets were previously specified for this session in `Session info`_.
                            in the order [ABC] where A = (aX,aY,aZ), B = (bX,bY,bZ), 
                            and C = (cX,cY,cZ)
 
+.. versionadded:: 3
+
+.. _velocities:
 
 Velocities
 ^^^^^^^^^^
@@ -409,6 +454,10 @@ velocities were previously specified for this session in `Session info`_.
                                      IMD system encoded in the order 
                                      [Vx1, Vy1, Vz1, ..., Vxn, Vyn, Vzn]
 
+.. versionadded:: 3
+
+.. _forces:
+
 Forces
 ^^^^^^
 
@@ -426,6 +475,8 @@ forces were previously specified for this session in `Session info`_.
                                      of each atom in the 
                                      IMD system encoded in the order 
                                      [Fx1, Fy1, Fz1, ..., Fxn, Fyn, Fzn]
+
+.. versionadded:: 3
 
 Packet order
 ------------
