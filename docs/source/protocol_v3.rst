@@ -38,6 +38,9 @@ Terms
 **IMD frame**: A simulation integration step in which IMD data will be sent from the simulation engine to the receiver. The IMD 
 transmission rate defines which integration steps are IMD frames.
 
+**IMD transmission rate**: The number of integration steps in between each IMD frame. For example,
+if the transmission rate is 1, every integration step in the simulation will be an IMD frame.
+
 **IMD system**: The subset of all atoms in the simulation for which the simulation engine can output IMD data
 and for which the receiver can send forces to the simulation engine to apply to.
 
@@ -322,9 +325,7 @@ Transmission rate
 ^^^^^^^^^^^^^^^^^
 
 Sent from the receiver to the simulation engine any time after the `Session info`_
-has been sent to change the number of steps between each IMD frame. For example,
-if the transmission rate is 1, every integration step in the simulation will 
-be an IMD frame.
+has been sent to change the IMD transmission rate. 
 
 .. code-block:: none
 
