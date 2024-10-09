@@ -1,3 +1,14 @@
+"""
+
+Classes
+^^^^^^^
+
+.. autoclass:: IMDClient
+   :members:
+   :inherited-members:
+   
+"""
+
 import socket
 import threading
 from .IMDProtocol import *
@@ -10,6 +21,7 @@ from typing import Union, Dict
 import signal
 
 logger = logging.getLogger(__name__)
+
 
 
 class IMDClient:
