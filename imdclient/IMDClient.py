@@ -123,8 +123,12 @@ class IMDClient:
         """
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if socket_bufsize is not None:
+            # Default (linux):
+            # /proc/sys/net/core/rmem_default
+            # Max (linux):
+            # /proc/sys/net/core/rmem_max
             conn.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, self._socket_bufsize
+                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
             )
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")

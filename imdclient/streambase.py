@@ -9,9 +9,7 @@ import warnings
 
 class StreamReaderBase(ReaderBase):
 
-    def __init__(
-        self, filename, convert_units=True, **kwargs
-    ):
+    def __init__(self, filename, convert_units=True, **kwargs):
         super(StreamReaderBase, self).__init__(
             filename, convert_units=convert_units, **kwargs
         )
@@ -39,9 +37,12 @@ class StreamReaderBase(ReaderBase):
     def n_frames(self):
         """Changes as stream is processed unlike other readers"""
         raise RuntimeError(
-            "{}: n_frames is unknown".format(
-                self.__class__.__name__
-            )
+            "{}: n_frames is unknown".format(self.__class__.__name__)
+        )
+
+    def __len__(self):
+        raise RuntimeError(
+            "{} has unknown length".format(self.__class__.__name__)
         )
 
     def next(self):
@@ -72,17 +73,13 @@ class StreamReaderBase(ReaderBase):
     # Incompatible methods
     def copy(self):
         raise NotImplementedError(
-            "{} does not support copying".format(
-                self.__class__.__name__
-            )
+            "{} does not support copying".format(self.__class__.__name__)
         )
 
     def _reopen(self):
         if self._reopen_called:
             raise RuntimeError(
-                "{}: Cannot reopen stream".format(
-                    self.__class__.__name__
-                )
+                "{}: Cannot reopen stream".format(self.__class__.__name__)
             )
         self._frame = -1
         self._reopen_called = True
@@ -145,16 +142,12 @@ class StreamReaderBase(ReaderBase):
 
     def __getstate__(self):
         raise NotImplementedError(
-            "{} does not support pickling".format(
-                self.__class__.__name__
-            )
+            "{} does not support pickling".format(self.__class__.__name__)
         )
 
     def __setstate__(self, state: object):
         raise NotImplementedError(
-            "{} does not support pickling".format(
-                self.__class__.__name__
-            )
+            "{} does not support pickling".format(self.__class__.__name__)
         )
 
 
