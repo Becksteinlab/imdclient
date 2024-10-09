@@ -483,8 +483,7 @@ Packet order
 
 After the simulation engine sends the `Handshake`_ and `Session info`_
 to the receiver and gets back a `Go`_ signal, it begins sending simulation data via
-IMD. The data within each IMD frame is always sent in the same, fixed order
-in IMDv3. This is a break from IMDv2 in which any packet order is acceptable.
+IMD. The data within each IMD frame is always sent in the same, fixed order:
 
 1. Time
 2. Energy block
@@ -497,10 +496,18 @@ If the simulation engine is configured to send only a strict subset of all
 available data packets, the fixed order of the list still applies to the
 remaining packets in the session. 
 
+.. versionchanged:: 3
+
+   In IMDv2, any packet order sent by the simulation engine is acceptable
+   and IMD frames in the same session don't have to contain the same data packets.
+   For example, an IMD frame in which only energies are sent can be followed by 
+   an IMD frame in which only coordinates are sent. In IMDv3, all packets 
+   specified in the session info must be sent in the same order and for every IMD frame.
+
 Units
 -----
 
-Like in IMDv2, the units in IMDv3 are fixed. The simulation engine must convert 
+The units in IMDv3 are fixed. The simulation engine must convert 
 values into these units before sending them through the socket. 
 The receiver must also convert forces it sends back to the simulation 
 engine into these units.
