@@ -97,4 +97,4 @@ Copyright (c) 2024, Lawson
  
 Project based on the 
 [MDAnalysis Cookiecutter](https://github.com/MDAnalysis/cookiecutter-mda) version 0.1.
-<!-- Please cite [MDAnalysis](https://github.com/MDAnalysis/mdanalysis#citation) when using IMDReader in published work. --> -->
+<!-- Please cite [MDAnalysis](https://github.com/MDAnalysis/mdanalysis#citation) when using IMDReader in published work. --> 
