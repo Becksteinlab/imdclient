@@ -167,9 +167,15 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
         reason="Stream-based reader cannot determine total_time until EOF"
     )
     def test_total_time(self, reader, ref):
-        assert_almost_equal(reader.totaltime, ref.totaltime, decimal=ref.prec)
+        assert_almost_equal(
+            reader.totaltime,
+            ref.totaltime,
+            decimal=ref.prec,
+        )
 
-    @pytest.mark.skip(reason="Stream-based reader can only be read iteratively")
+    @pytest.mark.skip(
+        reason="Stream-based reader can only be read iteratively"
+    )
     def test_changing_dimensions(self, ref, reader):
         if ref.changing_dimensions:
             reader.rewind()
@@ -177,7 +183,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
                 assert reader.ts.dimensions is None
             else:
                 assert_array_almost_equal(
-                    reader.ts.dimensions, ref.dimensions, decimal=ref.prec
+                    reader.ts.dimensions,
+                    ref.dimensions,
+                    decimal=ref.prec,
                 )
             reader[1]
             if ref.dimensions_second_frame is None:
@@ -199,7 +207,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             assert reader.ts.dimensions is None
         else:
             assert_array_almost_equal(
-                reader.ts.dimensions, ref.dimensions, decimal=ref.prec
+                reader.ts.dimensions,
+                ref.dimensions,
+                decimal=ref.prec,
             )
 
     def test_volume(self, ref, reader):
@@ -288,7 +298,10 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             ts_positions.append(ts.positions.copy())
         positions = np.asarray(ts_positions)
         timeseries = reader.timeseries(
-            start=slice[0], stop=slice[1], step=slice[2], order="fac"
+            start=slice[0],
+            stop=slice[1],
+            step=slice[2],
+            order="fac",
         )
         assert_allclose(timeseries, positions)
 
@@ -302,11 +315,17 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
         for i, ts in enumerate(transformed):
             idealcoords.append(ref.iter_ts(i).positions + v1 + v2)
             assert_array_almost_equal(
-                ts.positions, idealcoords[i], decimal=ref.prec
+                ts.positions,
+                idealcoords[i],
+                decimal=ref.prec,
             )
 
         for i, ts in enumerate(transformed):
-            assert_almost_equal(ts.positions, idealcoords[i], decimal=ref.prec)
+            assert_almost_equal(
+                ts.positions,
+                idealcoords[i],
+                decimal=ref.prec,
+            )
 
     @pytest.mark.skip(reason="Cannot slice stream")
     def test_transformations_slice(self, ref, transformed):
@@ -329,25 +348,35 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
         first_ideal = ref.iter_ts(0).positions + v1 + v2
         if len(transformed) > 1:
             assert_array_almost_equal(
-                transformed[0].positions, first_ideal, decimal=ref.prec
+                transformed[0].positions,
+                first_ideal,
+                decimal=ref.prec,
             )
             second_ideal = ref.iter_ts(1).positions + v1 + v2
             assert_array_almost_equal(
-                transformed[1].positions, second_ideal, decimal=ref.prec
+                transformed[1].positions,
+                second_ideal,
+                decimal=ref.prec,
             )
 
             # What if we comeback to the previous frame?
             assert_array_almost_equal(
-                transformed[0].positions, first_ideal, decimal=ref.prec
+                transformed[0].positions,
+                first_ideal,
+                decimal=ref.prec,
             )
 
             # How about we switch the frame to itself?
             assert_array_almost_equal(
-                transformed[0].positions, first_ideal, decimal=ref.prec
+                transformed[0].positions,
+                first_ideal,
+                decimal=ref.prec,
             )
         else:
             assert_array_almost_equal(
-                transformed[0].positions, first_ideal, decimal=ref.prec
+                transformed[0].positions,
+                first_ideal,
+                decimal=ref.prec,
             )
 
     @pytest.mark.skip(reason="Cannot rewind stream")
@@ -359,7 +388,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
         ideal_coords = ref.iter_ts(0).positions + v1 + v2
         transformed.rewind()
         assert_array_almost_equal(
-            transformed[0].positions, ideal_coords, decimal=ref.prec
+            transformed[0].positions,
+            ideal_coords,
+            decimal=ref.prec,
         )
 
     @pytest.mark.skip(reason="Cannot make a copy of a stream")
@@ -387,7 +418,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
         reader_p = pickle.loads(pickle.dumps(reader))
         assert_equal(len(reader), len(reader_p))
         assert_equal(
-            reader.ts, reader_p.ts, "Timestep is changed after pickling"
+            reader.ts,
+            reader_p.ts,
+            "Timestep is changed after pickling",
         )
 
     @pytest.mark.skip(reason="Cannot pickle socket")
@@ -410,7 +443,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             "Last timestep is changed after pickling",
         )
         assert_equal(
-            reader.ts, reader_p.ts, "Last timestep is changed after pickling"
+            reader.ts,
+            reader_p.ts,
+            "Last timestep is changed after pickling",
         )
 
     @pytest.mark.skip(reason="Cannot copy stream")
@@ -530,3 +565,73 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             collected_ts.append(ts.positions)
         for array in collected_ts:
             assert_allclose(array, collected_ts[0])
+
+
+class TestStreamIteration:
+
+    @pytest.fixture
+    def port(self):
+        return get_free_port()
+
+    @pytest.fixture
+    def universe(self):
+        return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+
+    @pytest.fixture
+    def imdsinfo(self):
+        return create_default_imdsinfo_v3()
+
+    @pytest.fixture
+    def reader(self, universe, imdsinfo, port):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=True)
+        reader = IMDReader(
+            f"localhost:{port}",
+            n_atoms=universe.trajectory.n_atoms,
+        )
+        server.send_frames(1, 5)
+
+        yield reader
+        server.cleanup()
+
+    def test_iterate_step(self, reader, universe):
+        i = 0
+        for ts in reader[::2]:
+            assert ts.frame == i
+            i += 2
+
+    def test_iterate_twice_sliced_raises_error(self, reader):
+        for ts in reader[::2]:
+            pass
+        with pytest.raises(RuntimeError):
+            for ts in reader[::2]:
+                pass
+
+    def test_iterate_twice_all_raises_error(self, reader):
+        for ts in reader:
+            pass
+        with pytest.raises(RuntimeError):
+            for ts in reader:
+                pass
+
+    def test_iterate_twice_fi_all_raises_error(self, reader):
+        for ts in reader[:]:
+            pass
+        with pytest.raises(RuntimeError):
+            for ts in reader[:]:
+                pass
+
+    def test_index_stream_raises_error(self, reader):
+        with pytest.raises(TypeError):
+            reader[0]
+
+    def test_iterate_backwards_raises_error(self, reader):
+        with pytest.raises(ValueError):
+            for ts in reader[::-1]:
+                pass
+
+    def test_iterate_start_stop_raises_error(self, reader):
+        with pytest.raises(ValueError):
+            for ts in reader[1:3]:
+                pass

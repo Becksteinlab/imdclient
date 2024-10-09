@@ -2,7 +2,7 @@ import MDAnalysis as mda
 import pytest
 import logging
 from .base import IMDv3IntegrationTest
-from .datafiles import NAMD_TOPOL, NAMD_CONF, NAMD_TRAJ
+from .datafiles import NAMD_TOPOL, NAMD_CONF, NAMD_TRAJ, NAMD_PARAMS, NAMD_PSF
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
@@ -18,7 +18,9 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def command(self):
-        return f"namd3 {NAMD_CONF}"
+        return (
+            f"cp {NAMD_PARAMS} {NAMD_PSF} {NAMD_TOPOL} . && namd3 {NAMD_CONF}"
+        )
 
     @pytest.fixture()
     def match_string(self):
