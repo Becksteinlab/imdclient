@@ -296,6 +296,14 @@ the indices can be "out of order". However, the index array cannot contain any i
 Force vectors acting on the same index should 
 be combined before being sent to the simulation engine to be applied.
 
+.. note:: 
+   
+   Though this packet is sent by the reciever, the rule that all body packets are 
+   sent in the native endianness of the machine running the simulation engine
+   still applies here. The receiver must use the endianness it gets from 
+   the :ref:`handshake` and swap the endianness of the indices and forces 
+   if necessary before sending.
+
 .. _pause:
 
 Pause
@@ -409,9 +417,9 @@ time packets were previously specified for this session in `Session info`_.
       1 (int32) Number of time packets being sent
 
    Body:
-      <val> (unsigned float64) dt for the simulation
-      <val> (unsigned float64) Current time of the simulation
-      <val> (unsigned int64) Current integration step of the simulation
+      <val> (float64) dt for the simulation
+      <val> (float64) Current time of the simulation
+      <val> (int64) Current integration step of the simulation
 
 .. versionadded:: 3
 
