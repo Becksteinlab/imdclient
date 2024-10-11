@@ -635,3 +635,12 @@ class TestStreamIteration:
         with pytest.raises(ValueError):
             for ts in reader[1:3]:
                 pass
+
+    def test_subslice_fi_all_after_iteration_raises_error(self, reader):
+        sliced_reader = reader[:]
+        for ts in sliced_reader:
+            pass
+        sub_sliced_reader = sliced_reader[::1]
+        with pytest.raises(RuntimeError):
+            for ts in sub_sliced_reader:
+                pass
