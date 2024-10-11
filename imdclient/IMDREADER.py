@@ -1,12 +1,16 @@
 """
 
-Example: Streaming an IMD v2 trajectory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Minimal Instructions for various Simulation Engine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To stream a trajectory from GROMACS or another simulation engine that supports 
-IMD v2, ensure that the simulation engine is running and waiting for an IMD connection.
+To stream a trajectory from a simulation engine that supports IMDv3, 
+one may use the appropriate input options to establish a connection and stream simulation data.
+Below, we have proided brief instructions on how to setup the various 
+simulation engine to stream data using IMDv3.
 
-For example, in GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
+GROMACS
+^^^^^^
+In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
 In GROMACS, you will know that the simulation is ready and waiting for the
 MDAnalysis IMDReader client when this line is printed to the terminal:
@@ -15,24 +19,41 @@ MDAnalysis IMDReader client when this line is printed to the terminal:
 
     IMD: Will wait until I have a connection and IMD_GO orders.
 
-Once the simulation is ready for a client connection, setup your :class:`Universe`
-like this: ::
+LAMMPS
+^^^^^^
 
-    import MDAnalysis as mda
-    # Pass host and port of the listening GROMACACS simulation
-    # server as the trajectory argument
-    u = mda.Universe("topology.tpr", "localhost:8888")
-
-For more information on IMD v2 as it is implemented in GROMACS, see the imd command line
-arguments described `here <https://manual.gromacs.org/documentation/5.1/onlinehelp/gmx-mdrun.html>`_,
-the :ref:`v2_spec` writeup, and this `example simulation  <https://www.mpinat.mpg.de/grubmueller/interactivemd>`_. Note that 
-setting the following line in your ``.mdp`` file allows you to change which subset of the
-simulation is sent to the client via IMD v2:
+NAMD
+^^^^
+In NAMD, the simulation will wait for a client connection when the  
+``IMDon`` option is set to ``yes`` in the NAMD configuration file. 
+Other options that can be set are detailed 
+`here <https://github.com/amruthesht/namd-3.0/blob/IMDv3-dev/IMDv3-dev.md>`_. 
+This will produce a simulation that is ready for a client connection with the 
+following terminal message:
 
 .. code-block:: none
 
-    ; Group to display and/or manipulate in interactive MD session
-    IMD-group                = System
+    Info: INTERACTIVE MD AWAITING CONNECTION
+
+
+Example Streaming Code
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Once the simulation is ready for a client connection, setup your :class:`Universe`
+like this: ::
+
+    import imdclient
+    import MDAnalysis as mda
+    # Pass host and port of the listening GROMACACS simulation
+    # server as the trajectory argument
+
+    # GROMACS
+    u = mda.Universe("topology.tpr", "localhost:8888")
+
+    # LAMMPS
+    
+    # NAMD
+    u = mda.Universe("topology.psf", "localhost:8888")
 
 Classes
 ^^^^^^^
