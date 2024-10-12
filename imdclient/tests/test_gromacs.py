@@ -18,7 +18,7 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def command(self):
-        return f". /usr/local/gromacs/bin/GMXRC && gmx mdrun -s {GROMACS_TPR} -imdport 8888 -imdwait"
+        return f". /usr/local/gromacs/bin/GMXRC && gmx mdrun -s {GROMACS_TPR} -imdport 8888 -imdwait -reprod"
 
     @pytest.fixture()
     def match_string(self):
