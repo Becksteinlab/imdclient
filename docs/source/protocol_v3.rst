@@ -62,7 +62,6 @@ For a quick understanding of how IMDv3 works, this scenario describes the flow o
 8. GROMACS receives a termination signal from the environment it is running in and closes the socket
 9. IMDClient recognizes that the session has ended, raising an EOF error after the last available frame of data has been processed
 
-
 Packet Types
 ------------
 
@@ -74,7 +73,7 @@ serve as a flexible slot for holding other information.
 All bytes in header packets are provided in network (big)
 endian order except for the second 4 
 bytes of the handshake packet. This is described in greater detail
-in the `Handshake`_ section.
+in the :ref:`handshake` section.
 
 In this document, header packets are described like this:
 
@@ -100,59 +99,59 @@ and its associated body packet (if present) is described in detail.
      - Present in IMDv2
    * - :ref:`disconnect`
      - 0
-     - Yes
+     - ✅
    * - :ref:`energies`
      - 1
-     - Yes
+     - ✅
    * - :ref:`coordinates`
      - 2
-     - Yes
+     - ✅
    * - :ref:`go`
      - 3 
-     - Yes
+     - ✅
    * - :ref:`handshake`
      - 4
-     - Yes
+     - ✅
    * - :ref:`kill`
      - 5
-     - Yes
+     - ✅
    * - :ref:`md-communication`
      - 6
-     - Yes
+     - ✅
    * - :ref:`pause`
      - 7 
-     - Yes
+     - ✅
    * - :ref:`transmission-rate`
      - 8
-     - Yes
+     - ✅
    * - :ref:`io-error`
      - 9
-     - Yes
+     - ✅
    * - :ref:`session-info`
      - 10
-     - No
+     - ❌
    * - :ref:`resume`
      - 11
-     - No
+     - ❌
    * - :ref:`time`
      - 12
-     - No
+     - ❌
    * - :ref:`box`
      - 13
-     - No
+     - ❌
    * - :ref:`velocities`
      - 14
-     - No
+     - ❌
    * - :ref:`forces`
      - 15
-     - No
+     - ❌
 
 .. _disconnect:
 
 Disconnect
 ^^^^^^^^^^
 
-Sent from the receiver to the simulation engine any time after the `Session info`_
+Sent from the receiver to the simulation engine any time after the :ref:`session info`
 has been sent to indicate that the simulation engine should 
 close the connected socket. Whether the simulation engine pauses execution until another connection is
 made is an implementation decision.
@@ -169,7 +168,7 @@ Energies
 ^^^^^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-energies were previously specified for this session in :ref:`session-info`.
+energies were previously specified for this session in the :ref:`session-info`.
 
 .. note:: 
   While the integration step is included in this
@@ -220,7 +219,7 @@ Go
 ^^
 
 Sent from the receiver to the simulation engine after the receiver receives 
-the `Handshake`_ and `Session info`_ packets. 
+the :ref:`handshake` and :ref:`session info` packets. 
 
 If the simulation engine does not 
 receive this packet within 1 second of sending the handshake and session info 
@@ -538,6 +537,12 @@ engine into these units.
      - picosecond
    * - Energy
      - kilojoules/mol
+
+IMD port number
+---------------
+
+The preferred port for IMD communication is 8888, but the simulation engine may freely specify the 
+port at which it listens for a receiver.
 
 References
 ----------
