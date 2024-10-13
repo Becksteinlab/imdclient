@@ -18,6 +18,13 @@ from .base import assert_allclose_with_logging
 import logging
 
 logger = logging.getLogger("imdclient.IMDClient")
+file_handler = logging.FileHandler("manual_test.log")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+logger.setLevel(logging.DEBUG)
 
 
 class TestIMDv3Manual:
@@ -39,6 +46,14 @@ class TestIMDv3Manual:
 
     @pytest.fixture()
     def universe(self, topol_arg, traj_arg):
+        # Hardcode for convenience
+        if topol_arg.endswith(".data"):
+            return mda.Universe(
+                topol_arg,
+                traj_arg,
+                atom_style="id type x y z",
+                convert_units=False,
+            )
         return mda.Universe(topol_arg, traj_arg)
 
     @pytest.fixture()
