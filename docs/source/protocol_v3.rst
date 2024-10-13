@@ -73,7 +73,7 @@ serve as a flexible slot for holding other information.
 All bytes in header packets are provided in network (big)
 endian order except for the second 4 
 bytes of the handshake packet. This is described in greater detail
-in the :ref:`handshake` section.
+in the :ref:`handshake <handshake>` section.
 
 In this document, header packets are described like this:
 
@@ -151,7 +151,7 @@ and its associated body packet (if present) is described in detail.
 Disconnect
 ^^^^^^^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to indicate that the simulation engine should 
 close the connected socket. Whether the simulation engine pauses execution until another connection is
 made is an implementation decision.
@@ -168,7 +168,7 @@ Energies
 ^^^^^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-energies were previously specified for this session in the :ref:`session-info`.
+energies were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. note:: 
   While the integration step is included in this
@@ -200,7 +200,7 @@ Coordinates
 ^^^^^^^^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-coordinates were previously specified for this session in :ref:`session-info`.
+coordinates were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. code-block:: none
 
@@ -219,7 +219,7 @@ Go
 ^^
 
 Sent from the receiver to the simulation engine after the receiver receives 
-the :ref:`handshake` and :ref:`session info` packets. 
+the :ref:`handshake <handshake>` and :ref:`session info <session-info>` packets. 
 
 If the simulation engine does not 
 receive this packet within 1 second of sending the handshake and session info 
@@ -258,7 +258,7 @@ by the simulation engine before being sent, speeding up execution.
 Kill
 ^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session-info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to request that the simulation engine
 stops execution of the simulation and exits. Whether or not the simulation engine 
 honors this request is an implementation decision.
@@ -274,7 +274,7 @@ honors this request is an implementation decision.
 MD Communication
 ^^^^^^^^^^^^^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session-info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to request that the forces 
 in the body packet are applied to the atoms specified in the body packet. 
 Whether or not the simulation engine honors this request is an implementation decision.
@@ -300,7 +300,7 @@ be combined before being sent to the simulation engine to be applied.
    Though this packet is sent by the receiver, the rule that all body packets are 
    sent in the native endianness of the machine running the simulation engine
    still applies here. The receiver must use the endianness it gets from 
-   the :ref:`handshake` and swap the endianness of the indices and forces 
+   the :ref:`handshake <handshake>` and swap the endianness of the indices and forces 
    if necessary before sending.
 
 .. _pause:
@@ -308,9 +308,9 @@ be combined before being sent to the simulation engine to be applied.
 Pause
 ^^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session-info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to request that the simulation
-engine pauses execution of the simulation until a :ref:`resume` packet is sent.
+engine pauses execution of the simulation until a :ref:`resume packet <resume>` is sent.
 Pause is idempotent, meaning subsequent pause packets sent after the first one will have no effect.
 
 
@@ -323,15 +323,15 @@ Pause is idempotent, meaning subsequent pause packets sent after the first one w
 .. versionchanged:: 3
 
    In IMDv2, pause acted as a toggle, meaning sending a pause packet twice 
-   would pause and then resume the simulation's execution. In IMDv3, the :ref:`resume`
-   packet is required to resume a paused simulation since pausing is idempotent.
+   would pause and then resume the simulation's execution. In IMDv3, the :ref:`resume packet <resume>`
+   is required to resume a paused simulation since pausing is idempotent.
 
 .. _transmission-rate:
 
 Transmission rate
 ^^^^^^^^^^^^^^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session-info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to change the IMD transmission rate. 
 
 .. code-block:: none
@@ -389,9 +389,9 @@ whether coordinates will be wrapped into the simulation box if present.
 Resume
 ^^^^^^
 
-Sent from the receiver to the simulation engine any time after the :ref:`session-info`
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to request that the simulation resumes execution
-if it is in a paused state. Like :ref:`pause`, resume is idempotent.
+if it is in a paused state. Like :ref:`pause <pause>`, resume is idempotent.
 
 .. code-block:: none
 
@@ -407,7 +407,7 @@ Time
 ^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-time packets were previously specified for this session in :ref:`session-info`.
+time packets were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. code-block:: none
 
@@ -428,7 +428,7 @@ Box
 ^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-box packets were previously specified for this session in :ref:`session-info`.
+box packets were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. code-block:: none
 
@@ -448,7 +448,7 @@ Velocities
 ^^^^^^^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-velocities were previously specified for this session in :ref:`session-info`.
+velocities were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. code-block:: none
 
@@ -470,7 +470,7 @@ Forces
 ^^^^^^
 
 Sent from the simulation engine to the receiver each IMD frame if 
-forces were previously specified for this session in :ref:`session-info`.
+forces were previously specified for this session in the :ref:`session info packet <session-info>`.
 
 .. code-block:: none
 
@@ -489,8 +489,8 @@ forces were previously specified for this session in :ref:`session-info`.
 Packet order
 ------------
 
-After the simulation engine sends the :ref:`handshake` and :ref:`session-info`
-to the receiver and gets back a :ref:`go` signal, it begins sending simulation data via
+After the simulation engine sends the :ref:`handshake <handshake>` and :ref:`session info <session-info>`
+packets to the receiver and gets back a :ref:`go <go>` signal, it begins sending simulation data via
 IMD. The data within each IMD frame is always sent in the same, fixed order:
 
 1. Time
