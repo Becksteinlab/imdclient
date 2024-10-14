@@ -132,7 +132,6 @@ class IMDReader(StreamReaderBase):
         )
 
         self._frame = -1
-        self._first_ts = None
 
         try:
             self._read_next_timestep()
