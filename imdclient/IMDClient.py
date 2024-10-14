@@ -1,7 +1,7 @@
 """
 
-Classes
-^^^^^^^
+IMDClient
+^^^^^^^^^
 
 .. autoclass:: IMDClient
    :members:

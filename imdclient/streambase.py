@@ -151,27 +151,38 @@ class StreamReaderBase(ReaderBase):
         )
 
 
-class StreamFrameIteratorSliced:
+class StreamFrameIteratorSliced(FrameIteratorBase):
 
-    def __init__(self, reader, step):
-        self._reader = reader
+    def __init__(self, trajectory, step):
+        super().__init__(trajectory)
         self._step = step
-        self._idx = 0
 
     def __iter__(self):
         # Calling reopen tells reader
         # it can't be reopened again
-        self._reader._reopen()
+        self.trajectory._reopen()
         return self
 
     def __next__(self):
         try:
             # Burn the timesteps until we reach the desired step
-            while self._idx % self._step != 0:
-                self._idx += 1
-                self._reader._read_next_timestep()
+            # Don't use next() to avoid unnecessary transformations
+            while self.trajectory._frame + 1 % self.step != 0:
+                self.trajectory._read_next_timestep()
         except (EOFError, IOError):
-            raise StopIteration
-        else:
-            self._idx += 1
-            return self._reader.next()
+            # Don't rewind here like we normally would
+            raise StopIteration from None
+
+        return self.trajectory.next()
+
+    def __len__(self):
+        raise RuntimeError(
+            "{} has unknown length".format(self.__class__.__name__)
+        )
+
+    def __getitem__(self, frame):
+        raise RuntimeError("Sliced iterator does not support indexing")
+
+    @property
+    def step(self):
+        return self._step
