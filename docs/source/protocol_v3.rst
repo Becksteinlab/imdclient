@@ -362,7 +362,7 @@ Session info
 ^^^^^^^^^^^^
 
 Sent by the simulation engine to the receiver immediately after
-the ref:`handshake` is sent to indicate to the receiver which data it 
+the :ref:`handshake` is sent to indicate to the receiver which data it 
 should expect for each IMD frame during the session along with
 whether coordinates will be wrapped into the simulation box if present.
 
