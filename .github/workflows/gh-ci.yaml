@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+      - develop
   schedule:
     # Weekly tests at midnight on Sundays run on main by default:
     #   Scheduled workflows run on the latest commit on the default or base branch.
@@ -24,6 +25,7 @@ defaults:
 
 jobs:
   environment-config:
+    if: github.repository == 'Becksteinlab/imdclient'
     runs-on: ubuntu-latest
     outputs:
       stable-python-version: ${{ steps.get-compatible-python.outputs.stable-python }}
@@ -39,6 +41,7 @@ jobs:
           release: "latest"
 
   main-tests:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ${{ matrix.os }}
     strategy:
@@ -101,9 +104,13 @@ jobs:
         conda list
 
 
-    - name: Run tests
+    - name: Run IMDClient tests
       run: |
         pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
+  
+    - name: Run IMDReader tests
+      run: |
+        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdreader.py
 
     - name: codecov
       if: github.event_name != 'schedule'
@@ -114,6 +121,7 @@ jobs:
         verbose: True
 
   pylint_check:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ubuntu-latest
 
@@ -139,6 +147,7 @@ jobs:
 
 
   pypi_check:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ubuntu-latest
 

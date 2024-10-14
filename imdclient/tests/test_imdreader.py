@@ -17,7 +17,6 @@ from .server import InThreadIMDServer
 from MDAnalysisTests.coordinates.base import (
     MultiframeReaderTest,
     BaseReference,
-    BaseWriterTest,
     assert_timestep_almost_equal,
 )
 from numpy.testing import (
@@ -32,7 +31,6 @@ import pytest
 from MDAnalysis.transformations import translate
 import pickle
 
-# NOTE: removeme
 from imdclient.IMDREADER import IMDReader
 
 logger = logging.getLogger("imdclient.IMDClient")
@@ -634,4 +632,13 @@ class TestStreamIteration:
     def test_iterate_start_stop_raises_error(self, reader):
         with pytest.raises(ValueError):
             for ts in reader[1:3]:
+                pass
+
+    def test_subslice_fi_all_after_iteration_raises_error(self, reader):
+        sliced_reader = reader[:]
+        for ts in sliced_reader:
+            pass
+        sub_sliced_reader = sliced_reader[::1]
+        with pytest.raises(RuntimeError):
+            for ts in sub_sliced_reader:
                 pass
