@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+      - develop
   schedule:
     # Weekly tests at midnight on Sundays run on main by default:
     #   Scheduled workflows run on the latest commit on the default or base branch.
@@ -101,9 +102,13 @@ jobs:
         conda list
 
 
-    - name: Run tests
+    - name: Run IMDClient tests
       run: |
         pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
+  
+    - name: Run IMDReader tests
+      run: |
+        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdreader.py
 
     - name: codecov
       if: github.event_name != 'schedule'
