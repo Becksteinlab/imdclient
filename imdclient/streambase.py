@@ -15,6 +15,7 @@ class StreamReaderBase(ReaderBase):
         )
         self._init_scope = True
         self._reopen_called = False
+        self._first_ts = None
 
     def _read_next_timestep(self):
         # No rewinding- to both load the first frame after  __init__
@@ -148,6 +149,16 @@ class StreamReaderBase(ReaderBase):
     def __setstate__(self, state: object):
         raise NotImplementedError(
             "{} does not support pickling".format(self.__class__.__name__)
+        )
+
+    def __repr__(self):
+        return (
+            "<{cls} {fname} with continuous stream of {natoms} atoms>"
+            "".format(
+                cls=self.__class__.__name__,
+                fname=self.filename,
+                natoms=self.n_atoms,
+            )
         )
 
 
