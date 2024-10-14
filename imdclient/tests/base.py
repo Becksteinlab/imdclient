@@ -5,11 +5,7 @@ import os
 import signal
 import subprocess
 import time
-import MDAnalysis as mda
-from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal
 from numpy.testing import (
-    assert_array_almost_equal,
-    assert_almost_equal,
     assert_allclose,
 )
 import numpy as np
@@ -121,4 +117,6 @@ class IMDv3IntegrationTest:
                     imdf.velocities, ts.velocities, atol=1e-03
                 )
             if imdsinfo.forces:
-                assert_allclose_with_logging(imdf.forces, ts.forces, atol=1e-03)
+                assert_allclose_with_logging(
+                    imdf.forces, ts.forces, atol=1e-03
+                )

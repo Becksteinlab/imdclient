@@ -11,5 +11,6 @@ Welcome to IMDClient's documentation!
    :caption: Contents:
 
    getting_started
+   usage
    api
    protocol_v3

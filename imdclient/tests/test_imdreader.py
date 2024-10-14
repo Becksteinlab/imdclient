@@ -17,7 +17,6 @@ from .server import InThreadIMDServer
 from MDAnalysisTests.coordinates.base import (
     MultiframeReaderTest,
     BaseReference,
-    BaseWriterTest,
     assert_timestep_almost_equal,
 )
 from numpy.testing import (
@@ -32,7 +31,6 @@ import pytest
 from MDAnalysis.transformations import translate
 import pickle
 
-# NOTE: removeme
 from imdclient.IMDREADER import IMDReader
 
 logger = logging.getLogger("imdclient.IMDClient")

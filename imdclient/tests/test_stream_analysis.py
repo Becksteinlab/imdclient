@@ -1,7 +1,6 @@
 import imdclient
 from MDAnalysisTests.datafiles import (
     COORDINATES_TOPOLOGY,
-    COORDINATES_TRR,
     COORDINATES_H5MD,
 )
 import MDAnalysis as mda
@@ -9,29 +8,13 @@ from .utils import (
     get_free_port,
     create_default_imdsinfo_v3,
 )
-
-# NOTE: replaceme with imdclient.tests.server
 from .server import InThreadIMDServer
-from MDAnalysisTests.coordinates.base import (
-    MultiframeReaderTest,
-    BaseReference,
-    BaseWriterTest,
-    assert_timestep_almost_equal,
-)
 from MDAnalysis.analysis.rms import RMSF
 from numpy.testing import (
     assert_almost_equal,
-    assert_array_almost_equal,
-    assert_equal,
-    assert_allclose,
 )
 import numpy as np
-import logging
 import pytest
-from MDAnalysis.transformations import translate
-import pickle
-
-# NOTE: removeme
 from imdclient.IMDREADER import IMDReader
 
 

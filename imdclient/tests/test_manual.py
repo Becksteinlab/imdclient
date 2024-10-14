@@ -1,10 +1,5 @@
 from imdclient.IMDClient import IMDClient
 import pytest
-from pathlib import Path
-import os
-import signal
-import subprocess
-import time
 import MDAnalysis as mda
 from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal
 from numpy.testing import (
