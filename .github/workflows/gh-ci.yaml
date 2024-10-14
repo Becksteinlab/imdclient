@@ -25,6 +25,7 @@ defaults:
 
 jobs:
   environment-config:
+    if: github.repository == 'Becksteinlab/imdclient'
     runs-on: ubuntu-latest
     outputs:
       stable-python-version: ${{ steps.get-compatible-python.outputs.stable-python }}
@@ -40,6 +41,7 @@ jobs:
           release: "latest"
 
   main-tests:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ${{ matrix.os }}
     strategy:
@@ -119,6 +121,7 @@ jobs:
         verbose: True
 
   pylint_check:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ubuntu-latest
 
@@ -144,6 +147,7 @@ jobs:
 
 
   pypi_check:
+    if: github.repository == 'Becksteinlab/imdclient'
     needs: environment-config
     runs-on: ubuntu-latest
 
