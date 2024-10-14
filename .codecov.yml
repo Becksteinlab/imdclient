@@ -15,3 +15,5 @@ comment:
 ignore:
   - "imdclient/_version.py"
   - "imdclient/data"
+  - "imdclient/tests"
+  - "examples"
