@@ -1,5 +1,5 @@
-Streaming Trajectories from a simulation engine with IMDv3
-=========================================================
+Streaming trajectories from a simulation engine with IMDv3
+==========================================================
 
 Configuring the simulation engine for IMDv3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

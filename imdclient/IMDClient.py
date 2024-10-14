@@ -5,7 +5,13 @@ IMDClient
 
 .. autoclass:: IMDClient
    :members:
+
+.. autoclass:: IMDProducerV3
+   :members:
    :inherited-members:
+
+.. autoclass:: IMDFrameBuffer
+   :members:
    
 """
 
@@ -21,7 +27,6 @@ from typing import Union, Dict
 import signal
 
 logger = logging.getLogger(__name__)
-
 
 
 class IMDClient:
