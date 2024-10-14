@@ -168,7 +168,7 @@ class StreamFrameIteratorSliced(FrameIteratorBase):
             # Burn the timesteps until we reach the desired step
             # Don't use next() to avoid unnecessary transformations
             while self.trajectory._frame % self.step != 0:
-                self.trajectory_read_next_timestep()
+                self.trajectory._read_next_timestep()
         except (EOFError, IOError):
             # Don't rewind here like we normally would
             raise StopIteration from None
