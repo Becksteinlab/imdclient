@@ -500,10 +500,10 @@ from blocking to non-blocking or vice versa.
 Whether or not the simulation engine honors this request is an implementation decision. 
 
 Regardless of whether this packet is accepted, the simulation engine will have an initial waiting behavior which applies
-to the beginning of the simulation. This default waiting behavior will be one of:
+to the beginning of the simulation:
 #. Blocking: Wait until a receiver is connected to begin execution of the simulation 
 #. Non-blocking: Begin the simulation regardless of whether a receiver is connected 
-and continously check on its listening socket for a receiver attempting to connect 
+and continously check on the listening socket for a receiver attempting to connect 
 
 The simulation engine's waiting behavior also applies when a receiver disconnects mid-simulation:
 #. Blocking: Pause simulation execution and wait until a receiver is connected to resume execution 
