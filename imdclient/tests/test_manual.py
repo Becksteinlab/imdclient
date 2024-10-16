@@ -65,6 +65,9 @@ class TestIMDv3Manual:
                 true_u.trajectory[i].data["step"],
                 imd_u.trajectory[i].data["step"],
             )
+            assert_allclose(
+                true_u.trajectory[i].dt, imd_u.trajectory[i].dt, atol=1e-03
+            )
             if true_u.trajectory[i].dimensions is not None:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].dimensions,
