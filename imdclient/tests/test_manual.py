@@ -39,19 +39,19 @@ class TestIMDv3Manual:
     """
 
     @pytest.fixture()
-    def true_u(self, imd_u, topol_arg, traj_path_arg):
-        return mda.Universe(topol_arg, traj_path_arg)
+    def true_u(self, imd_u, topol_path_arg, traj_path_arg):
+        return mda.Universe(topol_path_arg, traj_path_arg)
 
     @pytest.fixture()
-    def imd_u(self, topol_arg, tmp_path):
-        tmp_u = mda.Universe(topol_arg, "localhost:8888")
+    def imd_u(self, topol_path_arg, tmp_path):
+        tmp_u = mda.Universe(topol_path_arg, "localhost:8888")
         with mda.Writer(
             f"{tmp_path.as_posix()}/imd_test_traj.trr", tmp_u.atoms.n_atoms
         ) as w:
             for ts in tmp_u.trajectory:
                 w.write(tmp_u.atoms)
         imd_u = mda.Universe(
-            topol_arg, f"{tmp_path.as_posix()}/imd_test_traj.trr"
+            topol_path_arg, f"{tmp_path.as_posix()}/imd_test_traj.trr"
         )
         yield imd_u
 
