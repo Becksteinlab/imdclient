@@ -43,22 +43,22 @@ class timeit(object):
         # always propagate exceptions forward
         return False
 
-
 # NOTE: think of other edge cases as well- should be robust
 def parse_host_port(filename):
+    if not filename.startswith("imd://"):
+        raise ValueError("IMDReader: URL must be in the format 'imd://host:port'")
+    
     # Check if the format is correct
-    parts = filename.split(":")
+    parts = filename.split("imd://")[1].split(":")
     if len(parts) == 2:
-        host = parts[0]  # Hostname part
+        host = parts[0] 
         try:
-            port = int(parts[1])  # Convert the port part to an integer
+            port = int(parts[1])
             return (host, port)
         except ValueError:
-            # Handle the case where the port is not a valid integer
-            raise ValueError("Port must be an integer")
+            raise ValueError("IMDReader: Port must be an integer")
     else:
-        # Handle the case where the format does not match "host:port"
-        raise ValueError("Filename must be in the format 'host:port'")
+        raise ValueError("IMDReader: URL must be in the format 'imd://host:port'")
 
 
 def approximate_timestep_memsize(

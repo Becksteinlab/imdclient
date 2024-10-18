@@ -38,7 +38,7 @@ class TestStreamAnalysis:
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", port, first_frame=True)
 
-        imd_universe = mda.Universe(COORDINATES_TOPOLOGY, f"localhost:{port}")
+        imd_universe = mda.Universe(COORDINATES_TOPOLOGY, f"imd://localhost:{port}")
         server.send_frames(1, 5)
 
         yield imd_universe

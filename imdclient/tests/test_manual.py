@@ -44,7 +44,7 @@ class TestIMDv3Manual:
 
     @pytest.fixture()
     def imd_u(self, topol_path_arg, tmp_path):
-        tmp_u = mda.Universe(topol_path_arg, "localhost:8888")
+        tmp_u = mda.Universe(topol_path_arg, "imd://localhost:8888")
         with mda.Writer(
             f"{tmp_path.as_posix()}/imd_test_traj.trr", tmp_u.atoms.n_atoms
         ) as w:

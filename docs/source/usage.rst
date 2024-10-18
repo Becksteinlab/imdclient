@@ -48,6 +48,11 @@ like this: ::
     # engine as the trajectory argument
 
     # GROMACS
-    u = mda.Universe("topology.gro", "localhost:8888")
+    u = mda.Universe("topology.gro", "imd://localhost:8888")
     # NAMD
-    u = mda.Universe("topology.psf", "localhost:8888")
+    u = mda.Universe("topology.psf", "imd://localhost:8888")
+
+While this package allows the IMDReader to be automatically selected
+based on the trajectory URL matching the pattern 'imd://<host>:<port>',
+the format can be explicitly selected by passing the keyword argument
+'format="IMD"' to the :class:Universe.
