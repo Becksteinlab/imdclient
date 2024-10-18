@@ -30,6 +30,22 @@ logger = logging.getLogger(__name__)
 
 
 class IMDClient:
+    """
+    Parameters
+    ----------
+    host : str
+        Hostname of the server
+    port : int
+        Port number of the server
+    n_atoms : int
+        Number of atoms in the simulation
+    socket_bufsize : int, (optional)
+        Size of the socket buffer in bytes. Default is to use the system default
+    buffer_size : int (optional)
+        IMDFramebuffer will be filled with as many :class:IMDFrame fit in `buffer_size` [``10MB``]
+    **kwargs : dict (optional)
+        Additional keyword arguments to pass to the :class:BaseIMDProducer and :class:IMDFrameBuffer
+    """
     def __init__(
         self,
         host,
@@ -39,22 +55,7 @@ class IMDClient:
         multithreaded=True,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        host : str
-            Hostname of the server
-        port : int
-            Port number of the server
-        n_atoms : int
-            Number of atoms in the simulation
-        socket_bufsize : int, optional
-            Size of the socket buffer in bytes. Default is to use the system default
-        buffer_size : int, optional
-            IMDFramebuffer will be filled with as many IMDFrames fit in `buffer_size` [``10MB``]
-        **kwargs : optional
-            Additional keyword arguments to pass to the IMDProducer and IMDFrameBuffer
-        """
+
         self._stopped = False
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
@@ -254,6 +255,25 @@ class IMDClient:
 
 
 class BaseIMDProducer(threading.Thread):
+    """
+
+    Parameters
+    ----------
+    conn : socket.socket
+        Connection object to the server
+    buffer : IMDFrameBuffer
+        Buffer object to hold IMD frames. If `multithreaded` is False, this
+        argument is ignored
+    sinfo : IMDSessionInfo
+        Information about the IMD session
+    n_atoms : int
+        Number of atoms in the simulation
+    multithreaded : bool, optional
+        If True, socket interaction will occur in a separate thread &
+        frames will be buffered. Single-threaded, blocking IMDClient
+        should only be used in testing [[``True``]]
+
+    """
 
     def __init__(
         self,
@@ -265,24 +285,6 @@ class BaseIMDProducer(threading.Thread):
         timeout=5,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        conn : socket.socket
-            Connection object to the server
-        buffer : IMDFrameBuffer
-            Buffer object to hold IMD frames. If `multithreaded` is False, this
-            argument is ignored
-        sinfo : IMDSessionInfo
-            Information about the IMD session
-        n_atoms : int
-            Number of atoms in the simulation
-        multithreaded : bool, optional
-            If True, socket interaction will occur in a separate thread &
-            frames will be buffered. Single-threaded, blocking IMDClient
-            should only be used in testing [[``True``]]
-
-        """
         super(BaseIMDProducer, self).__init__(daemon=True)
         self._conn = conn
         self._imdsinfo = sinfo
