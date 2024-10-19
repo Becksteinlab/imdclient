@@ -73,8 +73,7 @@ jobs:
         run: |
           pytest -n auto -v --color=yes imdclient/tests/test_gromacs.py
 
-      - name: Save Docker logs
+
+      - name: Dump docker logs on failure
         if: failure()
-        run: |
-          docker ps -a
-          docker logs <container_id>
+        uses: jwalton/gh-docker-logs@v2
