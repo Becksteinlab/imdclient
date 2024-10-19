@@ -16,6 +16,7 @@ dependencies:
   - pytest-xdist
   - codecov
   - MDAnalysisTests>=2.7.0
+  - docker-py
 
   # Pip-only installs
   #- pip:
