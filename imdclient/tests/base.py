@@ -129,6 +129,14 @@ class IMDv3IntegrationTest:
                 w.write(u.atoms)
         yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
 
+    @pytest.fixture()
+    def true_u(self, topol, traj, imd_u, tmp_path):
+        u = mda.Universe(
+            (tmp_path / topol),
+            (tmp_path / traj),
+        )
+        yield u
+
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
         for i in range(first_frame, len(true_u.trajectory)):
             assert_allclose(
