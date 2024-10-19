@@ -1,5 +1,9 @@
 # This is a test namd configuration file
 
+# GH actions runners won't use GPU
+useCUDA off
+useOpenCL off
+
 timestep	0.5
 numsteps	10
 structure	alanin.psf
@@ -17,8 +21,13 @@ switchdist	7.0
 cutoff		8.0
 pairlistdist 	9.0
 
-dcdfile	alanin.dcd
-dcdfreq	1
+DCDfile	alanin.dcd
+DCDfreq	1
+DCDUnitCell    yes
+velDcdFile	alanin.vel.dcd
+velDcdFreq	1
+forceDcdFile	alanin.force.dcd
+forceDcdFreq	1
 
 #restartname	alanin.restart
 #restartfreq	10

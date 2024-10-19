@@ -34,9 +34,9 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
     def input_files(self):
         return [LAMMPS_IN, LAMMPS_TOPOL]
 
-    @pytest.fixture()
-    def match_string(self):
-        return "Waiting for IMD connection on port 8888"
+    # @pytest.fixture()
+    # def match_string(self):
+    #     return "Waiting for IMD connection on port 8888"
 
     @pytest.fixture()
     def first_frame(self):
@@ -57,10 +57,16 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
     def imd_u(self, docker_client, topol, tmp_path, port):
         u = mda.Universe(
             (tmp_path / topol),
-            f"localhost:{port}",
+            f"imd://localhost:{port}",
             atom_style="id type x y z",
         )
-        with mda.Writer((tmp_path / "imd.trr"), u.trajectory.n_atoms) as w:
+        with mda.Writer(
+            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
+        ) as w:
             for ts in u.trajectory:
                 w.write(u.atoms)
-        yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
+        yield mda.Universe(
+            (tmp_path / topol),
+            (tmp_path / "imd.trr"),
+            atom_style="id type x y z",
+        )

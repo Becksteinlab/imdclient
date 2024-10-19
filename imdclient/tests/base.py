@@ -79,7 +79,6 @@ class IMDv3IntegrationTest:
         input_files,
         setup_command,
         simulation_command,
-        match_string,
         port,
     ):
         docker_client = docker.from_env()
@@ -105,6 +104,7 @@ class IMDv3IntegrationTest:
             detach=True,
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
             ports={"8888/tcp": port},
+            # remove=True,
         )
 
         # For now, just wait 10 seconds
@@ -127,33 +127,35 @@ class IMDv3IntegrationTest:
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
         for i in range(first_frame, len(true_u.trajectory)):
             assert_allclose(
-                true_u.trajectory[i].time, imd_u.trajectory[i].time, atol=1e-03
+                true_u.trajectory[i].time,
+                imd_u.trajectory[i - first_frame].time,
+                atol=1e-03,
             )
             assert_allclose(
                 true_u.trajectory[i].data["step"],
-                imd_u.trajectory[i].data["step"],
+                imd_u.trajectory[i - first_frame].data["step"],
             )
             if true_u.trajectory[i].dimensions is not None:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].dimensions,
-                    imd_u.trajectory[i].dimensions,
+                    imd_u.trajectory[i - first_frame].dimensions,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_positions:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].positions,
-                    imd_u.trajectory[i].positions,
+                    imd_u.trajectory[i - first_frame].positions,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_velocities:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].velocities,
-                    imd_u.trajectory[i].velocities,
+                    imd_u.trajectory[i - first_frame].velocities,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_forces:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].forces,
-                    imd_u.trajectory[i].forces,
+                    imd_u.trajectory[i - first_frame].forces,
                     atol=1e-03,
                 )
