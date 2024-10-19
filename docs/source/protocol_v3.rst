@@ -501,13 +501,15 @@ Whether or not the simulation engine honors this request is an implementation de
 
 Regardless of whether this packet is accepted, the simulation engine will have an initial waiting behavior which applies
 to the beginning of the simulation:
-#. Blocking: Wait until a receiver is connected to begin execution of the simulation 
-#. Non-blocking: Begin the simulation regardless of whether a receiver is connected 
+
+1. Blocking: Wait until a receiver is connected to begin execution of the simulation 
+2. Non-blocking: Begin the simulation regardless of whether a receiver is connected 
 and continously check on the listening socket for a receiver attempting to connect 
 
 The simulation engine's waiting behavior also applies when a receiver disconnects mid-simulation:
-#. Blocking: Pause simulation execution and wait until a receiver is connected to resume execution 
-#. Non-blocking: Continue execution, continuously checking on the listening socket for a receiver attempting to connect
+
+1. Blocking: Pause simulation execution and wait until a receiver is connected to resume execution 
+2. Non-blocking: Continue execution, continuously checking on the listening socket for a receiver attempting to connect
 
  .. code-block:: none
 
