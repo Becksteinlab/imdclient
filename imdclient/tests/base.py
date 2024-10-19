@@ -81,6 +81,8 @@ class IMDv3IntegrationTest:
         simulation_command,
         port,
     ):
+        # In CI, container process needs access to tmp_path
+        tmp_path.chmod(0o777)
         docker_client = docker.from_env()
         img = docker_client.images.pull(
             "ghcr.io/becksteinlab/streaming-md-docker:main"
@@ -106,7 +108,6 @@ class IMDv3IntegrationTest:
             ports={"8888/tcp": port},
             # remove=True,
             name="sim",
-            privileged=True,
         )
 
         # For now, just wait 10 seconds
