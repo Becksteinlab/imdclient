@@ -72,3 +72,9 @@ jobs:
       - name: Run namd tests
         run: |
           pytest -n auto -v --color=yes imdclient/tests/test_namd.py
+
+      - name: Save Docker logs
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs <container_id>

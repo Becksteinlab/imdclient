@@ -70,3 +70,9 @@ jobs:
       - name: Run lammps tests
         run: |
           pytest -n auto -v --color=yes imdclient/tests/test_lammps.py
+
+      - name: Save Docker logs
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs <container_id>
