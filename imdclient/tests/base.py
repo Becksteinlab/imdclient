@@ -122,7 +122,9 @@ class IMDv3IntegrationTest:
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
         u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
-        with mda.Writer((tmp_path / "imd.trr"), u.trajectory.n_atoms) as w:
+        with mda.Writer(
+            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
+        ) as w:
             for ts in u.trajectory:
                 w.write(u.atoms)
         yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
