@@ -55,7 +55,7 @@ class IMDReference(BaseReference):
         self.n_atoms = traj.n_atoms
         self.prec = 3
 
-        self.trajectory = f"localhost:{self.port}"
+        self.trajectory = f"imd://localhost:{self.port}"
         self.topology = COORDINATES_TOPOLOGY
         self.changing_dimensions = True
         self.reader = IMDReader
@@ -585,7 +585,7 @@ class TestStreamIteration:
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", port, first_frame=True)
         reader = IMDReader(
-            f"localhost:{port}",
+            f"imd://localhost:{port}",
             n_atoms=universe.trajectory.n_atoms,
         )
         server.send_frames(1, 5)
