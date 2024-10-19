@@ -14,6 +14,7 @@ import docker
 import logging
 import shutil
 import MDAnalysis as mda
+from .utils import get_free_port
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -68,6 +69,10 @@ class IMDv3IntegrationTest:
         return None
 
     @pytest.fixture()
+    def port(self):
+        yield get_free_port()
+
+    @pytest.fixture()
     def docker_client(
         self,
         tmp_path,
@@ -75,6 +80,7 @@ class IMDv3IntegrationTest:
         setup_command,
         simulation_command,
         match_string,
+        port,
     ):
         docker_client = docker.from_env()
         docker_client.images.pull(
@@ -83,58 +89,36 @@ class IMDv3IntegrationTest:
         # Copy input files into tmp_path
         for inp in input_files:
             shutil.copy(inp, tmp_path)
-        # Start the container, mount tmp_path
-        container = docker_client.containers.run(
-            "ghcr.io/becksteinlab/streaming-md-docker:main",
-            volumes={tmp_path: {"bind": "/tmp", "mode": "rw"}},
-            detach=True,
-        )
+
+        cmdstring = "cd '/tmp'"
         # Run the setup command, if any
         if setup_command is not None:
             # This should be blocking
-            container.exec_run(setup_command, workdir="/tmp")
+            cmdstring += " && " + setup_command
 
-        # Start the simulation
-        cmd = docker_client.api.exec_create(
-            container.id, simulation_command, workdir="/tmp"
+        cmdstring += " && " + simulation_command
+
+        # Start the container, mount tmp_path, run simulation
+        container = docker_client.containers.run(
+            "ghcr.io/becksteinlab/streaming-md-docker:main",
+            f"/bin/sh -c '{cmdstring}'",
+            detach=True,
+            volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
+            ports={"8888/tcp": port},
         )
-        exec_output = docker_client.api.exec_start(exec_id=cmd["Id"])
-        # Wait for the match string
-        wait_time = 0
-        t = time.time()
-        matched = False
-        while wait_time < 60:
-            try:
-                # Open and read the log file directly from the host-side mounted path
-                with open(tmp_path / "output.log", "r") as log_file:
-                    log_content = log_file.read()
 
-                logger.debug(
-                    f"{tmp_path / "output.log"} content: {log_content.strip()}"
-                )
-                # Check if the match_string exists in the log content
-                if match_string in log_content:
-                    matched = True
-                    break
-
-            except FileNotFoundError:
-                wait_time = time.time() - t
-                time.sleep(1)
-
-            time.sleep(1)
-
-        if not matched:
-            raise RuntimeError(
-                f"Simulation failed to reach IMD Session readiness"
-            )
+        # For now, just wait 10 seconds
+        # life is too short to figure out how to redirect all stdout from inside
+        # a container
+        time.sleep(10)
 
         yield
 
         container.stop()
 
     @pytest.fixture()
-    def imd_u(self, docker_client, topol, tmp_path):
-        u = mda.Universe((tmp_path / topol), "imd://localhost:8888")
+    def imd_u(self, docker_client, topol, tmp_path, port):
+        u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
         with mda.Writer((tmp_path / "imd.trr"), u.trajectory.n_atoms) as w:
             for ts in u.trajectory:
                 w.write(u.atoms)

@@ -20,7 +20,7 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def simulation_command(self):
-        return f"/bin/sh -c 'lmp < {Path(LAMMPS_IN).name} > output.log'"
+        return f"lmp < {Path(LAMMPS_IN).name}"
 
     @pytest.fixture()
     def topol(self):
@@ -54,10 +54,10 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         yield u
 
     @pytest.fixture()
-    def imd_u(self, docker_client, topol, tmp_path):
+    def imd_u(self, docker_client, topol, tmp_path, port):
         u = mda.Universe(
             (tmp_path / topol),
-            "imd://localhost:8888",
+            f"localhost:{port}",
             atom_style="id type x y z",
         )
         with mda.Writer((tmp_path / "imd.trr"), u.trajectory.n_atoms) as w:
