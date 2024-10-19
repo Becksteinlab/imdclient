@@ -63,22 +63,9 @@ jobs:
           conda info
           conda list
 
-      - name: Clone lammps fork
-        uses: actions/checkout@v4
-        with:
-          repository: ljwoods2/lammps
-          ref: imd-v3
-          path: lammps
-
-      - name: Build lammps
+      - name: Pull docker image
         run: |
-          cd lammps
-          mkdir build
-          cd build
-          cmake ../cmake/ -D PKG_MISC=yes
-          cmake --build .
-          make install
-          lmp -h
+          docker pull ghcr.io/becksteinlab/streaming-md-docker:main
 
       - name: Run lammps tests
         run: |

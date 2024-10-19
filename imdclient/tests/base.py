@@ -82,7 +82,7 @@ class IMDv3IntegrationTest:
         port,
     ):
         docker_client = docker.from_env()
-        docker_client.images.pull(
+        img = docker_client.images.pull(
             "ghcr.io/becksteinlab/streaming-md-docker:main"
         )
         # Copy input files into tmp_path
@@ -99,7 +99,7 @@ class IMDv3IntegrationTest:
 
         # Start the container, mount tmp_path, run simulation
         container = docker_client.containers.run(
-            "ghcr.io/becksteinlab/streaming-md-docker:main",
+            img,
             f"/bin/sh -c '{cmdstring}'",
             detach=True,
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},

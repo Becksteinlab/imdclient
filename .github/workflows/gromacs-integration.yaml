@@ -64,23 +64,10 @@ jobs:
           pip list
           conda info
           conda list
-
-      - name: Clone gromacs fork
-        uses: actions/checkout@v4
-        with:
-          repository: hcho38/gromacs
-          ref: imd-v3
-          path: gromacs
-
-      - name: Build gromacs
+      
+      - name: Pull docker image
         run: |
-          cd gromacs
-          mkdir build
-          cd build
-          cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON
-          make
-          sudo make install
-          source /usr/local/gromacs/bin/GMXRC
+          docker pull ghcr.io/becksteinlab/streaming-md-docker:main
 
       - name: Run gromacs tests
         run: |

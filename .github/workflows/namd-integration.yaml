@@ -64,37 +64,10 @@ jobs:
           pip list
           conda info
           conda list
-
-      - name: Clone namd fork
-        uses: actions/checkout@v4
-        with:
-          repository: amruthesht/namd-3.0
-          ref: IMDv3-dev
-          path: namd
-
-      - name: Build namd
+          
+      - name: Pull docker image
         run: |
-          cd namd
-          tar xf charm-8.0.0.tar
-          cd charm-8.0.0
-          ./build charm++ multicore-linux-x86_64 --with-production
-          cd multicore-linux-x86_64/tests/charm++/megatest
-          make
-          cd ../../../../..
-          wget https://www.fftw.org/fftw-2.1.5.tar.gz
-          tar xzf fftw-2.1.5.tar.gz
-          cd fftw-2.1.5
-          ./configure --enable-float --enable-type-prefix --enable-static 
-          make
-          sudo make install
-          cd ..
-          wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
-          tar xzf tcl8.6.13-linux-x86_64-threaded.tar.gz
-          mv tcl8.6.13-linux-x86_64-threaded tcl-threaded
-          ./config Linux-x86_64-g++.simple --charm-arch multicore-linux-x86_64 --fftw-prefix "/usr/local"
-          cd Linux-x86_64-g++.simple
-          make
-          sudo ln -s $PWD/namd3 /usr/local/bin/namd3
+          docker pull ghcr.io/becksteinlab/streaming-md-docker:main
 
       - name: Run namd tests
         run: |
