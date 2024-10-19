@@ -105,6 +105,8 @@ class IMDv3IntegrationTest:
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
             ports={"8888/tcp": port},
             # remove=True,
+            name="sim",
+            privileged=True,
         )
 
         # For now, just wait 10 seconds

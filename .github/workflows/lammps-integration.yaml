@@ -73,4 +73,5 @@ jobs:
 
       - name: Dump docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2
+        run: |
+          docker logs sim
