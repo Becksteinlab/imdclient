@@ -503,8 +503,7 @@ Regardless of whether this packet is accepted, the simulation engine will have a
 to the beginning of the simulation:
 
 1. Blocking: Wait until a receiver is connected to begin execution of the simulation 
-2. Non-blocking: Begin the simulation regardless of whether a receiver is connected 
-and continously check on the listening socket for a receiver attempting to connect 
+2. Non-blocking: Begin the simulation regardless of whether a receiver is connected and continuously check on the listening socket for a receiver attempting to connect 
 
 The simulation engine's waiting behavior also applies when a receiver disconnects mid-simulation:
 
