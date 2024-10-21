@@ -145,6 +145,9 @@ and its associated body packet (if present) is described in detail.
    * - :ref:`forces`
      - 15
      - ❌
+   * - :ref:`wait-flag`
+     - 16
+     - ❌
 
 .. _disconnect:
 
@@ -475,7 +478,7 @@ forces were previously specified for this session in the :ref:`session info pack
 .. code-block:: none
 
    Header:
-      14 (int32) Forces
+      15 (int32) Forces
       <n_atoms> (int32) Number of atoms in the IMD system
 
    Body:
@@ -483,6 +486,42 @@ forces were previously specified for this session in the :ref:`session info pack
                                      of each atom in the 
                                      IMD system encoded in the order 
                                      [Fx1, Fy1, Fz1, ..., Fxn, Fyn, Fzn]
+
+.. versionadded:: 3
+
+.. _wait-flag:
+
+Wait flag
+^^^^^^^^^
+
+Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
+has been sent to request that the simulation engine modify its waiting behavior mid-simulation either
+from blocking to non-blocking or vice versa.
+Whether or not the simulation engine honors this request is an implementation decision. 
+
+Regardless of whether this packet is accepted, the simulation engine will have an initial waiting behavior which applies
+to the beginning of the simulation:
+
+1. Blocking: Wait until a receiver is connected to begin execution of the simulation 
+2. Non-blocking: Begin the simulation regardless of whether a receiver is connected and continuously check on the listening socket for a receiver attempting to connect 
+
+The simulation engine's waiting behavior also applies when a receiver disconnects mid-simulation:
+
+1. Blocking: Pause simulation execution and wait until a receiver is connected to resume execution 
+2. Non-blocking: Continue execution, continuously checking on the listening socket for a receiver attempting to connect
+
+ .. code-block:: none
+
+   Header:
+      16 (int32) Wait flag
+      <val> (int32) Nonzero to set the simulation engine's waiting behavior to blocking, 0
+                    to set the simulation engine's waiting behavior to non-blocking
+
+.. note:: 
+
+   The purpose of this packet is to allow a receiver to monitor the first *n* frames 
+   of a simulation and then disconnect without blocking the continued execution of the 
+   simulation.
 
 .. versionadded:: 3
 
