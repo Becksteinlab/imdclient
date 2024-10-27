@@ -21,7 +21,7 @@ cmake ../cmake/ -D PKG_MISC=yes -D PKG_GPU=on -D GPU_API=cuda -D PKG_H5MD=yes -D
 make -j 4
 ```
 
-In one shell, navigate to the lammps hpc testing directory and run the simulation
+In one shell (with all modules above loaded), navigate to the lammps hpc testing directory and run the simulation
 ```bash
 cd imdclient/tests/hpc_testing/lammps
 
@@ -37,5 +37,5 @@ source activate imdclient-test
 pytest -s imdclient/tests/test_manual.py \
     --topol_path_arg imdclient/tests/hpc_testing/lammps/topology_after_min.data \
     --traj_path_arg imdclient/tests/hpc_testing/lammps/lammps_trj.h5md \
-    --first_frame_arg 0
+    --first_frame_arg 1
 ```
