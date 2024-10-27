@@ -47,7 +47,7 @@ pytest -s ../../test_manual.py \
 ```
 
 ```bash
-./lmp < /Users/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
+./lmp < /home/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
 
 ```
 
@@ -58,8 +58,7 @@ module load mamba
 source activate imdclient-test
 
 pytest -s imdclient/tests/test_manual.py \
-    --topol_path_arg imdclient/tests/hpc_testing/topology_after_min.data \
-    --traj_path_arg imdclient/tests/hpc_testing/ \
-    --first_frame_arg <first traj frame to compare to IMD>
-
+    --topol_path_arg imdclient/tests/hpc_testing/lammps/topology_after_min.data \
+    --traj_path_arg imdclient/tests/hpc_testing/lammps/lammps_trj.h5md \
+    --first_frame_arg 1
 ```
