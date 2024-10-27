@@ -7,7 +7,7 @@ log   logfile.txt #Write the log file to this text file. All thermodynamic infor
 ## Create Box
 #Refers to an abstract geometric region of space. units box refers to the fact that the size of the box is specified in the units as given in the units command. 
 # The name "forbox" refers to the region ID so that you can refer to it somewhere else in this input script.
-region forbox block 0 45.8 0 45.8 0 45.8 units box
+region forbox block 0 183.2 0 183.2 0 183.2 units box
 create_box 1 forbox 
 # Since we have given fcc as lattice type no need to mention basis for this
 lattice fcc 4.58 
@@ -33,6 +33,9 @@ run 1
 minimize 1e-25 1e-19 10000 10000 
 print "Finished Minimizing"
 variable ener equal pe
+
+## Output the topology after minimization
+write_data topology_after_min.data
 
 ## Prepare MD simulation
 timestep  0.001

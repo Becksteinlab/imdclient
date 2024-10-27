@@ -21,37 +21,14 @@ cmake ../cmake/ -D PKG_MISC=yes -D PKG_GPU=on -D GPU_API=cuda -D PKG_H5MD=yes -D
 make -j 4
 ```
 
-After LAMMPS has been built, change into the directory containing this file.
-
-To generate the "source of truth" trajectory, run:
+In one shell, navigate to the lammps hpc testing directory and run the simulation
 ```bash
-mpiexec -np 1 /home/ljwoods2/workspace/lammps/build_gpu/lmp -in lammps_v3_write_traj.in
+cd imdclient/tests/hpc_testing/lammps
+
+mpiexec -np 2 --oversubscribe /home/ljwoods2/workspace/lammps/build_gpu/lmp -sf gpu -in /home/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
 ```
 
-To test, run this in the same shell:
-```bash
-mpiexec --oversubscribe -np 2 /home/ljwoods2/workspace/lammps/build_gpu/lmp -in lammps_v3_imd.in
-```
-
-And in a different shell (from the same directory), run the following commands:
-
-```bash
-module load mamba
-# Environment containing IMDClient
-source activate imdclient-test
-
-pytest -s ../../test_manual.py \
-    --topol_arg topology_after_min.data \
-    --traj_arg lammps_trj.h5md \
-    --first_frame_arg 1
-```
-
-```bash
-./lmp < /home/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
-
-```
-
-
+In another shell, run the test script
 ```bash 
 module load mamba
 # Environment containing IMDClient
@@ -60,5 +37,5 @@ source activate imdclient-test
 pytest -s imdclient/tests/test_manual.py \
     --topol_path_arg imdclient/tests/hpc_testing/lammps/topology_after_min.data \
     --traj_path_arg imdclient/tests/hpc_testing/lammps/lammps_trj.h5md \
-    --first_frame_arg 1
+    --first_frame_arg 0
 ```
