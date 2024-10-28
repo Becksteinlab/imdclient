@@ -448,13 +448,7 @@ class IMDProducerV2(BaseIMDProducer):
             self._expect_header(
                 IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
             )
-            self._read(self._positions)
-            np.copyto(
-                self._imdf.positions,
-                np.frombuffer(
-                    self._positions, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
+            self._read(self._imdf.positions.ravel())
         elif (
             header.type == IMDHeaderType.IMD_FCOORDS
             and header.length == self._n_atoms
@@ -465,13 +459,7 @@ class IMDProducerV2(BaseIMDProducer):
                 self._imdf.energies = self._prev_energies
             else:
                 self._imdf.energies = None
-            self._read(self._positions)
-            np.copyto(
-                self._imdf.positions,
-                np.frombuffer(
-                    self._positions, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
+            self._read(self._imdf.positions.ravel())
         else:
             raise RuntimeError("IMDProducer: Unexpected packet type or length")
 
@@ -600,35 +588,17 @@ class IMDProducerV3(BaseIMDProducer):
             self._expect_header(
                 IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
             )
-            self._read(self._positions)
-            np.copyto(
-                self._imdf.positions,
-                np.frombuffer(
-                    self._positions, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
+            self._read(self._imdf.positions.ravel())
         if self._imdsinfo.velocities:
             self._expect_header(
                 IMDHeaderType.IMD_VELOCITIES, expected_value=self._n_atoms
             )
-            self._read(self._velocities)
-            np.copyto(
-                self._imdf.velocities,
-                np.frombuffer(
-                    self._velocities, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
+            self._read(self._imdf.velocities.ravel())
         if self._imdsinfo.forces:
             self._expect_header(
                 IMDHeaderType.IMD_FORCES, expected_value=self._n_atoms
             )
-            self._read(self._forces)
-            np.copyto(
-                self._imdf.forces,
-                np.frombuffer(
-                    self._forces, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
+            self._read(self._imdf.forces.ravel())
 
     def __del__(self):
         logger.debug("IMDProducer: I am being deleted")
