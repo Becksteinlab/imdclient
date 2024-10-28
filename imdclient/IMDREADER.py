@@ -24,6 +24,17 @@ logger = logging.getLogger("imdclient.IMDClient")
 class IMDReader(StreamReaderBase):
     """
     Reader for IMD protocol packets.
+
+    Parameters
+    ----------
+    filename : a string of the form "host:port" where host is the hostname
+        or IP address of the listening GROMACS server and port
+        is the port number.
+    n_atoms : int (optional)
+        number of atoms in the system. defaults to number of atoms
+        in the topology. don't set this unless you know what you're doing.
+    kwargs : dict (optional)
+        keyword arguments passed to the constructed :class:`IMDClient`
     """
 
     format = "IMD"
@@ -37,17 +48,6 @@ class IMDReader(StreamReaderBase):
         n_atoms=None,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        filename : a string of the form "host:port" where host is the hostname
-            or IP address of the listening GROMACS server and port
-            is the port number.
-        n_atoms : int (optional)
-            number of atoms in the system. defaults to number of atoms
-            in the topology. don't set this unless you know what you're doing.
-        """
-
         super(IMDReader, self).__init__(filename, **kwargs)
 
         logger.debug("IMDReader initializing")
@@ -101,7 +101,9 @@ class IMDReader(StreamReaderBase):
             self.ts.data["dt"] = imdf.dt
             self.ts.data["step"] = imdf.step
         if imdf.energies is not None:
-            self.ts.data.update(imdf.energies)
+            self.ts.data.update(
+                {k: v for k, v in imdf.energies.items() if k != "step"}
+            )
         if imdf.box is not None:
             self.ts.dimensions = core.triclinic_box(*imdf.box)
         if imdf.positions is not None:

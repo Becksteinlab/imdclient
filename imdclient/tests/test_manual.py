@@ -1,18 +1,24 @@
-from imdclient.IMDClient import IMDClient
+from imdclient.IMDREADER import IMDReader
 import pytest
 import MDAnalysis as mda
 from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal
 from numpy.testing import (
-    assert_array_almost_equal,
-    assert_almost_equal,
     assert_allclose,
 )
 import numpy as np
 from .base import assert_allclose_with_logging
+from pathlib import Path
 
 import logging
 
 logger = logging.getLogger("imdclient.IMDClient")
+file_handler = logging.FileHandler("manual_test.log")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+logger.setLevel(logging.DEBUG)
 
 
 class TestIMDv3Manual:
@@ -23,48 +29,63 @@ class TestIMDv3Manual:
     and then run this command relative to the root of the cloned respository:
 
     pytest -s imdclient/tests/test_manual.py \
-        --topol_arg <path/to/topology> \
-        --traj_arg <path/to/trajectory> \
+        --topol_path_arg <path/to/topology> \
+        --traj_path_arg <path/to/trajectory> \
         --first_frame_arg <first traj frame to compare to IMD>
 
-    Where the topology is the same topology as the IMD system, the trajectory is the trajectory
-    to compare to IMD data read from the socket, and the first frame is the first frame of the 
+    Where the topology is the same topology as the IMD system, the trajectory is the path where
+    the trajectory of the running simulation is being written, and the first frame is the first frame of the
     trajectory which should be compared to IMD data read from the socket (0 for GROMACS and NAMD, 1 for LAMMPS)
     """
 
     @pytest.fixture()
-    def universe(self, topol_arg, traj_arg):
-        return mda.Universe(topol_arg, traj_arg)
+    def true_u(self, imd_u, topol_path_arg, traj_path_arg):
+        return mda.Universe(topol_path_arg, traj_path_arg)
 
     @pytest.fixture()
-    def client(self, universe):
-        client = IMDClient("localhost", 8888, universe.trajectory.n_atoms)
-        yield client
-        client.stop()
+    def imd_u(self, topol_path_arg, tmp_path):
+        tmp_u = mda.Universe(topol_path_arg, "imd://localhost:8888")
+        with mda.Writer(
+            f"{tmp_path.as_posix()}/imd_test_traj.trr", tmp_u.atoms.n_atoms
+        ) as w:
+            for ts in tmp_u.trajectory:
+                w.write(tmp_u.atoms)
+        imd_u = mda.Universe(
+            topol_path_arg, f"{tmp_path.as_posix()}/imd_test_traj.trr"
+        )
+        yield imd_u
 
-    def test_compare_imd_to_true_traj(self, universe, client, first_frame_arg):
-        imdsinfo = client.get_imdsessioninfo()
+    def test_compare_imd_to_true_traj(self, true_u, imd_u, first_frame_arg):
 
-        for ts in universe.trajectory[first_frame_arg:]:
-            imdf = client.get_imdframe()
-            if imdsinfo.time:
-                assert_allclose(imdf.time, ts.time, atol=1e-03)
-                assert_allclose(imdf.step, ts.data["step"])
-            if imdsinfo.box:
+        for i in range(first_frame_arg, len(true_u.trajectory)):
+            assert_allclose(
+                true_u.trajectory[i].time, imd_u.trajectory[i].time, atol=1e-03
+            )
+            assert_allclose(
+                true_u.trajectory[i].data["step"],
+                imd_u.trajectory[i].data["step"],
+            )
+            if true_u.trajectory[i].dimensions is not None:
                 assert_allclose_with_logging(
-                    imdf.box,
-                    ts.triclinic_dimensions,
+                    true_u.trajectory[i].dimensions,
+                    imd_u.trajectory[i].dimensions,
                     atol=1e-03,
                 )
-            if imdsinfo.positions:
+            if true_u.trajectory[i].has_positions:
                 assert_allclose_with_logging(
-                    imdf.positions, ts.positions, atol=1e-03
+                    true_u.trajectory[i].positions,
+                    imd_u.trajectory[i].positions,
+                    atol=1e-03,
                 )
-            if imdsinfo.velocities:
+            if true_u.trajectory[i].has_velocities:
                 assert_allclose_with_logging(
-                    imdf.velocities, ts.velocities, atol=1e-03
+                    true_u.trajectory[i].velocities,
+                    imd_u.trajectory[i].velocities,
+                    atol=1e-03,
                 )
-            if imdsinfo.forces:
+            if true_u.trajectory[i].has_forces:
                 assert_allclose_with_logging(
-                    imdf.forces, ts.forces, atol=1e-03
+                    true_u.trajectory[i].forces,
+                    imd_u.trajectory[i].forces,
+                    atol=1e-03,
                 )
