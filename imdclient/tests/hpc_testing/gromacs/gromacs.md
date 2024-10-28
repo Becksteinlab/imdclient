@@ -17,6 +17,8 @@ cd build_gpu
 
 cmake .. -DGMX_BUILD_OWN_FFTW=ON -DGMX_GPU=CUDA -DGMX_THREAD_MPI=ON
 make -j 4
+make install
+source /your/installation/prefix/here/bin/GMXRC
 ```
 
 After GROMACS has been built, change into the directory containing this file.
