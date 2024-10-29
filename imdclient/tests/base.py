@@ -85,7 +85,7 @@ class IMDv3IntegrationTest:
         tmp_path.chmod(0o777)
         docker_client = docker.from_env()
         img = docker_client.images.pull(
-            "ghcr.io/becksteinlab/streaming-md-docker:main"
+            "ghcr.io/becksteinlab/streaming-md-docker:main-Common-CPU"
         )
         # Copy input files into tmp_path
         for inp in input_files:
@@ -137,36 +137,70 @@ class IMDv3IntegrationTest:
         )
         yield u
 
-    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
+    @pytest.fixture()
+    def comp_time(self):
+        return True
+
+    @pytest.fixture()
+    def comp_dt(self):
+        return True
+
+    @pytest.fixture()
+    def comp_step(self):
+        return True
+
+    def test_compare_imd_to_true_traj(
+        self, imd_u, true_u, first_frame, comp_time, comp_dt, comp_step
+    ):
         for i in range(first_frame, len(true_u.trajectory)):
-            assert_allclose(
-                true_u.trajectory[i].time,
-                imd_u.trajectory[i - first_frame].time,
-                atol=1e-03,
-            )
-            assert_allclose(
-                true_u.trajectory[i].data["step"],
-                imd_u.trajectory[i - first_frame].data["step"],
-            )
-            if true_u.trajectory[i].dimensions is not None:
+            if comp_time:
+                assert_allclose(
+                    true_u.trajectory[i].time,
+                    imd_u.trajectory[i - first_frame].time,
+                    atol=1e-03,
+                )
+            if comp_dt:
+                assert_allclose(
+                    true_u.trajectory[i].dt,
+                    imd_u.trajectory[i - first_frame].dt,
+                    atol=1e-03,
+                )
+            if comp_step:
+                assert_allclose(
+                    true_u.trajectory[i].data["step"],
+                    imd_u.trajectory[i - first_frame].data["step"],
+                )
+            if (
+                true_u.trajectory[i].dimensions is not None
+                and imd_u.trajectory[i].dimensions is not None
+            ):
                 assert_allclose_with_logging(
                     true_u.trajectory[i].dimensions,
                     imd_u.trajectory[i - first_frame].dimensions,
                     atol=1e-03,
                 )
-            if true_u.trajectory[i].has_positions:
+            if (
+                true_u.trajectory[i].has_positions
+                and imd_u.trajectory[i - first_frame].has_positions
+            ):
                 assert_allclose_with_logging(
                     true_u.trajectory[i].positions,
                     imd_u.trajectory[i - first_frame].positions,
                     atol=1e-03,
                 )
-            if true_u.trajectory[i].has_velocities:
+            if (
+                true_u.trajectory[i].has_velocities
+                and imd_u.trajectory[i - first_frame].has_velocities
+            ):
                 assert_allclose_with_logging(
                     true_u.trajectory[i].velocities,
                     imd_u.trajectory[i - first_frame].velocities,
                     atol=1e-03,
                 )
-            if true_u.trajectory[i].has_forces:
+            if (
+                true_u.trajectory[i].has_forces
+                and imd_u.trajectory[i - first_frame].has_forces
+            ):
                 assert_allclose_with_logging(
                     true_u.trajectory[i].forces,
                     imd_u.trajectory[i - first_frame].forces,

@@ -1,9 +1,5 @@
 # This is a test namd configuration file
 
-# GH actions runners won't use GPU
-useCUDA off
-useOpenCL off
-
 timestep	0.5
 numsteps	10
 structure	alanin.psf
@@ -49,8 +45,8 @@ IMDwait		on
 IMDversion     3
 IMDsendPositions        yes
 IMDsendEnergies     yes
-#IMDsendTime        yes
-#IMDsendBoxDimensions       yes
+IMDsendTime        yes
+IMDsendBoxDimensions       yes
 IMDsendVelocities       yes
-#IMDsendForces      yes
+IMDsendForces      yes
 IMDwrapPositions       yes

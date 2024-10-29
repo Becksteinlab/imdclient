@@ -42,6 +42,10 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
     def first_frame(self):
         return 1
 
+    @pytest.fixture()
+    def comp_dt(self):
+        return False
+
     # This must wait until after imd stream has ended
     @pytest.fixture()
     def true_u(self, topol, traj, imd_u, tmp_path):
