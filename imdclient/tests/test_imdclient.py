@@ -74,7 +74,8 @@ class TestIMDClientV3:
         server.cleanup()
 
     @pytest.fixture(params=[">", "<"])
-    def server_client(self, universe, imdsinfo, port, request):
+    def server_client(self, universe, imdsinfo, port, request,
+                      wait_after_disconnect=None):
         server = InThreadIMDServer(universe.trajectory)
         imdsinfo.endianness = request.param
         server.set_imdsessioninfo(imdsinfo)
@@ -83,6 +84,7 @@ class TestIMDClientV3:
             f"localhost",
             port,
             universe.trajectory.n_atoms,
+            wait_after_disconnect=wait_after_disconnect,
         )
         yield server, client
         client.stop()
@@ -147,4 +149,50 @@ class TestIMDClientV3:
         with pytest.raises(EOFError):
             client.get_imdframe()
         # server should receive disconnect from client (though it doesn't have to do anything)
+        server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+
+    # Default wait_after_disconnect behavior with value set to None
+    def test_unchanged_wait_after_disconnect(self, server_client):
+        """Client ends connection before server sends all frames and continues 
+        default wait behavior on server side
+        """
+        server, client = server_client
+        server.send_frames(0, 2)
+        client.get_imdframe()
+        client.get_imdframe()
+        # client stops connection before server sends all frames
+        client.stop()
+        # server receives only disconnect from client
+        server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+
+    # wait_after_disconnect behavior with value set to True
+    @pytest.mark.parametrize("wait_after_disconnect", [True])
+    def test_wait_after_disconnect(self, server_client):
+        """Client ends connection before server sends all frames and continues 
+        wait behavior on server side
+        """
+        server, client = server_client
+        server.send_frames(0, 2)
+        client.get_imdframe()
+        client.get_imdframe()
+        # client stops connection before server sends all frames
+        client.stop(wait_after_disconnect=True)
+        # server receives wait flag and then the disconnect from client
+        server.expect_packet(IMDHeaderType.IMD_WAIT, 1)
+        server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+
+    # wait_after_disconnect behavior with value set to False
+    @pytest.mark.parametrize("wait_after_disconnect", [False])
+    def test_no_wait_after_disconnect(self, server_client):
+        """Client ends connection before server sends all frames and continues 
+        no wait behavior on server side
+        """
+        server, client = server_client
+        server.send_frames(0, 2)
+        client.get_imdframe()
+        client.get_imdframe()
+        # client stops connection before server sends all frames
+        client.stop(wait_after_disconnect=False)
+        # server receives wait flag and disconnect from client
+        server.expect_packet(IMDHeaderType.IMD_WAIT, 0)
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)

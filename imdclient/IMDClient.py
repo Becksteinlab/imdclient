@@ -37,6 +37,7 @@ class IMDClient:
         n_atoms,
         socket_bufsize=None,
         multithreaded=True,
+        wait_after_disconnect=None,
         **kwargs,
     ):
         """
@@ -50,8 +51,14 @@ class IMDClient:
             Number of atoms in the simulation
         socket_bufsize : int, optional
             Size of the socket buffer in bytes. Default is to use the system default
-        buffer_size : int, optional
-            IMDFramebuffer will be filled with as many IMDFrames fit in `buffer_size` [``10MB``]
+        multithreaded : bool, optional
+            If True, socket interaction will occur in a separate thread &
+            frames will be buffered. Single-threaded, blocking IMDClient
+            should only be used in testing [[``True``]]
+        wait_after_disconnect : bool, optional
+            Determines the behavior of the simulation engine after the connection with imdclient is disconnected.
+            If True, the simulation will wait for the receiver to reconnect. If False, the simulation will continue
+            Default is None, where the simulation will continue with the same IMDwait behavior as set by the user when runnign the simulation
         **kwargs : optional
             Additional keyword arguments to pass to the IMDProducer and IMDFrameBuffer
         """
@@ -59,6 +66,7 @@ class IMDClient:
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
+        self._wait_after_disconnect = wait_after_disconnect
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -112,7 +120,7 @@ class IMDClient:
             except EOFError:
                 # in this case, consumer is already finished
                 # and doesn't need to be notified
-                self._wait(0)
+                # self._wait(self._wait_after_disconnect)
                 self._disconnect()
                 self._stopped = True
                 raise EOFError
@@ -120,7 +128,7 @@ class IMDClient:
             try:
                 return self._producer._get_imdframe()
             except EOFError:
-                self._wait(0)
+                # self._wait(self._wait_after_disconnect)
                 self._disconnect()
                 raise EOFError
 
@@ -131,11 +139,11 @@ class IMDClient:
         if self._multithreaded:
             if not self._stopped:
                 self._buf.notify_consumer_finished()
-                self._wait(0)
+                self._wait(self._wait_after_disconnect)
                 self._disconnect()
                 self._stopped = True
         else:
-            self._wait(0)
+            self._wait(self._wait_after_disconnect)
             self._disconnect()
 
     def _connect_to_server(self, host, port, socket_bufsize):
@@ -241,15 +249,16 @@ class IMDClient:
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
 
-    def _wait(self, IMDwait):
+    def _wait(self, IMDwait=None):
         """
         Wait for the server to send a pause packet
         """
-        wait = create_header_bytes(IMDHeaderType.IMD_WAIT, IMDwait)
-        self._conn.sendall(wait)
-        # Output waiting behavior in debug to value of IMDwait to wait if 1 and not wait if 0 output words wait and not-wait
-        logger.debug("IMDClient: Waiting behavior set to %s", 
-                     "wait" if IMDwait else "not-wait")
+        if IMDwait is not None:
+            wait = create_header_bytes(IMDHeaderType.IMD_WAIT, IMDwait)
+            self._conn.sendall(wait)
+            # Output waiting behavior in debug to value of IMDwait to wait if 1 and not wait if 0 output words wait and not-wait
+            logger.debug("IMDClient: Waiting behavior set to %s", 
+                        "wait" if IMDwait else "not-wait")
 
     def _disconnect(self):
         # MUST disconnect before stopping execution
