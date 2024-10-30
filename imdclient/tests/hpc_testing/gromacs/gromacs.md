@@ -15,7 +15,7 @@ module load openmpi/4.1.5
 mkdir -p build_gpu
 cd build_gpu
 
-cmake .. -DGMX_BUILD_OWN_FFTW=ON -DGMX_GPU=CUDA -DGMX_THREAD_MPI=ON
+cmake .. -DGMX_BUILD_OWN_FFTW=ON -DGMX_GPU=CUDA -DGMX_MPI=ON
 make -j 4
 make install
 source /your/installation/prefix/here/bin/GMXRC
@@ -23,7 +23,7 @@ source /your/installation/prefix/here/bin/GMXRC
 
 After GROMACS has been built, change into the directory containing this file.
 
-To generate the "source of truth" trajectory, run:
+To test on one node, run this in the shell (assuming there are 4 cores available):
 ```bash
 /home/ljwoods2/workspace/gromacs/build_mpi/bin/gmx grompp \
     -f gmx_gpu_test.mdp \
@@ -36,18 +36,23 @@ To generate the "source of truth" trajectory, run:
 /home/ljwoods2/workspace/gromacs/build_mpi/bin/gmx mdrun \
     -s gmx_gpu_test.tpr \
     -o gmx_gpu_test.trr \
-    -reprod \
+    -imdwait \
     -ntmpi 2
+    -ntomp 2
 ```
+To test on multiple nodes, run this in the shell (assuming there are 4 nodes and 16 cores available, with 1 GPU on each node):
 
-To test, run this in the same shell:
 ```bash
-/home/ljwoods2/workspace/gromacs/build_mpi/bin/gmx mdrun \
+module load openmpi/4.1.5
+
+/home/ljwoods2/workspace/gromacs/build_mpi/bin/mpirun \
+    -np 4
+    gmx_mpi mdrun \
     -s gmx_gpu_test.tpr \
     -o gmx_gpu_test.trr \
     -imdwait \
-    -reprod \
-    -ntmpi 2 
+    -ntomp 4
+    -gpu_id 0
 ```
 
 And in a different shell (from the same directory), run the following commands:
