@@ -37,7 +37,7 @@ To test on one node, run this in the shell (assuming there are 4 cores available
     -s gmx_gpu_test.tpr \
     -o gmx_gpu_test.trr \
     -imdwait \
-    -ntmpi 2
+    -ntmpi 2 \
     -ntomp 2
 ```
 To test on multiple nodes, run this in the shell (assuming there are 4 nodes and 16 cores available, with 1 GPU on each node):
@@ -46,12 +46,12 @@ To test on multiple nodes, run this in the shell (assuming there are 4 nodes and
 module load openmpi/4.1.5
 
 /home/ljwoods2/workspace/gromacs/build_mpi/bin/mpirun \
-    -np 4
+    -np 4 \
     gmx_mpi mdrun \
     -s gmx_gpu_test.tpr \
     -o gmx_gpu_test.trr \
     -imdwait \
-    -ntomp 4
+    -ntomp 4 \
     -gpu_id 0
 ```
 
