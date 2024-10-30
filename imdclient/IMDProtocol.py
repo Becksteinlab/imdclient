@@ -30,10 +30,11 @@ class IMDHeaderType(Enum):
     # New in IMD v3
     IMD_SESSIONINFO = 10
     IMD_RESUME = 11
-    IMD_TIME = 12
-    IMD_BOX = 13
-    IMD_VELOCITIES = 14
-    IMD_FORCES = 15
+    IMD_WAIT = 12
+    IMD_TIME = 13
+    IMD_BOX = 14
+    IMD_VELOCITIES = 15
+    IMD_FORCES = 16
 
 
 def parse_energy_bytes(data, endianness):

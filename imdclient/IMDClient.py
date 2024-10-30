@@ -112,6 +112,7 @@ class IMDClient:
             except EOFError:
                 # in this case, consumer is already finished
                 # and doesn't need to be notified
+                self._wait(0)
                 self._disconnect()
                 self._stopped = True
                 raise EOFError
@@ -119,6 +120,7 @@ class IMDClient:
             try:
                 return self._producer._get_imdframe()
             except EOFError:
+                self._wait(0)
                 self._disconnect()
                 raise EOFError
 
@@ -129,9 +131,11 @@ class IMDClient:
         if self._multithreaded:
             if not self._stopped:
                 self._buf.notify_consumer_finished()
+                self._wait(0)
                 self._disconnect()
                 self._stopped = True
         else:
+            self._wait(0)
             self._disconnect()
 
     def _connect_to_server(self, host, port, socket_bufsize):
@@ -236,6 +240,16 @@ class IMDClient:
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
+
+    def _wait(self, IMDwait):
+        """
+        Wait for the server to send a pause packet
+        """
+        wait = create_header_bytes(IMDHeaderType.IMD_WAIT, IMDwait)
+        self._conn.sendall(wait)
+        # Output waiting behavior in debug to value of IMDwait to wait if 1 and not wait if 0 output words wait and not-wait
+        logger.debug("IMDClient: Waiting behavior set to %s", 
+                     "wait" if IMDwait else "not-wait")
 
     def _disconnect(self):
         # MUST disconnect before stopping execution
