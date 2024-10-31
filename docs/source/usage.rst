@@ -55,4 +55,4 @@ like this: ::
 While this package allows the IMDReader to be automatically selected
 based on the trajectory URL matching the pattern 'imd://<host>:<port>',
 the format can be explicitly selected by passing the keyword argument
-'format="IMD"' to the :class:Universe.
+'format="IMD"' to the :class:`Universe`.
