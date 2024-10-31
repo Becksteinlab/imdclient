@@ -116,8 +116,10 @@ class IMDv3IntegrationTest:
         time.sleep(30)
 
         yield
-
-        container.stop()
+        try:
+            container.stop()
+        except docker.errors.NotFound:
+            pass
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
