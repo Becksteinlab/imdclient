@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 import logging
 from .base import IMDv3IntegrationTest
-from .datafiles import LAMMPS_IN, LAMMPS_TOPOL
+from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("lammps_test.log")
@@ -18,9 +18,13 @@ logger.setLevel(logging.DEBUG)
 
 class TestIMDv3Lammps(IMDv3IntegrationTest):
 
+    @pytest.fixture(params=[LAMMPS_IN_NST_1, LAMMPS_IN_NST_8])
+    def inp(self, request):
+        return request.param
+
     @pytest.fixture()
-    def simulation_command(self):
-        return f"lmp < {Path(LAMMPS_IN).name}"
+    def simulation_command(self, inp):
+        return f"lmp < {Path(inp).name}"
 
     @pytest.fixture()
     def topol(self):
@@ -31,16 +35,19 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         return "lammps_trj.h5md"
 
     @pytest.fixture()
-    def input_files(self):
-        return [LAMMPS_IN, LAMMPS_TOPOL]
+    def input_files(self, inp):
+        return [inp, LAMMPS_TOPOL]
 
     # @pytest.fixture()
     # def match_string(self):
     #     return "Waiting for IMD connection on port 8888"
 
     @pytest.fixture()
-    def first_frame(self):
-        return 1
+    def first_frame(self, inp):
+        if inp == LAMMPS_IN_NST_1:
+            return 1
+        else:
+            return 0
 
     @pytest.fixture()
     def comp_dt(self):

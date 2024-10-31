@@ -106,14 +106,14 @@ class IMDv3IntegrationTest:
             detach=True,
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
             ports={"8888/tcp": port},
-            # remove=True,
             name="sim",
+            remove=True,
         )
 
-        # For now, just wait 10 seconds
+        # For now, just wait 30 seconds
         # life is too short to figure out how to redirect all stdout from inside
         # a container
-        time.sleep(10)
+        time.sleep(30)
 
         yield
 
@@ -172,7 +172,7 @@ class IMDv3IntegrationTest:
                 )
             if (
                 true_u.trajectory[i].dimensions is not None
-                and imd_u.trajectory[i].dimensions is not None
+                and imd_u.trajectory[i - first_frame].dimensions is not None
             ):
                 assert_allclose_with_logging(
                     true_u.trajectory[i].dimensions,

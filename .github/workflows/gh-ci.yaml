@@ -167,15 +167,15 @@ jobs:
 
       - name: Run GROMACS tests
         run: |
-          pytest -n auto -v --color=yes imdclient/tests/test_gromacs.py
+          pytest -v --color=yes imdclient/tests/test_gromacs.py
     
       - name: Run LAMMPS tests
         run: |
-          pytest -n auto -v --color=yes imdclient/tests/test_lammps.py
+          pytest -v --color=yes imdclient/tests/test_lammps.py
   
       - name: Run NAMD tests
         run: |
-          pytest -n auto -v --color=yes imdclient/tests/test_namd.py
+          pytest -v --color=yes imdclient/tests/test_namd.py
       
       - name: Dump docker logs on failure
         if: failure()

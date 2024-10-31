@@ -17,6 +17,11 @@ switchdist	7.0
 cutoff		8.0
 pairlistdist 	9.0
 
+# Add box dimensions 
+cellBasisVector1  32.76  0.0   0.0
+cellBasisVector2   0.0  31.66  0.0
+cellBasisVector3   0.0   0.0  32.89
+
 DCDfile	alanin.dcd
 DCDfreq	1
 DCDUnitCell    yes
@@ -24,6 +29,8 @@ velDcdFile	alanin.vel.dcd
 velDcdFreq	1
 forceDcdFile	alanin.force.dcd
 forceDcdFreq	1
+XSTFile     alanin.xst
+xstFreq		1
 
 #restartname	alanin.restart
 #restartfreq	10
