@@ -30,8 +30,10 @@ GROMACS_TRAJ = (
 GROMACS_TOPOL = (_data_ref / "gromacs" / "md" / "struct.gro").as_posix()
 GROMACS_TPR = (_data_ref / "gromacs" / "md" / "gmx_serial_test.tpr").as_posix()
 NAMD_TOPOL = (_data_ref / "namd" / "md" / "alanin.pdb").as_posix()
-NAMD_CONF = (_data_ref / "namd" / "md" / "namd_v3.namd").as_posix()
+NAMD_CONF = (_data_ref / "namd" / "md" / "alanin.namd").as_posix()
 NAMD_TRAJ = (_data_ref / "namd" / "md" / "alanin.dcd").as_posix()
+NAMD_VEL = (_data_ref / "namd" / "md" / "alanin.vel").as_posix()
+NAMD_FORCE = (_data_ref / "namd" / "md" / "alanin.force").as_posix()
 NAMD_PARAMS = (_data_ref / "namd" / "md" / "alanin.params").as_posix()
 NAMD_PSF = (_data_ref / "namd" / "md" / "alanin.psf").as_posix()
 
