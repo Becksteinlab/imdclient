@@ -148,3 +148,54 @@ class TestIMDClientV3:
             client.get_imdframe()
         # server should receive disconnect from client (though it doesn't have to do anything)
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+
+
+class TestIMDClientV3ContextManager:
+    @pytest.fixture
+    def port(self):
+        return get_free_port()
+
+    @pytest.fixture
+    def universe(self):
+        return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+
+    @pytest.fixture
+    def imdsinfo(self):
+        return create_default_imdsinfo_v3()
+
+    @pytest.fixture
+    def server(self, universe, imdsinfo, port):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        yield server
+        server.cleanup()
+
+    def test_context_manager_traj_unchanged(self, server, port, universe):
+        server.handshake_sequence("localhost", port, first_frame=False)
+
+        i = 0
+        with IMDClient(
+            "localhost",
+            port,
+            universe.trajectory.n_atoms,
+        ) as client:
+            server.send_frames(0, 5)
+            while i < 5:
+
+                imdf = client.get_imdframe()
+                assert_allclose(universe.trajectory[i].time, imdf.time)
+                assert_allclose(universe.trajectory[i].dt, imdf.dt)
+                assert_allclose(universe.trajectory[i].data["step"], imdf.step)
+                assert_allclose(
+                    universe.trajectory[i].positions, imdf.positions
+                )
+                assert_allclose(
+                    universe.trajectory[i].velocities, imdf.velocities
+                )
+                assert_allclose(universe.trajectory[i].forces, imdf.forces)
+                assert_allclose(
+                    universe.trajectory[i].triclinic_dimensions, imdf.box
+                )
+                i += 1
+        server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+        assert i == 5

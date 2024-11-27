@@ -43,6 +43,8 @@ class IMDClient:
         Size of the socket buffer in bytes. Default is to use the system default
     buffer_size : int (optional)
         IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` [``10MB``]
+    timeout : int, optional
+        Timeout for the socket in seconds [``5``]
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
     """
@@ -68,8 +70,10 @@ class IMDClient:
                 n_atoms,
                 **kwargs,
             )
+            self._error_queue = queue.Queue()
         else:
             self._buf = None
+            self._error_queue = None
         if self._imdsinfo.version == 2:
             self._producer = IMDProducerV2(
                 self._conn,
@@ -77,6 +81,7 @@ class IMDClient:
                 self._imdsinfo,
                 n_atoms,
                 multithreaded,
+                self._error_queue,
                 **kwargs,
             )
         elif self._imdsinfo.version == 3:
@@ -86,6 +91,7 @@ class IMDClient:
                 self._imdsinfo,
                 n_atoms,
                 multithreaded,
+                self._error_queue,
                 **kwargs,
             )
 
@@ -103,6 +109,10 @@ class IMDClient:
 
     def get_imdframe(self):
         """
+        Returns
+        -------
+        IMDFrame
+            The next frame from the IMD server
         Raises
         ------
         EOFError
@@ -116,6 +126,9 @@ class IMDClient:
                 # and doesn't need to be notified
                 self._disconnect()
                 self._stopped = True
+
+                if self._error_queue.qsize():
+                    raise EOFError(f"{self._error_queue.get()}")
                 raise EOFError
         else:
             try:
@@ -125,9 +138,18 @@ class IMDClient:
                 raise EOFError
 
     def get_imdsessioninfo(self):
+        """
+        Returns
+        -------
+        IMDSessionInfo
+            Information about the IMD session
+        """
         return self._imdsinfo
 
     def stop(self):
+        """
+        Stop the client and close the connection
+        """
         if self._multithreaded:
             if not self._stopped:
                 self._buf.notify_consumer_finished()
@@ -146,9 +168,7 @@ class IMDClient:
             # /proc/sys/net/core/rmem_default
             # Max (linux):
             # /proc/sys/net/core/rmem_max
-            conn.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
-            )
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
             conn.connect((host, port))
@@ -254,6 +274,13 @@ class IMDClient:
         finally:
             self._conn.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False
+
 
 class BaseIMDProducer(threading.Thread):
     """
@@ -269,11 +296,14 @@ class BaseIMDProducer(threading.Thread):
         Information about the IMD session
     n_atoms : int
         Number of atoms in the simulation
-    multithreaded : bool, optional
+    multithreaded : bool
         If True, socket interaction will occur in a separate thread &
         frames will be buffered. Single-threaded, blocking IMDClient
-        should only be used in testing [[``True``]]
-
+        should only be used in testing
+    error_queue: queue.Queue
+        Queue to hold errors produced by the producer thread
+    timeout : int, optional
+        Timeout for the socket in seconds [``5``]
     """
 
     def __init__(
@@ -282,7 +312,8 @@ class BaseIMDProducer(threading.Thread):
         buffer,
         sinfo,
         n_atoms,
-        multithreaded=True,
+        multithreaded,
+        error_queue,
         timeout=5,
         **kwargs,
     ):
@@ -291,6 +322,7 @@ class BaseIMDProducer(threading.Thread):
         self._imdsinfo = sinfo
         self._paused = False
 
+        self.error_queue = error_queue
         # Timeout for first frame should be longer
         # than rest of frames
         self._timeout = timeout
@@ -385,6 +417,7 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Simulation ended normally, cleaning up")
         except Exception as e:
             logger.debug("IMDProducer: An unexpected error occurred: %s", e)
+            self.error_queue.put(e)
         finally:
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
@@ -400,9 +433,19 @@ class BaseIMDProducer(threading.Thread):
             )
         # Sometimes we do not care what the value is
         if expected_value is not None and header.length != expected_value:
-            raise RuntimeError(
-                f"IMDProducer: Expected header value {expected_value}, got {header.length}"
-            )
+            if expected_type in [
+                IMDHeaderType.IMD_FCOORDS,
+                IMDHeaderType.IMD_VELOCITIES,
+                IMDHeaderType.IMD_FORCES,
+            ]:
+                raise RuntimeError(
+                    f"IMDProducer: Expected n_atoms value {expected_value}, got {header.length}. "
+                    + "Ensure you are using the correct topology file."
+                )
+            else:
+                raise RuntimeError(
+                    f"IMDProducer: Expected header value {expected_value}, got {header.length}"
+                )
 
     def _get_header(self):
         self._read(self._header)
@@ -422,9 +465,11 @@ class BaseIMDProducer(threading.Thread):
 
 
 class IMDProducerV2(BaseIMDProducer):
-    def __init__(self, conn, buffer, sinfo, n_atoms, multithreaded, **kwargs):
+    def __init__(
+        self, conn, buffer, sinfo, n_atoms, multithreaded, error_queue, **kwargs
+    ):
         super(IMDProducerV2, self).__init__(
-            conn, buffer, sinfo, n_atoms, multithreaded, **kwargs
+            conn, buffer, sinfo, n_atoms, multithreaded, error_queue, **kwargs
         )
 
         self._energies = bytearray(IMDENERGYPACKETLENGTH)
@@ -517,6 +562,7 @@ class IMDProducerV3(BaseIMDProducer):
         sinfo,
         n_atoms,
         multithreaded,
+        error_queue,
         **kwargs,
     ):
         super(IMDProducerV3, self).__init__(
@@ -525,6 +571,7 @@ class IMDProducerV3(BaseIMDProducer):
             sinfo,
             n_atoms,
             multithreaded,
+            error_queue,
             **kwargs,
         )
         # The body of an x/v/f packet should contain
@@ -682,9 +729,7 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError(
-                "unpause_empty_proportion must be between 0 and 1"
-            )
+            raise ValueError("unpause_empty_proportion must be between 0 and 1")
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -751,9 +796,7 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(
-                f"IMDProducer: Error waiting for space in buffer: {e}"
-            )
+            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -799,9 +842,7 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while (
-                    self._full_q.qsize() == 0 and not self._producer_finished
-                ):
+                while self._full_q.qsize() == 0 and not self._producer_finished:
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:
