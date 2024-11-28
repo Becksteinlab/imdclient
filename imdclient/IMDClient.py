@@ -98,14 +98,42 @@ class IMDClient:
         self._go()
 
         if self._multithreaded:
+            # Disconnect MUST occur. This covers typical cases
             signal.signal(signal.SIGINT, self.signal_handler)
+            signal.signal(signal.SIGTERM, self.signal_handler)
+
+            # Disconnect MUST occur. This covers Jupyter + Ipython cases
+            # since in jupyter, the signal handler is reset to the default
+            # by pre- and post- hooks
+            # https://stackoverflow.com/questions/70841648/jupyter-reverts-signal-handler-to-default-when-running-next-cell
+            try:
+                import IPython
+            except ImportError:
+                has_ipython = False
+            else:
+                has_ipython = True
+
+            if has_ipython:
+                try:
+                    from IPython import get_ipython
+
+                    if get_ipython() is not None:
+                        kernel = get_ipython().kernel
+                        kernel.pre_handler_hook = lambda: None
+                        kernel.post_handler_hook = lambda: None
+                        logger.debug("Running in Jupyter")
+                except NameError:
+                    logger.debug("Running in non-jupyter IPython environment")
+
             self._producer.start()
 
     def signal_handler(self, sig, frame):
         """Catch SIGINT to allow clean shutdown on CTRL+C
         This also ensures that main thread execution doesn't get stuck
         waiting in buf.pop_full_imdframe()"""
+        logger.debug("Intercepted signal")
         self.stop()
+        logger.debug("Shutdown success")
 
     def get_imdframe(self):
         """
@@ -152,9 +180,9 @@ class IMDClient:
         """
         if self._multithreaded:
             if not self._stopped:
+                self._stopped = True
                 self._buf.notify_consumer_finished()
                 self._disconnect()
-                self._stopped = True
         else:
             self._disconnect()
 
