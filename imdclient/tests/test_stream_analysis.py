@@ -15,7 +15,7 @@ from numpy.testing import (
 )
 import numpy as np
 import pytest
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 
 
 class TestStreamAnalysis:
