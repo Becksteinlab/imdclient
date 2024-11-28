@@ -1,4 +1,3 @@
-from imdclient.IMDREADER import IMDReader
 import MDAnalysis as mda
 import pytest
 from pathlib import Path
@@ -49,6 +48,7 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         else:
             return 0
 
+    # Not present in lammps-produced H5MD
     @pytest.fixture()
     def comp_dt(self):
         return False

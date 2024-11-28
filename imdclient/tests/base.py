@@ -1,5 +1,5 @@
 from imdclient.IMDClient import IMDClient
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 import pytest
 from pathlib import Path
 import os

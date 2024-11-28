@@ -173,14 +173,10 @@ jobs:
         run: |
           pytest -v --color=yes imdclient/tests/test_lammps.py
   
-      - name: Run NAMD tests
-        run: |
-          pytest -v --color=yes imdclient/tests/test_namd.py
-      
-      - name: Dump docker logs on failure
-        if: failure()
-        run: |
-          docker logs sim
+      # SUSPEND until NAMD permissions are resolved
+      # - name: Run NAMD tests
+      #   run: |
+      #     pytest -v --color=yes imdclient/tests/test_namd.py
 
   pylint_check:
     if: github.repository == 'Becksteinlab/imdclient'
