@@ -1,5 +1,5 @@
 API Documentation
 =================
 
-.. automodule:: imdclient.IMDREADER
+.. automodule:: imdclient.IMD
 .. automodule:: imdclient.IMDClient
