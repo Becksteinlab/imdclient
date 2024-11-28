@@ -42,10 +42,11 @@ class IMDClient:
     socket_bufsize : int, (optional)
         Size of the socket buffer in bytes. Default is to use the system default
     buffer_size : int (optional)
-        IMDFramebuffer will be filled with as many :class:IMDFrame fit in `buffer_size` [``10MB``]
+        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` [``10MB``]
     **kwargs : dict (optional)
-        Additional keyword arguments to pass to the :class:BaseIMDProducer and :class:IMDFrameBuffer
+        Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
     """
+
     def __init__(
         self,
         host,
@@ -640,6 +641,21 @@ class IMDFrameBuffer:
     """
     Acts as interface between producer (IMDProducer) and consumer (IMDClient) threads
     when IMDClient runs in multithreaded mode
+
+    Parameters
+    ----------
+    imdsinfo : IMDSessionInfo
+        Information about the IMD session
+    n_atoms : int
+        Number of atoms in the simulation
+    buffer_size : int, optional
+        Size of the buffer in bytes [``10MB``]
+    pause_empty_proportion : float, optional
+        Lower threshold proportion of the buffer's IMDFrames that are empty
+        before the simulation is paused [``0.25``]
+    unpause_empty_proportion : float, optional
+        Proportion of the buffer's IMDFrames that must be empty
+        before the simulation is unpaused [``0.5``]
     """
 
     def __init__(
@@ -651,23 +667,6 @@ class IMDFrameBuffer:
         unpause_empty_proportion=0.5,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        imdsinfo : IMDSessionInfo
-            Information about the IMD session
-        n_atoms : int
-            Number of atoms in the simulation
-        buffer_size : int, optional
-            Size of the buffer in bytes [``10MB``]
-        pause_empty_proportion : float, optional
-            Lower threshold proportion of the buffer's IMDFrames that are empty
-            before the simulation is paused [``0.25``]
-        unpause_empty_proportion : float, optional
-            Proportion of the buffer's IMDFrames that must be empty
-            before the simulation is unpaused [``0.5``]
-        """
-
         # Syncing reader and producer
         self._producer_finished = False
         self._consumer_finished = False
