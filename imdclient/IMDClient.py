@@ -42,7 +42,7 @@ class IMDClient:
     socket_bufsize : int, (optional)
         Size of the socket buffer in bytes. Default is to use the system default
     buffer_size : int (optional)
-        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` [``10MB``]
+        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
     timeout : int, optional
         Timeout for the socket in seconds [``5``]
     **kwargs : dict (optional)

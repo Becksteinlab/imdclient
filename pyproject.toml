@@ -33,6 +33,7 @@ test = [
     "pytest-xdist>=2.5",
     "pytest-cov>=3.0",
     "MDAnalysisTests>=2.7.0",
+    "docker-py",
 ]
 doc = [
     "sphinx",

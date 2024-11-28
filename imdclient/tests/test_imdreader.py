@@ -31,7 +31,7 @@ import pytest
 from MDAnalysis.transformations import translate
 import pickle
 
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")

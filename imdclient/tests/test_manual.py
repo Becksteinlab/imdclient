@@ -1,4 +1,4 @@
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 import pytest
 import MDAnalysis as mda
 from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal
@@ -59,33 +59,35 @@ class TestIMDv3Manual:
 
         for i in range(first_frame_arg, len(true_u.trajectory)):
             assert_allclose(
-                true_u.trajectory[i].time, imd_u.trajectory[i].time, atol=1e-03
+                true_u.trajectory[i].time,
+                imd_u.trajectory[i - first_frame_arg].time,
+                atol=1e-03,
             )
             assert_allclose(
                 true_u.trajectory[i].data["step"],
-                imd_u.trajectory[i].data["step"],
+                imd_u.trajectory[i - first_frame_arg].data["step"],
             )
             if true_u.trajectory[i].dimensions is not None:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].dimensions,
-                    imd_u.trajectory[i].dimensions,
+                    imd_u.trajectory[i - first_frame_arg].dimensions,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_positions:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].positions,
-                    imd_u.trajectory[i].positions,
+                    imd_u.trajectory[i - first_frame_arg].positions,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_velocities:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].velocities,
-                    imd_u.trajectory[i].velocities,
+                    imd_u.trajectory[i - first_frame_arg].velocities,
                     atol=1e-03,
                 )
             if true_u.trajectory[i].has_forces:
                 assert_allclose_with_logging(
                     true_u.trajectory[i].forces,
-                    imd_u.trajectory[i].forces,
+                    imd_u.trajectory[i - first_frame_arg].forces,
                     atol=1e-03,
                 )

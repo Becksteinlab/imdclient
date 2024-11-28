@@ -1,6 +1,5 @@
 from imdclient.IMDProtocol import *
 import socket
-from imdclient.IMDProtocol import *
 import logging
 
 
