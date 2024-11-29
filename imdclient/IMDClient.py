@@ -25,6 +25,7 @@ import time
 import numpy as np
 from typing import Union, Dict
 import signal
+import atexit
 
 logger = logging.getLogger(__name__)
 
@@ -98,11 +99,11 @@ class IMDClient:
         self._go()
 
         if self._multithreaded:
-            # Disconnect MUST occur. This covers typical cases
+            # Disconnect MUST occur. This covers typical cases (Python, IPython interpreter)
             signal.signal(signal.SIGINT, self.signal_handler)
             signal.signal(signal.SIGTERM, self.signal_handler)
 
-            # Disconnect MUST occur. This covers Jupyter + Ipython cases
+            # Disconnect and socket shutdown MUST occur. This covers Jupyter use
             # since in jupyter, the signal handler is reset to the default
             # by pre- and post- hooks
             # https://stackoverflow.com/questions/70841648/jupyter-reverts-signal-handler-to-default-when-running-next-cell
@@ -124,6 +125,10 @@ class IMDClient:
                         logger.debug("Running in Jupyter")
                 except NameError:
                     logger.debug("Running in non-jupyter IPython environment")
+
+            # Final case: error is raised outside of IMDClient code
+            logger.debug("Registering atexit")
+            atexit.register(self.stop)
 
             self._producer.start()
 
@@ -181,8 +186,8 @@ class IMDClient:
         if self._multithreaded:
             if not self._stopped:
                 self._stopped = True
-                self._buf.notify_consumer_finished()
                 self._disconnect()
+                self._buf.notify_consumer_finished()
         else:
             self._disconnect()
 
