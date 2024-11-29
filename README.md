@@ -21,11 +21,16 @@ IMDClient
 [url_license]: https://opensource.org/license/mit
 [url_mda]: https://www.mdanalysis.org
 
-Receiver for IMDv3 protocol from simulation engines like Gromacs, LAMMPS, and NAMD.
+Receiver for [IMDv3 protocol](https://imdclient.readthedocs.io/en/latest/protocol_v3.html) from simulation engines like Gromacs, LAMMPS, and NAMD.
 
 IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdreader/blob/main/CODE_OF_CONDUCT.md).
 
 ### Installation
+
+IMDClient is available via PyPi and can be installed with pip:
+```bash
+pip install imdclient
+```
 
 To build IMDClient from source,
 we highly recommend using virtual environments.
