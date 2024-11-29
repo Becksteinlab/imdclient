@@ -1,4 +1,5 @@
 from imdclient.IMDClient import IMDClient
+from imdclient.IMD import IMDReader
 import pytest
 from pathlib import Path
 import os
@@ -9,8 +10,11 @@ from numpy.testing import (
     assert_allclose,
 )
 import numpy as np
-
+import docker
 import logging
+import shutil
+import MDAnalysis as mda
+from .utils import get_free_port
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -61,62 +65,146 @@ def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
 class IMDv3IntegrationTest:
 
     @pytest.fixture()
-    def run_sim_and_wait(self, tmp_path, command, match_string):
-        old_cwd = Path.cwd()
-        os.chdir(tmp_path)
-        p = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=True,
-            text=True,
-            bufsize=0,
-            preexec_fn=os.setsid,
-        )
-        t = time.time()
-
-        for stdout_line in iter(p.stdout.readline, ""):
-            logger.debug(f"stdout: {stdout_line}")
-            if match_string in stdout_line:
-
-                break
-            if time.time() - t > 10:
-                raise TimeoutError("Timeout waiting for match string")
-
-        logger.debug("Match string found")
-        yield p
-        os.chdir(old_cwd)
-        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+    def setup_command(self):
+        return None
 
     @pytest.fixture()
-    def client(self, run_sim_and_wait, universe):
-        client = IMDClient("localhost", 8888, universe.trajectory.n_atoms)
-        yield client
-        client.stop()
+    def port(self):
+        yield get_free_port()
 
-    def test_compare_imd_to_true_traj(self, universe, client, first_frame):
-        imdsinfo = client.get_imdsessioninfo()
+    @pytest.fixture()
+    def docker_client(
+        self,
+        tmp_path,
+        input_files,
+        setup_command,
+        simulation_command,
+        port,
+    ):
+        # In CI, container process needs access to tmp_path
+        tmp_path.chmod(0o777)
+        docker_client = docker.from_env()
+        img = docker_client.images.pull(
+            "ghcr.io/becksteinlab/streaming-md-docker:main-Common-CPU"
+        )
+        # Copy input files into tmp_path
+        for inp in input_files:
+            shutil.copy(inp, tmp_path)
 
-        for ts in universe.trajectory[first_frame:]:
-            imdf = client.get_imdframe()
-            if imdsinfo.time:
-                assert_allclose(imdf.time, ts.time, atol=1e-03)
-                assert_allclose(imdf.step, ts.data["step"])
-            if imdsinfo.box:
-                assert_allclose_with_logging(
-                    imdf.box,
-                    ts.triclinic_dimensions,
+        cmdstring = "cd '/tmp'"
+        # Run the setup command, if any
+        if setup_command is not None:
+            # This should be blocking
+            cmdstring += " && " + setup_command
+
+        cmdstring += " && " + simulation_command
+
+        # Start the container, mount tmp_path, run simulation
+        container = docker_client.containers.run(
+            img,
+            f"/bin/sh -c '{cmdstring}'",
+            detach=True,
+            volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
+            ports={"8888/tcp": port},
+            name="sim",
+            remove=True,
+        )
+
+        # For now, just wait 30 seconds
+        # life is too short to figure out how to redirect all stdout from inside
+        # a container
+        time.sleep(30)
+
+        yield
+        try:
+            container.stop()
+        except docker.errors.NotFound:
+            pass
+
+    @pytest.fixture()
+    def imd_u(self, docker_client, topol, tmp_path, port):
+        u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
+        with mda.Writer(
+            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
+        ) as w:
+            for ts in u.trajectory:
+                w.write(u.atoms)
+        yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
+
+    @pytest.fixture()
+    def true_u(self, topol, traj, imd_u, tmp_path):
+        u = mda.Universe(
+            (tmp_path / topol),
+            (tmp_path / traj),
+        )
+        yield u
+
+    @pytest.fixture()
+    def comp_time(self):
+        return True
+
+    @pytest.fixture()
+    def comp_dt(self):
+        return True
+
+    @pytest.fixture()
+    def comp_step(self):
+        return True
+
+    def test_compare_imd_to_true_traj(
+        self, imd_u, true_u, first_frame, comp_time, comp_dt, comp_step
+    ):
+        for i in range(first_frame, len(true_u.trajectory)):
+            if comp_time:
+                assert_allclose(
+                    true_u.trajectory[i].time,
+                    imd_u.trajectory[i - first_frame].time,
                     atol=1e-03,
                 )
-            if imdsinfo.positions:
-                assert_allclose_with_logging(
-                    imdf.positions, ts.positions, atol=1e-03
+            if comp_dt:
+                assert_allclose(
+                    true_u.trajectory[i].dt,
+                    imd_u.trajectory[i - first_frame].dt,
+                    atol=1e-03,
                 )
-            if imdsinfo.velocities:
-                assert_allclose_with_logging(
-                    imdf.velocities, ts.velocities, atol=1e-03
+            if comp_step:
+                assert_allclose(
+                    true_u.trajectory[i].data["step"],
+                    imd_u.trajectory[i - first_frame].data["step"],
                 )
-            if imdsinfo.forces:
+            if (
+                true_u.trajectory[i].dimensions is not None
+                and imd_u.trajectory[i - first_frame].dimensions is not None
+            ):
                 assert_allclose_with_logging(
-                    imdf.forces, ts.forces, atol=1e-03
+                    true_u.trajectory[i].dimensions,
+                    imd_u.trajectory[i - first_frame].dimensions,
+                    atol=1e-03,
+                )
+            if (
+                true_u.trajectory[i].has_positions
+                and imd_u.trajectory[i - first_frame].has_positions
+            ):
+                assert_allclose_with_logging(
+                    true_u.trajectory[i].positions,
+                    imd_u.trajectory[i - first_frame].positions,
+                    atol=1e-03,
+                )
+            if (
+                true_u.trajectory[i].has_velocities
+                and imd_u.trajectory[i - first_frame].has_velocities
+            ):
+                assert_allclose_with_logging(
+                    true_u.trajectory[i].velocities,
+                    imd_u.trajectory[i - first_frame].velocities,
+                    atol=1e-03,
+                )
+            if (
+                true_u.trajectory[i].has_forces
+                and imd_u.trajectory[i - first_frame].has_forces
+            ):
+                assert_allclose_with_logging(
+                    true_u.trajectory[i].forces,
+                    imd_u.trajectory[i - first_frame].forces,
+                    atol=1e-03,
                 )
