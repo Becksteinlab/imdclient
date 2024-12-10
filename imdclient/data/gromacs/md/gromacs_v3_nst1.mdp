@@ -5,11 +5,11 @@ integrator              = md        ; leap-frog integrator
 nsteps                  = 100    ; 1 * 1000 = 1 ps
 dt                      = 0.001     ; 1 fs
 ; Output control
-nstxout                 = 1      ; save coordinates every 1 ps
-nstvout                 = 1      ; save velocities every 1 ps
-nstfout                 = 1
-nstenergy               = 1      ; save energies every 1 ps
-nstlog                  = 1      ; update log file every 1 ps
+nstxout                 = 1      ; save coordinates every 1 fs
+nstvout                 = 1      ; save velocities every 1 fs
+nstfout                 = 1      ; save forces every 1 fs
+nstenergy               = 1      ; save energies every 1 fs
+nstlog                  = 10     
 ; Center of mass (COM) motion
 nstcomm                 = 10        ; remove COM motion every 10 steps
 comm-mode               = Linear    ; remove only COM translation (liquids in PBC) 
@@ -31,7 +31,7 @@ coulombtype             = PME       ; Particle Mesh Ewald for long-range electro
 pme_order               = 4         ; cubic interpolation
 fourierspacing          = 0.12      ; grid spacing for FFT
 ; Temperature coupling is on
-tcoupl                  = Berendsen       ; good for production, after equilibration
+tcoupl                  = Nose-Hoover       ; good for production, after equilibration
 ; we define separate thermostats for the solute and solvent (need to adapt)
 ; see default groups defined by Gromacs for your system or define your own (make_ndx)
 tc-grps                 = Protein  SOL      ; the separate groups for the thermostats
