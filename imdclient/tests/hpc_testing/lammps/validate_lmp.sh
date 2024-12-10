@@ -2,10 +2,11 @@
 
 # Default values
 LAMMPS_BIN="lmp"
-LAMMPS_INPUT="lammps_v3.in"
+LAMMPS_INPUT="lammps_v3_nst_1.in"
 TOPOL_PATH="topology_after_min.data"
 
 OUTPUT_FILE="lammps_imd.out"
+TRAJ_FILE="lammps_trj.h5md"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -59,7 +60,7 @@ done
 echo "Running IMDClient manual test..."
 python ../../test_manual.py \
     --topol_path "$TOPOL_PATH" \
-    --traj_path "$TRAJ_PATH" \
+    --traj_path "$TRAJ_FILE" \
     --first_frame 1 
 
 
