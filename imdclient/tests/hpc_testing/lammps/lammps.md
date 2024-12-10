@@ -2,7 +2,7 @@
 
 ## GPU, MPI, and asynchronous IMD testing
 
-Allocate a GPU node on SOL and clone in https://github.com/ljwoods2/lammps/tree/imdv3
+Allocate a GPU node on SOL and clone in https://github.com/ljwoods2/lammps/tree/imd-v3
 
 After cloning, do:
 
@@ -25,7 +25,8 @@ In one shell (with all modules above loaded), navigate to the lammps hpc testing
 ```bash
 cd imdclient/tests/hpc_testing/lammps
 
-mpiexec -np 2 --oversubscribe /home/ljwoods2/workspace/lammps/build_gpu/lmp -sf gpu -in /home/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
+mpiexec -n 2 /home/ljwoods2/workspace/lammps/build_gpu/lmp -sf gpu -in \
+    /home/ljwoods2/workspace/imdclient/imdclient/tests/hpc_testing/lammps/lammps_v3.in 
 ```
 
 In another shell, run the test script

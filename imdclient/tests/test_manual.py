@@ -66,6 +66,7 @@ class TestIMDv3Manual:
             f"{tmp_path.as_posix()}/imd_test_traj.trr",
             atom_style="id type x y z",
         )
+        # Give all MPI ranks a chance to release FD on traj
         time.sleep(10)
         yield imd_u
 
