@@ -7,7 +7,6 @@ from pathlib import Path
 import time
 import argparse
 import logging
-from base import assert_allclose_with_logging
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("manual_test.log")
@@ -34,6 +33,49 @@ Where the topology is the same topology as the IMD system, the trajectory is the
 the trajectory of the running simulation is being written, and the first frame is the first frame of the
 trajectory which should be compared to IMD data read from the socket (0 for GROMACS and NAMD, 1 for LAMMPS)
 """
+
+
+def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
+    """
+    Custom function to compare two arrays element-wise, similar to np.testing.assert_allclose,
+    but logs all non-matching values.
+
+    Parameters:
+    a, b : array_like
+        Input arrays to compare.
+    rtol : float
+        Relative tolerance.
+    atol : float
+        Absolute tolerance.
+    equal_nan : bool
+        Whether to compare NaNs as equal.
+    """
+    # Convert inputs to numpy arrays
+    a = np.asarray(a)
+    b = np.asarray(b)
+
+    # Compute the absolute difference
+    diff = np.abs(a - b)
+
+    # Check if values are within tolerance
+    not_close = diff > (atol + rtol * np.abs(b))
+
+    # Check if there are any NaNs and handle them if necessary
+    if equal_nan:
+        nan_mask = np.isnan(a) & np.isnan(b)
+        not_close &= ~nan_mask
+
+    # Log all the values that are not close
+    if np.any(not_close):
+        print("The following values do not match within tolerance:")
+        for idx in np.argwhere(not_close):
+            logger.debug(
+                f"a[{tuple(idx)}]: {a[tuple(idx)]}, b[{tuple(idx)}]: {b[tuple(idx)]}, diff: {diff[tuple(idx)]}"
+            )
+        # Optionally raise an error after logging if you want it to behave like assert
+        raise AssertionError("Arrays are not almost equal.")
+    else:
+        print("All values are within tolerance.")
 
 
 def load_true_universe(topol_path, traj_path):
@@ -64,8 +106,9 @@ def load_imd_universe(topol_path, tmp_path):
 
 def test_compare_imd_to_true_traj_vel(imd_u, true_u_vel, first_frame):
     for i in range(first_frame, len(true_u_vel.trajectory)):
+        # Manually convert unit
         assert_allclose_with_logging(
-            true_u_vel.trajectory[i].positions,
+            true_u_vel.trajectory[i].positions * 20.45482706,
             imd_u.trajectory[i - first_frame].velocities,
             atol=1e-03,
         )
@@ -138,18 +181,22 @@ def main():
 
     args = parser.parse_args()
 
-    print("Writing IMD trajectory to temporary directory...")
+    print(
+        "Writing IMD trajectory to temporary directory...\n===================="
+    )
     imd_u = load_imd_universe(args.topol_path, args.tmp_path)
 
-    print("Loading source of truth trajectory...")
+    print("Loading source of truth trajectory...\n====================")
     true_u = load_true_universe(args.topol_path, args.traj_path)
 
     try:
-        print("Comparing trajectories...")
+        print("Comparing trajectories...\n====================")
         test_compare_imd_to_true_traj(true_u, imd_u, args.first_frame)
 
         if args.vel_path is not None:
-            print("Loading source of truth velocity trajectory...")
+            print(
+                "Loading source of truth velocity trajectory...\n===================="
+            )
             true_vel = load_true_universe(args.topol_path, args.vel_path)
             print("Comparing velocities...")
             test_compare_imd_to_true_traj_vel(
@@ -157,9 +204,11 @@ def main():
             )
 
         if args.force_path is not None:
-            logger.info("Loading source of truth force trajectory...")
+            print(
+                "Loading source of truth force trajectory...\n===================="
+            )
             true_force = load_true_universe(args.topol_path, args.force_path)
-            logger.info("Comparing forces...")
+            print("Comparing forces...")
             test_compare_imd_to_true_traj_forces(
                 imd_u, true_force, args.first_frame
             )

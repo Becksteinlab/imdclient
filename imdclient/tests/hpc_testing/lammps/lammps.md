@@ -35,8 +35,11 @@ module load mamba
 # Environment containing IMDClient
 source activate imdclient-test
 
-pytest -s imdclient/tests/test_manual.py \
-    --topol_path_arg imdclient/tests/hpc_testing/lammps/topology_after_min.data \
-    --traj_path_arg imdclient/tests/hpc_testing/lammps/lammps_trj.h5md \
-    --first_frame_arg 1
+mkdir tmp_test
+
+python imdclient/tests/test_manual.py \
+    --topol_path imdclient/tests/hpc_testing/lammps/topology_after_min.data \
+    --traj_path imdclient/tests/hpc_testing/lammps/lammps_trj.h5md \
+    --first_frame 1 \
+    --tmp_path tmp_test
 ```
