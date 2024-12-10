@@ -8,7 +8,7 @@ from numpy.testing import (
 import numpy as np
 from .base import assert_allclose_with_logging
 from pathlib import Path
-
+import time
 import logging
 
 logger = logging.getLogger("imdclient.IMDClient")
@@ -66,6 +66,7 @@ class TestIMDv3Manual:
             f"{tmp_path.as_posix()}/imd_test_traj.trr",
             atom_style="id type x y z",
         )
+        time.sleep(10)
         yield imd_u
 
     def test_compare_imd_to_true_traj(self, true_u, imd_u, first_frame_arg):
