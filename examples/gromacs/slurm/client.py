@@ -1,5 +1,5 @@
 # NOTE: chamge
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 import MDAnalysis as mda
 import logging
 

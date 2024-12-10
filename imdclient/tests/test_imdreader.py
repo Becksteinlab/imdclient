@@ -31,7 +31,7 @@ import pytest
 from MDAnalysis.transformations import translate
 import pickle
 
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
@@ -171,9 +171,7 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             decimal=ref.prec,
         )
 
-    @pytest.mark.skip(
-        reason="Stream-based reader can only be read iteratively"
-    )
+    @pytest.mark.skip(reason="Stream-based reader can only be read iteratively")
     def test_changing_dimensions(self, ref, reader):
         if ref.changing_dimensions:
             reader.rewind()
@@ -642,3 +640,19 @@ class TestStreamIteration:
         with pytest.raises(RuntimeError):
             for ts in sub_sliced_reader:
                 pass
+
+
+def test_n_atoms_mismatch():
+    universe = mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+    port = get_free_port()
+    server = InThreadIMDServer(universe.trajectory)
+    server.set_imdsessioninfo(create_default_imdsinfo_v3())
+    server.handshake_sequence("localhost", port, first_frame=True)
+    with pytest.raises(
+        EOFError,
+        match="IMDProducer: Expected n_atoms value 6, got 5. Ensure you are using the correct topology file.",
+    ):
+        IMDReader(
+            f"imd://localhost:{port}",
+            n_atoms=universe.trajectory.n_atoms + 1,
+        )

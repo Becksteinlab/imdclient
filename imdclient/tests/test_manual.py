@@ -1,4 +1,4 @@
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 import pytest
 import MDAnalysis as mda
 from MDAnalysisTests.coordinates.base import assert_timestep_almost_equal

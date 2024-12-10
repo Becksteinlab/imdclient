@@ -1,4 +1,4 @@
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 import MDAnalysis as mda
 import logging
 from imdclient.tests.datafiles import NAMD_TOPOL
