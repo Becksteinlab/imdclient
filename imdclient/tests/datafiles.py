@@ -9,11 +9,20 @@ Use as ::
 """
 
 __all__ = [
-    "LAMMPS_IN",
     "LAMMPS_TOPOL",
+    "LAMMPS_IN_NST_1",
+    "LAMMPS_IN_NST_8",
     "GROMACS_TRAJ",
-    "GROMACS_TOPOL",
-    "GROMACS_TPR",
+    "GROMACS_MDP",
+    "GROMACS_TOP" "LAMMPS_IN_NST_1",
+    "GROMACS_GRO",
+    "GROMACS_MDP_NST_1",
+    "GROMACS_MDP_NST_8",
+    "NAMD_TOPOL",
+    "NAMD_CONF_NST_1",
+    "NAMD_CONF_NST_8",
+    "NAMD_PARAMS",
+    "NAMD_PSF",
 ]
 
 from importlib import resources

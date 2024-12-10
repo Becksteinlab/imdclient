@@ -14,7 +14,7 @@ import docker
 import logging
 import shutil
 import MDAnalysis as mda
-from .utils import get_free_port
+from utils import get_free_port
 
 logger = logging.getLogger("imdclient.IMDClient")
 

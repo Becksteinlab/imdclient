@@ -2,7 +2,7 @@
 
 ## GPU, MPI, threading
 
-Allocate a GPU node on SOL and clone in https://github.com/hcho38/gromacs.git
+Allocate a GPU node on SOL and clone in https://gitlab.com/ljwoods2/gromacs.git
 
 After cloning, do:
 ```bash
