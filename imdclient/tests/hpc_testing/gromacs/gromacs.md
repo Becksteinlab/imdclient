@@ -62,8 +62,11 @@ module load mamba
 # Environment containing IMDClient
 source activate imdclient-test
 
-pytest -s ../../test_manual.py \
-    --topol_arg struct.gro \
-    --traj_arg gmx_gpu_test.trr \
-    --first_frame_arg 0
+mkdir tmp_test
+
+python imdclient/tests/test_manual.py \
+    --topol_arg imdclient/tests/hpc_testing/gromacs/struct.gro \
+    --traj_arg imdclient/tests/hpc_testing/gromacs/gmx_gpu_test.trr \
+    --first_frame_arg 0 \
+    --tmp_path tmp_test
 ```
