@@ -69,6 +69,7 @@ class TestIMDClientV3:
             buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo)
             * 2,
         )
+        server.join_accept_thread()
         yield server, client
         client.stop()
         server.cleanup()
@@ -84,6 +85,7 @@ class TestIMDClientV3:
             port,
             universe.trajectory.n_atoms,
         )
+        server.join_accept_thread()
         yield server, client
         client.stop()
         server.cleanup()
@@ -160,6 +162,7 @@ class TestIMDClientV3:
             universe.trajectory.n_atoms,
             continue_after_disconnect=cont,
         )
+        server.join_accept_thread()
         server.expect_packet(
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
