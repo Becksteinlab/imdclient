@@ -46,6 +46,10 @@ class IMDClient:
         IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
     timeout : int, optional
         Timeout for the socket in seconds [``5``]
+    continue_after_disconnect : bool, optional [``None``]
+        If True, the client will attempt to change the simulation engine's waiting behavior to
+        non-blocking after the client disconnects. If False, the client will attempt to change it
+        to blocking. If None, the client will not attempt to change the simulation engine's behavior.
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
     """
@@ -57,6 +61,7 @@ class IMDClient:
         n_atoms,
         socket_bufsize=None,
         multithreaded=True,
+        continue_after_disconnect=None,
         **kwargs,
     ):
 
@@ -64,6 +69,7 @@ class IMDClient:
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
+        self._continue_after_disconnect = continue_after_disconnect
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -201,7 +207,9 @@ class IMDClient:
             # /proc/sys/net/core/rmem_default
             # Max (linux):
             # /proc/sys/net/core/rmem_max
-            conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
+            conn.setsockopt(
+                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
+            )
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
             conn.connect((host, port))
@@ -291,6 +299,17 @@ class IMDClient:
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
+
+        if self._continue_after_disconnect is not None:
+            wait_behavior = (int)(not self._continue_after_disconnect)
+            wait_packet = create_header_bytes(
+                IMDHeaderType.IMD_WAIT, wait_behavior
+            )
+            self._conn.sendall(wait_packet)
+            logger.debug(
+                "IMDClient: Attempted to change wait behavior to ", 
+                not self._continue_after_disconnect 
+            )
 
     def _disconnect(self):
         # MUST disconnect before stopping execution
@@ -499,7 +518,14 @@ class BaseIMDProducer(threading.Thread):
 
 class IMDProducerV2(BaseIMDProducer):
     def __init__(
-        self, conn, buffer, sinfo, n_atoms, multithreaded, error_queue, **kwargs
+        self,
+        conn,
+        buffer,
+        sinfo,
+        n_atoms,
+        multithreaded,
+        error_queue,
+        **kwargs,
     ):
         super(IMDProducerV2, self).__init__(
             conn, buffer, sinfo, n_atoms, multithreaded, error_queue, **kwargs
@@ -762,7 +788,9 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError("unpause_empty_proportion must be between 0 and 1")
+            raise ValueError(
+                "unpause_empty_proportion must be between 0 and 1"
+            )
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -829,7 +857,9 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
+            logger.debug(
+                f"IMDProducer: Error waiting for space in buffer: {e}"
+            )
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -875,7 +905,9 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while self._full_q.qsize() == 0 and not self._producer_finished:
+                while (
+                    self._full_q.qsize() == 0 and not self._producer_finished
+                ):
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:

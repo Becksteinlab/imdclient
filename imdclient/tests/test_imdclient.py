@@ -149,6 +149,21 @@ class TestIMDClientV3:
         # server should receive disconnect from client (though it doesn't have to do anything)
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
 
+    @pytest.mark.parametrize("cont", [True, False])
+    def test_continue_after_disconnect(self, universe, imdsinfo, port, cont):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            port,
+            universe.trajectory.n_atoms,
+            continue_after_disconnect=cont,
+        )
+        server.expect_packet(
+            IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
+        )
+
 
 class TestIMDClientV3ContextManager:
     @pytest.fixture
