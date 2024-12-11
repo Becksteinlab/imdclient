@@ -69,6 +69,7 @@ class TestIMDClientV3:
             buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo)
             * 2,
         )
+        server.join_accept_thread()
         yield server, client
         client.stop()
         server.cleanup()
@@ -84,6 +85,7 @@ class TestIMDClientV3:
             port,
             universe.trajectory.n_atoms,
         )
+        server.join_accept_thread()
         yield server, client
         client.stop()
         server.cleanup()
@@ -148,6 +150,22 @@ class TestIMDClientV3:
             client.get_imdframe()
         # server should receive disconnect from client (though it doesn't have to do anything)
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
+
+    @pytest.mark.parametrize("cont", [True, False])
+    def test_continue_after_disconnect(self, universe, imdsinfo, port, cont):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            port,
+            universe.trajectory.n_atoms,
+            continue_after_disconnect=cont,
+        )
+        server.join_accept_thread()
+        server.expect_packet(
+            IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
+        )
 
 
 class TestIMDClientV3ContextManager:

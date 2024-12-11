@@ -93,21 +93,13 @@ class InThreadIMDServer:
             positions,
             wrapped_coords,
             velocities,
-            forces
+            forces,
         )
         logger.debug(f"InThreadIMDServer: Sending session info")
         self.conn.sendall(sinfo)
 
     def join_accept_thread(self):
         self.accept_thread.join()
-
-    def _expect_go(self):
-        logger.debug(f"InThreadIMDServer: Waiting for go")
-        head_buf = bytearray(IMDHEADERSIZE)
-        read_into_buf(self.conn, head_buf)
-        header = IMDHeader(head_buf)
-        if header.type != IMDHeaderType.IMD_GO:
-            raise ValueError("Expected IMD_GO packet, got something else")
 
     def send_frames(self, start, end):
         for i in range(start, end):
@@ -126,7 +118,7 @@ class InThreadIMDServer:
             )
 
             self.conn.sendall(time_header + time)
-        
+
         if self.imdsinfo.energies:
             energy_header = create_header_bytes(IMDHeaderType.IMD_ENERGIES, 1)
             energies = create_energy_bytes(
@@ -183,7 +175,6 @@ class InThreadIMDServer:
 
             self.conn.sendall(force_header + force)
 
-        
     def expect_packet(self, packet_type, expected_length=None):
         head_buf = bytearray(IMDHEADERSIZE)
         read_into_buf(self.conn, head_buf)
