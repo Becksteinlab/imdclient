@@ -307,7 +307,7 @@ class IMDClient:
             )
             self._conn.sendall(wait_packet)
             logger.debug(
-                "IMDClient: Attempted to change wait behavior to ", 
+                "IMDClient: Attempted to change wait behavior to %s", 
                 not self._continue_after_disconnect 
             )
 
