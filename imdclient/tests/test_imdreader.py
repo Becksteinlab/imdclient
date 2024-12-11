@@ -658,3 +658,60 @@ def test_n_atoms_mismatch():
             f"imd://localhost:{port}",
             n_atoms=universe.trajectory.n_atoms + 1,
         )
+
+# raise errors for incompatible methods
+class TestIMDReaderBaseAPIExceptions():
+
+    @pytest.fixture
+    def reader(self):
+        universe = mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+        imdsinfo = create_default_imdsinfo_v3()
+        port = get_free_port()
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=True)
+
+        reader = IMDReader(
+            f"imd://localhost:{port}", n_atoms=universe.trajectory.n_atoms
+        )
+        server.send_frames(1, 5)
+        yield reader
+        server.cleanup()
+
+    # test copy method
+    def test_copy_raises_notimplemented_error(self, reader):
+        with pytest.raises(NotImplementedError):
+            reader.copy()
+
+    # test _reopen method
+    def test_reopen_raises_runtime_error_on_second_call(self, reader):
+        # First call should be fine
+        reader._reopen()
+        # Second call should raise RuntimeError
+        with pytest.raises(RuntimeError):
+            reader._reopen()
+    
+    # test n_frames
+    def test_n_frames_raises_runtime_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.n_frames()
+
+    # test __len__
+    def test_len_raises_runtime_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.__len__()
+    
+    # test rewind method
+    def test_rewind_raises_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.rewind()
+
+    # Test __getstate__ method
+    def test_getstate_raises_notimplemented_error(self, reader):
+        with pytest.raises(NotImplementedError):
+            reader.__getstate__()
+
+    # Test __setstate__ method
+    def test_setstate_raises_notimplemented_error(self, reader):
+        with pytest.raises(NotImplementedError):
+            reader.__setstate__(None)
