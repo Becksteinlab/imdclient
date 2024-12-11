@@ -171,7 +171,9 @@ class TestIMDReaderBaseAPI(MultiframeReaderTest):
             decimal=ref.prec,
         )
 
-    @pytest.mark.skip(reason="Stream-based reader can only be read iteratively")
+    @pytest.mark.skip(
+        reason="Stream-based reader can only be read iteratively"
+    )
     def test_changing_dimensions(self, ref, reader):
         if ref.changing_dimensions:
             reader.rewind()

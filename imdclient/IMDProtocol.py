@@ -34,6 +34,7 @@ class IMDHeaderType(Enum):
     IMD_BOX = 13
     IMD_VELOCITIES = 14
     IMD_FORCES = 15
+    IMD_WAIT = 16
 
 
 def parse_energy_bytes(data, endianness):

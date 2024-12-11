@@ -145,7 +145,7 @@ and its associated body packet (if present) is described in detail.
    * - :ref:`forces`
      - 15
      - ❌
-   * - :ref:`wait-flag`
+   * - :ref:`wait`
      - 16
      - ❌
 
@@ -489,10 +489,10 @@ forces were previously specified for this session in the :ref:`session info pack
 
 .. versionadded:: 3
 
-.. _wait-flag:
+.. _wait:
 
-Wait flag
-^^^^^^^^^
+Wait
+^^^^
 
 Sent from the receiver to the simulation engine any time after the :ref:`session info packet <session-info>`
 has been sent to request that the simulation engine modify its waiting behavior mid-simulation either
@@ -513,7 +513,7 @@ The simulation engine's waiting behavior also applies when a receiver disconnect
  .. code-block:: none
 
    Header:
-      16 (int32) Wait flag
+      16 (int32) Wait
       <val> (int32) Nonzero to set the simulation engine's waiting behavior to blocking, 0
                     to set the simulation engine's waiting behavior to non-blocking
 
