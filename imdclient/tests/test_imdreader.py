@@ -667,6 +667,21 @@ class TestIMDReaderBaseAPIExceptions():
         # Second call should raise RuntimeError
         with pytest.raises(RuntimeError):
             reader._reopen()
+    
+    # test n_frames
+    def test_n_frames_raises_runtime_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.n_frames()
+
+    # test __len__
+    def test_len_raises_runtime_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.__len__()
+    
+    # test rewind method
+    def test_rewind_raises_error(self, reader):
+        with pytest.raises(RuntimeError):
+            reader.rewind()
 
     # # test __getitem__ method
     # def test_getitem_raises_runtime_error(self, reader):
