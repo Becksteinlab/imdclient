@@ -50,6 +50,7 @@ class IMDReader(StreamReaderBase):
     ):
         super(IMDReader, self).__init__(filename, **kwargs)
 
+        self._imdclient = None
         logger.debug("IMDReader initializing")
 
         if n_atoms is None:
@@ -125,6 +126,7 @@ class IMDReader(StreamReaderBase):
     def close(self):
         """Gracefully shut down the reader. Stops the producer thread."""
         logger.debug("IMDReader close() called")
-        self._imdclient.stop()
+        if self._imdclient is not None:
+            self._imdclient.stop()
         # NOTE: removeme after testing
         logger.debug("IMDReader shut down gracefully.")

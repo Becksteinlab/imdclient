@@ -739,9 +739,6 @@ class IMDProducerV3(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
 
-    def __del__(self):
-        logger.debug("IMDProducer: I am being deleted")
-
 
 class IMDFrameBuffer:
     """
