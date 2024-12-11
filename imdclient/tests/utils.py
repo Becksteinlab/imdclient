@@ -1,8 +1,5 @@
 from imdclient.IMDProtocol import *
 import socket
-import time
-from imdclient.IMDProtocol import *
-from imdclient.IMDREADER import read_into_buf, sock_contains_data
 import logging
 
 

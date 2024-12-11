@@ -1,3 +1,20 @@
+"""
+
+IMDClient
+^^^^^^^^^
+
+.. autoclass:: IMDClient
+   :members:
+
+.. autoclass:: IMDProducerV3
+   :members:
+   :inherited-members:
+
+.. autoclass:: IMDFrameBuffer
+   :members:
+   
+"""
+
 import socket
 import threading
 from .IMDProtocol import *
@@ -8,11 +25,35 @@ import time
 import numpy as np
 from typing import Union, Dict
 import signal
+import atexit
 
 logger = logging.getLogger(__name__)
 
 
 class IMDClient:
+    """
+    Parameters
+    ----------
+    host : str
+        Hostname of the server
+    port : int
+        Port number of the server
+    n_atoms : int
+        Number of atoms in the simulation
+    socket_bufsize : int, (optional)
+        Size of the socket buffer in bytes. Default is to use the system default
+    buffer_size : int (optional)
+        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
+    timeout : int, optional
+        Timeout for the socket in seconds [``5``]
+    continue_after_disconnect : bool, optional [``None``]
+        If True, the client will attempt to change the simulation engine's waiting behavior to
+        non-blocking after the client disconnects. If False, the client will attempt to change it
+        to blocking. If None, the client will not attempt to change the simulation engine's behavior.
+    **kwargs : dict (optional)
+        Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
+    """
+
     def __init__(
         self,
         host,
@@ -20,28 +61,15 @@ class IMDClient:
         n_atoms,
         socket_bufsize=None,
         multithreaded=True,
+        continue_after_disconnect=None,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        host : str
-            Hostname of the server
-        port : int
-            Port number of the server
-        n_atoms : int
-            Number of atoms in the simulation
-        socket_bufsize : int, optional
-            Size of the socket buffer in bytes. Default is to use the system default
-        buffer_size : int, optional
-            IMDFramebuffer will be filled with as many IMDFrames fit in `buffer_size` [``10MB``]
-        **kwargs : optional
-            Additional keyword arguments to pass to the IMDProducer and IMDFrameBuffer
-        """
+
         self._stopped = False
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
+        self._continue_after_disconnect = continue_after_disconnect
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -49,8 +77,10 @@ class IMDClient:
                 n_atoms,
                 **kwargs,
             )
+            self._error_queue = queue.Queue()
         else:
             self._buf = None
+            self._error_queue = None
         if self._imdsinfo.version == 2:
             self._producer = IMDProducerV2(
                 self._conn,
@@ -58,6 +88,7 @@ class IMDClient:
                 self._imdsinfo,
                 n_atoms,
                 multithreaded,
+                self._error_queue,
                 **kwargs,
             )
         elif self._imdsinfo.version == 3:
@@ -67,23 +98,60 @@ class IMDClient:
                 self._imdsinfo,
                 n_atoms,
                 multithreaded,
+                self._error_queue,
                 **kwargs,
             )
 
         self._go()
 
         if self._multithreaded:
+            # Disconnect MUST occur. This covers typical cases (Python, IPython interpreter)
             signal.signal(signal.SIGINT, self.signal_handler)
+            signal.signal(signal.SIGTERM, self.signal_handler)
+
+            # Disconnect and socket shutdown MUST occur. This covers Jupyter use
+            # since in jupyter, the signal handler is reset to the default
+            # by pre- and post- hooks
+            # https://stackoverflow.com/questions/70841648/jupyter-reverts-signal-handler-to-default-when-running-next-cell
+            try:
+                import IPython
+            except ImportError:
+                has_ipython = False
+            else:
+                has_ipython = True
+
+            if has_ipython:
+                try:
+                    from IPython import get_ipython
+
+                    if get_ipython() is not None:
+                        kernel = get_ipython().kernel
+                        kernel.pre_handler_hook = lambda: None
+                        kernel.post_handler_hook = lambda: None
+                        logger.debug("Running in Jupyter")
+                except NameError:
+                    logger.debug("Running in non-jupyter IPython environment")
+
+            # Final case: error is raised outside of IMDClient code
+            logger.debug("Registering atexit")
+            atexit.register(self.stop)
+
             self._producer.start()
 
     def signal_handler(self, sig, frame):
         """Catch SIGINT to allow clean shutdown on CTRL+C
         This also ensures that main thread execution doesn't get stuck
         waiting in buf.pop_full_imdframe()"""
+        logger.debug("Intercepted signal")
         self.stop()
+        logger.debug("Shutdown success")
 
     def get_imdframe(self):
         """
+        Returns
+        -------
+        IMDFrame
+            The next frame from the IMD server
         Raises
         ------
         EOFError
@@ -97,6 +165,9 @@ class IMDClient:
                 # and doesn't need to be notified
                 self._disconnect()
                 self._stopped = True
+
+                if self._error_queue.qsize():
+                    raise EOFError(f"{self._error_queue.get()}")
                 raise EOFError
         else:
             try:
@@ -106,14 +177,23 @@ class IMDClient:
                 raise EOFError
 
     def get_imdsessioninfo(self):
+        """
+        Returns
+        -------
+        IMDSessionInfo
+            Information about the IMD session
+        """
         return self._imdsinfo
 
     def stop(self):
+        """
+        Stop the client and close the connection
+        """
         if self._multithreaded:
             if not self._stopped:
-                self._buf.notify_consumer_finished()
-                self._disconnect()
                 self._stopped = True
+                self._disconnect()
+                self._buf.notify_consumer_finished()
         else:
             self._disconnect()
 
@@ -123,8 +203,12 @@ class IMDClient:
         """
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if socket_bufsize is not None:
+            # Default (linux):
+            # /proc/sys/net/core/rmem_default
+            # Max (linux):
+            # /proc/sys/net/core/rmem_max
             conn.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, self._socket_bufsize
+                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
             )
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
@@ -216,6 +300,17 @@ class IMDClient:
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
 
+        if self._continue_after_disconnect is not None:
+            wait_behavior = (int)(not self._continue_after_disconnect)
+            wait_packet = create_header_bytes(
+                IMDHeaderType.IMD_WAIT, wait_behavior
+            )
+            self._conn.sendall(wait_packet)
+            logger.debug(
+                "IMDClient: Attempted to change wait behavior to %s", 
+                not self._continue_after_disconnect 
+            )
+
     def _disconnect(self):
         # MUST disconnect before stopping execution
         # if simulation already ended, this method will do nothing
@@ -231,8 +326,37 @@ class IMDClient:
         finally:
             self._conn.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False
+
 
 class BaseIMDProducer(threading.Thread):
+    """
+
+    Parameters
+    ----------
+    conn : socket.socket
+        Connection object to the server
+    buffer : IMDFrameBuffer
+        Buffer object to hold IMD frames. If `multithreaded` is False, this
+        argument is ignored
+    sinfo : IMDSessionInfo
+        Information about the IMD session
+    n_atoms : int
+        Number of atoms in the simulation
+    multithreaded : bool
+        If True, socket interaction will occur in a separate thread &
+        frames will be buffered. Single-threaded, blocking IMDClient
+        should only be used in testing
+    error_queue: queue.Queue
+        Queue to hold errors produced by the producer thread
+    timeout : int, optional
+        Timeout for the socket in seconds [``5``]
+    """
 
     def __init__(
         self,
@@ -240,33 +364,17 @@ class BaseIMDProducer(threading.Thread):
         buffer,
         sinfo,
         n_atoms,
-        multithreaded=True,
+        multithreaded,
+        error_queue,
         timeout=5,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        conn : socket.socket
-            Connection object to the server
-        buffer : IMDFrameBuffer
-            Buffer object to hold IMD frames. If `multithreaded` is False, this
-            argument is ignored
-        sinfo : IMDSessionInfo
-            Information about the IMD session
-        n_atoms : int
-            Number of atoms in the simulation
-        multithreaded : bool, optional
-            If True, socket interaction will occur in a separate thread &
-            frames will be buffered. Single-threaded, blocking IMDClient
-            should only be used in testing [[``True``]]
-
-        """
         super(BaseIMDProducer, self).__init__(daemon=True)
         self._conn = conn
         self._imdsinfo = sinfo
         self._paused = False
 
+        self.error_queue = error_queue
         # Timeout for first frame should be longer
         # than rest of frames
         self._timeout = timeout
@@ -361,6 +469,7 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Simulation ended normally, cleaning up")
         except Exception as e:
             logger.debug("IMDProducer: An unexpected error occurred: %s", e)
+            self.error_queue.put(e)
         finally:
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
@@ -376,9 +485,19 @@ class BaseIMDProducer(threading.Thread):
             )
         # Sometimes we do not care what the value is
         if expected_value is not None and header.length != expected_value:
-            raise RuntimeError(
-                f"IMDProducer: Expected header value {expected_value}, got {header.length}"
-            )
+            if expected_type in [
+                IMDHeaderType.IMD_FCOORDS,
+                IMDHeaderType.IMD_VELOCITIES,
+                IMDHeaderType.IMD_FORCES,
+            ]:
+                raise RuntimeError(
+                    f"IMDProducer: Expected n_atoms value {expected_value}, got {header.length}. "
+                    + "Ensure you are using the correct topology file."
+                )
+            else:
+                raise RuntimeError(
+                    f"IMDProducer: Expected header value {expected_value}, got {header.length}"
+                )
 
     def _get_header(self):
         self._read(self._header)
@@ -398,9 +517,18 @@ class BaseIMDProducer(threading.Thread):
 
 
 class IMDProducerV2(BaseIMDProducer):
-    def __init__(self, conn, buffer, sinfo, n_atoms, multithreaded, **kwargs):
+    def __init__(
+        self,
+        conn,
+        buffer,
+        sinfo,
+        n_atoms,
+        multithreaded,
+        error_queue,
+        **kwargs,
+    ):
         super(IMDProducerV2, self).__init__(
-            conn, buffer, sinfo, n_atoms, multithreaded, **kwargs
+            conn, buffer, sinfo, n_atoms, multithreaded, error_queue, **kwargs
         )
 
         self._energies = bytearray(IMDENERGYPACKETLENGTH)
@@ -493,6 +621,7 @@ class IMDProducerV3(BaseIMDProducer):
         sinfo,
         n_atoms,
         multithreaded,
+        error_queue,
         **kwargs,
     ):
         super(IMDProducerV3, self).__init__(
@@ -501,6 +630,7 @@ class IMDProducerV3(BaseIMDProducer):
             sinfo,
             n_atoms,
             multithreaded,
+            error_queue,
             **kwargs,
         )
         # The body of an x/v/f packet should contain
@@ -609,14 +739,26 @@ class IMDProducerV3(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
 
-    def __del__(self):
-        logger.debug("IMDProducer: I am being deleted")
-
 
 class IMDFrameBuffer:
     """
     Acts as interface between producer (IMDProducer) and consumer (IMDClient) threads
     when IMDClient runs in multithreaded mode
+
+    Parameters
+    ----------
+    imdsinfo : IMDSessionInfo
+        Information about the IMD session
+    n_atoms : int
+        Number of atoms in the simulation
+    buffer_size : int, optional
+        Size of the buffer in bytes [``10MB``]
+    pause_empty_proportion : float, optional
+        Lower threshold proportion of the buffer's IMDFrames that are empty
+        before the simulation is paused [``0.25``]
+    unpause_empty_proportion : float, optional
+        Proportion of the buffer's IMDFrames that must be empty
+        before the simulation is unpaused [``0.5``]
     """
 
     def __init__(
@@ -628,23 +770,6 @@ class IMDFrameBuffer:
         unpause_empty_proportion=0.5,
         **kwargs,
     ):
-        """
-        Parameters
-        ----------
-        imdsinfo : IMDSessionInfo
-            Information about the IMD session
-        n_atoms : int
-            Number of atoms in the simulation
-        buffer_size : int, optional
-            Size of the buffer in bytes [``10MB``]
-        pause_empty_proportion : float, optional
-            Lower threshold proportion of the buffer's IMDFrames that are empty
-            before the simulation is paused [``0.25``]
-        unpause_empty_proportion : float, optional
-            Proportion of the buffer's IMDFrames that must be empty
-            before the simulation is unpaused [``0.5``]
-        """
-
         # Syncing reader and producer
         self._producer_finished = False
         self._consumer_finished = False

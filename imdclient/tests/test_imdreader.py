@@ -17,7 +17,6 @@ from .server import InThreadIMDServer
 from MDAnalysisTests.coordinates.base import (
     MultiframeReaderTest,
     BaseReference,
-    BaseWriterTest,
     assert_timestep_almost_equal,
 )
 from numpy.testing import (
@@ -32,8 +31,7 @@ import pytest
 from MDAnalysis.transformations import translate
 import pickle
 
-# NOTE: removeme
-from imdclient.IMDREADER import IMDReader
+from imdclient.IMD import IMDReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
@@ -57,7 +55,7 @@ class IMDReference(BaseReference):
         self.n_atoms = traj.n_atoms
         self.prec = 3
 
-        self.trajectory = f"localhost:{self.port}"
+        self.trajectory = f"imd://localhost:{self.port}"
         self.topology = COORDINATES_TOPOLOGY
         self.changing_dimensions = True
         self.reader = IMDReader
@@ -587,7 +585,7 @@ class TestStreamIteration:
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", port, first_frame=True)
         reader = IMDReader(
-            f"localhost:{port}",
+            f"imd://localhost:{port}",
             n_atoms=universe.trajectory.n_atoms,
         )
         server.send_frames(1, 5)
@@ -636,6 +634,31 @@ class TestStreamIteration:
             for ts in reader[1:3]:
                 pass
 
+    def test_subslice_fi_all_after_iteration_raises_error(self, reader):
+        sliced_reader = reader[:]
+        for ts in sliced_reader:
+            pass
+        sub_sliced_reader = sliced_reader[::1]
+        with pytest.raises(RuntimeError):
+            for ts in sub_sliced_reader:
+                pass
+
+
+def test_n_atoms_mismatch():
+    universe = mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+    port = get_free_port()
+    server = InThreadIMDServer(universe.trajectory)
+    server.set_imdsessioninfo(create_default_imdsinfo_v3())
+    server.handshake_sequence("localhost", port, first_frame=True)
+    with pytest.raises(
+        EOFError,
+        match="IMDProducer: Expected n_atoms value 6, got 5. Ensure you are using the correct topology file.",
+    ):
+        IMDReader(
+            f"imd://localhost:{port}",
+            n_atoms=universe.trajectory.n_atoms + 1,
+        )
+
 # raise errors for incompatible methods
 class TestIMDReaderBaseAPIExceptions():
 
@@ -649,7 +672,7 @@ class TestIMDReaderBaseAPIExceptions():
         server.handshake_sequence("localhost", port, first_frame=True)
 
         reader = IMDReader(
-            f"localhost:{port}", n_atoms=universe.trajectory.n_atoms
+            f"imd://localhost:{port}", n_atoms=universe.trajectory.n_atoms
         )
         server.send_frames(1, 5)
         yield reader
@@ -683,29 +706,6 @@ class TestIMDReaderBaseAPIExceptions():
         with pytest.raises(RuntimeError):
             reader.rewind()
 
-    # # test __getitem__ method
-    # def test_getitem_raises_runtime_error(self, reader):
-    #     with pytest.raises(RuntimeError):
-    #         reader[0]
-
-    # # Test check_slice_indices method
-    # def test_check_slice_indices_raises_value_error(self, reader):
-    #     # start is not None
-    #     with pytest.raises(ValueError):
-    #         reader.check_slice_indices(start=0, stop=None, step=None)
-    #     # stop is not None
-    #     with pytest.raises(ValueError):
-    #         reader.check_slice_indices(start=None, stop=10, step=None)
-    #     # step is not None and not 1
-    #     with pytest.raises(ValueError):
-    #         reader.check_slice_indices(start=None, stop=None, step=2)
-    #     # step is negative
-    #     with pytest.raises(ValueError):
-    #         reader.check_slice_indices(start=None, stop=None, step=-1)
-    #     # step is not an integer
-    #     with pytest.raises(ValueError):
-    #         reader.check_slice_indices(start=None, stop=None, step=1.5)
-
     # Test __getstate__ method
     def test_getstate_raises_notimplemented_error(self, reader):
         with pytest.raises(NotImplementedError):
@@ -715,4 +715,3 @@ class TestIMDReaderBaseAPIExceptions():
     def test_setstate_raises_notimplemented_error(self, reader):
         with pytest.raises(NotImplementedError):
             reader.__setstate__(None)
- #move this class to IMDReader.py

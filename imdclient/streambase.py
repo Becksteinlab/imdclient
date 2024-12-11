@@ -9,14 +9,13 @@ import warnings
 
 class StreamReaderBase(ReaderBase):
 
-    def __init__(
-        self, filename, convert_units=True, **kwargs
-    ):
+    def __init__(self, filename, convert_units=True, **kwargs):
         super(StreamReaderBase, self).__init__(
             filename, convert_units=convert_units, **kwargs
         )
         self._init_scope = True
         self._reopen_called = False
+        self._first_ts = None
 
     def _read_next_timestep(self):
         # No rewinding- to both load the first frame after  __init__
@@ -39,9 +38,12 @@ class StreamReaderBase(ReaderBase):
     def n_frames(self):
         """Changes as stream is processed unlike other readers"""
         raise RuntimeError(
-            "{}: n_frames is unknown".format(
-                self.__class__.__name__
-            )
+            "{}: n_frames is unknown".format(self.__class__.__name__)
+        )
+
+    def __len__(self):
+        raise RuntimeError(
+            "{} has unknown length".format(self.__class__.__name__)
         )
 
     def next(self):
@@ -72,17 +74,13 @@ class StreamReaderBase(ReaderBase):
     # Incompatible methods
     def copy(self):
         raise NotImplementedError(
-            "{} does not support copying".format(
-                self.__class__.__name__
-            )
+            "{} does not support copying".format(self.__class__.__name__)
         )
 
     def _reopen(self):
         if self._reopen_called:
             raise RuntimeError(
-                "{}: Cannot reopen stream".format(
-                    self.__class__.__name__
-                )
+                "{}: Cannot reopen stream".format(self.__class__.__name__)
             )
         self._frame = -1
         self._reopen_called = True
@@ -145,40 +143,57 @@ class StreamReaderBase(ReaderBase):
 
     def __getstate__(self):
         raise NotImplementedError(
-            "{} does not support pickling".format(
-                self.__class__.__name__
-            )
+            "{} does not support pickling".format(self.__class__.__name__)
         )
 
     def __setstate__(self, state: object):
         raise NotImplementedError(
-            "{} does not support pickling".format(
-                self.__class__.__name__
+            "{} does not support pickling".format(self.__class__.__name__)
+        )
+
+    def __repr__(self):
+        return (
+            "<{cls} {fname} with continuous stream of {natoms} atoms>"
+            "".format(
+                cls=self.__class__.__name__,
+                fname=self.filename,
+                natoms=self.n_atoms,
             )
         )
 
 
-class StreamFrameIteratorSliced:
+class StreamFrameIteratorSliced(FrameIteratorBase):
 
-    def __init__(self, reader, step):
-        self._reader = reader
+    def __init__(self, trajectory, step):
+        super().__init__(trajectory)
         self._step = step
-        self._idx = 0
 
     def __iter__(self):
         # Calling reopen tells reader
         # it can't be reopened again
-        self._reader._reopen()
+        self.trajectory._reopen()
         return self
 
     def __next__(self):
         try:
             # Burn the timesteps until we reach the desired step
-            while self._idx % self._step != 0:
-                self._idx += 1
-                self._reader._read_next_timestep()
+            # Don't use next() to avoid unnecessary transformations
+            while self.trajectory._frame + 1 % self.step != 0:
+                self.trajectory._read_next_timestep()
         except (EOFError, IOError):
-            raise StopIteration
-        else:
-            self._idx += 1
-            return self._reader.next()
+            # Don't rewind here like we normally would
+            raise StopIteration from None
+
+        return self.trajectory.next()
+
+    def __len__(self):
+        raise RuntimeError(
+            "{} has unknown length".format(self.__class__.__name__)
+        )
+
+    def __getitem__(self, frame):
+        raise RuntimeError("Sliced iterator does not support indexing")
+
+    @property
+    def step(self):
+        return self._step

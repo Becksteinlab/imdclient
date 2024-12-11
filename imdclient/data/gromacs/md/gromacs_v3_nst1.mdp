@@ -1,5 +1,5 @@
 title                   = PRODUCTION IN NPT
-ld-seed                 = 1
+ld-seed			= 1
 ; Run parameters
 integrator              = md        ; leap-frog integrator
 nsteps                  = 100    ; 1 * 1000 = 1 ps
@@ -7,9 +7,9 @@ dt                      = 0.001     ; 1 fs
 ; Output control
 nstxout                 = 1      ; save coordinates every 1 fs
 nstvout                 = 1      ; save velocities every 1 fs
-nstfout                 = 1
+nstfout                 = 1      ; save forces every 1 fs
 nstenergy               = 1      ; save energies every 1 fs
-nstlog                  = 10      ; update log file every 1 ps
+nstlog                  = 10     
 ; Center of mass (COM) motion
 nstcomm                 = 10        ; remove COM motion every 10 steps
 comm-mode               = Linear    ; remove only COM translation (liquids in PBC) 

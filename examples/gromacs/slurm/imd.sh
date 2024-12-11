@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J GMX_IMDREADER
+#SBATCH -J GMX_IMD
 #SBATCH -N 1
 #SBATCH -n 16
 #SBATCH --gres=gpu:1

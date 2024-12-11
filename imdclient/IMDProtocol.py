@@ -34,6 +34,7 @@ class IMDHeaderType(Enum):
     IMD_BOX = 13
     IMD_VELOCITIES = 14
     IMD_FORCES = 15
+    IMD_WAIT = 16
 
 
 def parse_energy_bytes(data, endianness):
@@ -103,7 +104,7 @@ class IMDTime:
     """Convenience class to represent the body of time packet"""
 
     def __init__(self, data, endianness):
-        self.dt, self.time, self.step = struct.unpack(f"{endianness}ddQ", data)
+        self.dt, self.time, self.step = struct.unpack(f"{endianness}ddq", data)
 
 
 @dataclass
@@ -138,13 +139,13 @@ def parse_imdv3_session_info(data, end):
     imdsinfo = IMDSessionInfo(
         version=3,
         endianness=end,
-        time=(time == 1),
-        box=(box == 1),
-        positions=(positions == 1),
-        wrapped_coords=(wrapped_coords == 1),
-        velocities=(velocties == 1),
-        forces=(forces == 1),
-        energies=(energies == 1),
+        time=(time != 0),
+        box=(box != 0),
+        positions=(positions != 0),
+        wrapped_coords=(wrapped_coords != 0),
+        velocities=(velocties != 0),
+        forces=(forces != 0),
+        energies=(energies != 0),
     )
     logger.debug(f"parse_imdv3_session_info3: {data}")
     return imdsinfo
