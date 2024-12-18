@@ -22,19 +22,36 @@ MDAnalysis IMDReader client when this line is printed to the terminal:
 
     IMD: Will wait until I have a connection and IMD_GO orders.
 
+You are now ready to connect to the simulation engine with a client.
+
 NAMD
 ----
-In NAMD, the simulation will wait for a client connection when the  
-``IMDon`` option is set to ``yes`` in the NAMD configuration file. 
-Other options that can be set are detailed 
-`here <https://github.com/amruthesht/namd-3.0/blob/IMDv3-dev/IMDv3-dev.md>`_. 
-This will produce a simulation that is ready for a client connection with the 
+To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
+
+.. code-block:: none
+
+    IMDon yes
+    IMDport <port, must be the same port used for the client>
+    IMDwait <yes/no>
+    IMDfreq <frequency of sending data to the client>
+
+    IMDsendPositions <yes/no>
+    IMDsendEnergies <yes/no>
+    IMDsendTime <yes/no>
+    IMDsendBoxDimensions <yes/no>
+    IMDsendVelocities <yes/no>
+    IMDsendForces <yes/no>
+    IMDwrapPositions <yes/no>
+
+
+Once the simulation is ready for a client connection, it will print 
 following terminal message:
 
 .. code-block:: none
 
     Info: INTERACTIVE MD AWAITING CONNECTION
 
+You are now ready to connect to the simulation engine with a client.
 
 Using IMDClient with MDAnalysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

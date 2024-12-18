@@ -123,6 +123,10 @@ jobs:
     if: github.repository == 'Becksteinlab/imdclient'
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -131,6 +135,13 @@ jobs:
           uname -a
           df -h
           ulimit -a
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.NAMD_DOCKER_TOKEN }}
 
       - name: Install conda dependencies
         uses: conda-incubator/setup-miniconda@v2
@@ -161,9 +172,18 @@ jobs:
           python --version
           python -m pip install .  --no-deps 
 
-      - name: Pull container
+      - name: Pull private NAMD container
         run: |
-          docker pull ghcr.io/becksteinlab/streaming-md-docker:main-Common-CPU
+          docker pull ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu
+  
+      # Uses private container
+      - name: Run NAMD tests
+        run: |
+          pytest -v --color=yes imdclient/tests/test_namd.py
+
+      - name: Pull GROMACS + LAMMPS container
+        run: |
+          docker pull ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu
 
       - name: Run GROMACS tests
         run: |
@@ -172,11 +192,6 @@ jobs:
       - name: Run LAMMPS tests
         run: |
           pytest -v --color=yes imdclient/tests/test_lammps.py
-  
-      # SUSPEND until NAMD permissions are resolved
-      # - name: Run NAMD tests
-      #   run: |
-      #     pytest -v --color=yes imdclient/tests/test_namd.py
 
   pylint_check:
     if: github.repository == 'Becksteinlab/imdclient'
