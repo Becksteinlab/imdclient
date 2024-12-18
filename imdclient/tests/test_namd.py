@@ -91,10 +91,8 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 imd_u.trajectory[i - first_frame].dt,
                 atol=1e-03,
             )
-            assert_allclose(
-                true_u.trajectory[i].data["step"],
-                imd_u.trajectory[i - first_frame].data["step"],
-            )
+            # step in DCDReader is frame index, not integration step
+            # don't compare step
             assert_allclose_with_logging(
                 true_u.trajectory[i].dimensions,
                 imd_u.trajectory[i - first_frame].dimensions,
@@ -107,9 +105,7 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
             )
 
     # Compare velocities
-    def test_compare_imd_to_true_traj_vel(
-        self, imd_u, true_u_vel, first_frame
-    ):
+    def test_compare_imd_to_true_traj_vel(self, imd_u, true_u_vel, first_frame):
         for i in range(first_frame, len(true_u_vel.trajectory)):
             assert_allclose_with_logging(
                 # Unit conversion
