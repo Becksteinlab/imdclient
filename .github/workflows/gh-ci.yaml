@@ -174,7 +174,7 @@ jobs:
 
       - name: Pull private NAMD container
         run: |
-          docker pull ghcr.io/becksteinlab/streaming-namd-docker:main-namd-cpu
+          docker pull ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu
   
       # Uses private container
       - name: Run NAMD tests
