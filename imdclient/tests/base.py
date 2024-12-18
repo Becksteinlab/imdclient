@@ -65,6 +65,10 @@ def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
 class IMDv3IntegrationTest:
 
     @pytest.fixture()
+    def container_name(self):
+        return "ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu"
+
+    @pytest.fixture()
     def setup_command(self):
         return None
 
@@ -80,12 +84,13 @@ class IMDv3IntegrationTest:
         setup_command,
         simulation_command,
         port,
+        container_name,
     ):
         # In CI, container process needs access to tmp_path
         tmp_path.chmod(0o777)
         docker_client = docker.from_env()
         img = docker_client.images.pull(
-            "ghcr.io/becksteinlab/streaming-md-docker:main-Common-CPU"
+            container_name,
         )
         # Copy input files into tmp_path
         for inp in input_files:

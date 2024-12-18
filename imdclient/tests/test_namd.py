@@ -26,6 +26,10 @@ logger.setLevel(logging.DEBUG)
 
 class TestIMDv3NAMD(IMDv3IntegrationTest):
 
+    @pytest.fixture()
+    def container_name(self):
+        return "ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu"
+
     @pytest.fixture(params=[NAMD_CONF_NST_1, NAMD_CONF_NST_8])
     def inp(self, request):
         return request.param
@@ -108,7 +112,8 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
     ):
         for i in range(first_frame, len(true_u_vel.trajectory)):
             assert_allclose_with_logging(
-                true_u_vel.trajectory[i].positions,
+                # Unit conversion
+                true_u_vel.trajectory[i].positions * 20.45482706,
                 imd_u.trajectory[i - first_frame].velocities,
                 atol=1e-03,
             )

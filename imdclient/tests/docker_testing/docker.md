@@ -5,7 +5,7 @@ Ensure [docker](https://www.docker.com/) and the [NVIDIA container toolkit](http
 
 To run the container:
 ```bash
-docker pull ghcr.io/becksteinlab/streaming-md-docker:main-Common-GPU
+docker pull ghcr.io/becksteinlab/streaming-md-docker:main-common-gpu
 
 docker run -v $PWD/imdclient/data:/home/conda:rw -it --runtime=nvidia --gpus=all \
     ghcr.io/becksteinlab/streaming-md-docker:main-Common-GPU
