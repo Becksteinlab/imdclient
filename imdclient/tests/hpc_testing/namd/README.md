@@ -35,39 +35,113 @@ command line arguments.
 
 ### Compiling on ASU's Sol supercomputer
 
-Allocate a GPU node on SOL and clone in https://gitlab.com/tcbgUIUC/namd.git
+Allocate requisite resources (CPU cores, nodes, GPUs) on SOL and clone in https://gitlab.com/tcbgUIUC/namd.git
 
-After cloning, do:
+After cloning and `cd`-ing to `namd` folder if you're not already there, do:
 
 ```bash
 git checkout feature_imdv3
-module load cmake-3.21.4-gcc-11.2.0
-module load gcc-10.3.0-gcc-11.2.0
-module load cuda-11.7.0-gcc-11.2.0
-module load openmpi/4.1.5
+```
 
-wget http://www.ks.uiuc.edu/Research/namd/libraries/fftw-linux-x86_64.tar.gz
-tar xzf fftw-linux-x86_64.tar.gz
-mv linux-x86_64 fftw
-wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64.tar.gz
-wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
-tar xzf tcl8.6.13-linux-x86_64.tar.gz
-tar xzf tcl8.6.13-linux-x86_64-threaded.tar.gz
-mv tcl8.6.13-linux-x86_64 tcl
-mv tcl8.6.13-linux-x86_64-threaded tcl-threaded
+Download and install TCL and FFTW libraries:
+```bash
+    wget http://www.ks.uiuc.edu/Research/namd/libraries/fftw-linux-x86_64.tar.gz
+    tar xzf fftw-linux-x86_64.tar.gz
+    mv linux-x86_64 fftw
+    wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64.tar.gz
+    wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+    tar xzf tcl8.6.13-linux-x86_64.tar.gz
+    tar xzf tcl8.6.13-linux-x86_64-threaded.tar.gz
+    mv tcl8.6.13-linux-x86_64 tcl
+    mv tcl8.6.13-linux-x86_64-threaded tcl-threaded
+```
 
+Once can then download and unpack the Charm++ source code:
+
+```bash
 wget https://github.com/charmplusplus/charm/archive/refs/tags/v8.0.0.tar.gz
 tar xf v8.0.0.tar.gz
+```
+
+Then, NAMD can be built with the following options:
+
+#### Muticore version
+
+```bash
+module load gcc-11.2.0-gcc-11.2.0
 
 cd charm-8.0.0
 ./build charm++ multicore-linux-x86_64 --with-production
-cd multicore-linux-x86_64/tests/charm++/megatest
-make -j 4
-./megatest +p4 
 cd ../../../../..
 
 ./config Linux-x86_64-g++ --charm-arch multicore-linux-x86_64
 
 cd Linux-x86_64-g++
-make -j 4
+make
+```
+
+#### InfiniBand UCX OpenMPI PMIx version
+
+```bash
+module load gcc-11.2.0-gcc-11.2.0
+module load openmpi/4.1.5
+module load pmix/4.1.3-slurm
+
+export CPATH="/packages/apps/pmix/4.1.3-slurm/include:$CPATH"
+export LIBRARY_PATH="/packages/apps/pmix/4.1.3-slurm/lib:$LIBRARY_PATH"
+
+cd charm-8.0.0
+./build charm++ ucx-linux-x86_64 ompipmix --with-production
+cd ../../../../..
+
+./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-ompipmix
+
+cd Linux-x86_64-g++
+make
+```
+
+#### MPI version
+
+```bash
+module load gcc-11.2.0-gcc-11.2.0
+module load mpich/4.2.2
+
+env MPICXX=mpicxx ./build charm++ mpi-linux-x86_64 --with-production
+cd ../../../../..
+
+./config Linux-x86_64-g++ --charm-arch mpi-linux-x86_64
+
+cd Linux-x86_64-g++
+make
+```
+
+#### GPU-resident CUDA multicore version
+
+```bash
+module load gcc-11.2.0-gcc-11.2.0
+module load mpich/4.2.2
+module load cuda-11.8.0-gcc-11.2.0
+module load gsl-2.7.1-gcc-11.2.0
+
+cd charm-8.0.0
+./build charm++ multicore-linux-x86_64 --with-production
+cd ../../../../..
+
+./config Linux-x86_64-g++ --charm-arch multicore-linux-x86_64 --with-single-node-cuda
+
+cd Linux-x86_64-g++
+make
+```
+
+#### GPU-resident CUDA MPI version
+
+```bash
+cd charm-8.0.0
+env MPICXX=mpicxx ./build charm++ mpi-linux-x86_64-smp --with-production
+cd 
+
+./config Linux-x86_64-g++ --charm-arch mpi-linux-x86_64-smp --with-single-node-cuda
+
+cd Linux-x86_64-g++
+make
 ```
