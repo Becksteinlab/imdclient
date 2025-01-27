@@ -13,7 +13,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u = mda.Universe("md.tpr", "localhost:8888")
+u = mda.Universe("md.tpr", "imd://localhost:8888")
 for ts in u.trajectory:
     i += 1
 
