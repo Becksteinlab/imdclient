@@ -1,7 +1,7 @@
 from imdclient.IMD import IMDReader
 import MDAnalysis as mda
 import logging
-from imdclient.tests.datafiles import NAMD_TOPOL
+from imdclient.tests.datafiles import GROMACS_TOP
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("imdreader.log")
@@ -13,7 +13,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u = mda.Universe(NAMD_TOPOL, "imd://localhost:8888")
+u = mda.Universe(GROMACS_TOP, "imd://localhost:8888")
 for ts in u.trajectory:
     i += 1
 
