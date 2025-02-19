@@ -167,7 +167,7 @@ from .backends import (
 )
 from .results import Results, ResultsGroup
 
-from .streambase import StreamReaderBase
+from MDAnalysis.coordinates.base import StreamReaderBase
 
 logger = logging.getLogger(__name__)
 
