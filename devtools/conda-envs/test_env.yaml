@@ -8,17 +8,20 @@ dependencies:
   - pip
 
   # MDAnalysis
-  - MDAnalysis>=2.7.0
+  # - MDAnalysis>=2.7.0
+  - 
 
   # Testing
   - pytest
   - pytest-cov
   - pytest-xdist
   - codecov
-  - MDAnalysisTests>=2.7.0
+  # - MDAnalysisTests>=2.7.0
   - docker-py
 
   # Pip-only installs
-  #- pip:
+  - pip:
   #  - codecov
+  - "MDAnalysis @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
+  - "MDAnalysisTests @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
 

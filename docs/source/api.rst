@@ -1,5 +1,5 @@
 API Documentation
 =================
 
-.. automodule:: imdclient.IMD
+.. automodule:: MDAanalysis.coordinates.IMD
 .. automodule:: imdclient.IMDClient

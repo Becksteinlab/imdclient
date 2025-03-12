@@ -76,8 +76,8 @@ Using IMDClient with MDAnalysis
 Once the simulation is ready for a client connection, setup your MDAnalysis :class:`Universe`
 like this: ::
 
-    from IMDClient.IMD import IMDReader
     import MDAnalysis as mda
+    from MDAnalysis.coordinates.IMD import IMDReader
     # Pass host and port of the listening simulation
     # engine as the trajectory argument
 

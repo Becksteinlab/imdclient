@@ -1,5 +1,5 @@
-from imdclient.IMD import IMDReader
 import MDAnalysis as mda
+from MDAnalysis.coordinates.IMD import IMDReader
 import logging
 from imdclient.tests.datafiles import GROMACS_TOP
 

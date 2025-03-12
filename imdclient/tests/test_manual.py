@@ -1,5 +1,5 @@
 import imdclient
-from imdclient.IMD import IMDReader
+from MDAnalysis.coordinates.IMD import IMDReader
 import MDAnalysis as mda
 from numpy.testing import assert_allclose
 import numpy as np
