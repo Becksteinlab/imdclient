@@ -49,11 +49,6 @@ jobs:
       matrix:
         os: [macOS-latest, ubuntu-latest]
         python-version: ["3.10", "3.11", "3.12"]
-        # We'll test three variants of MDAnalysis:
-        #   - latest (stable from conda-forge)
-        #   - develop (official development branch from conda-forge)
-        #   - imdv3-branch (your custom dev branch from Git)
-        mdanalysis-version: ["latest", "develop", "imdv3-branch"]
 
     steps:
     - uses: actions/checkout@v4
@@ -84,24 +79,6 @@ jobs:
         auto-activate-base: false
         show-channel-urls: true
         miniconda-version: latest
-
-
-    - name: Install MDAnalysis version
-      if: ${{ matrix.mdanalysis-version == 'latest' || matrix.mdanalysis-version == 'develop' }}
-      uses: MDAnalysis/install-mdanalysis@main
-      with:
-        version: ${{ matrix.mdanalysis-version }}
-        install-tests: true
-        installer: conda
-        shell: bash -l {0} 
-
-    # 2) For "imdv3-branch", install from your Git branch
-    - name: Install MDAnalysis from imdv3 branch
-      if: ${{ matrix.mdanalysis-version == 'imdv3-branch' }}
-      run: |
-        python -m pip install --upgrade pip
-        pip install "MDAnalysis @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
-        pip install "MDAnalysisTests @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
 
     - name: Install imdclient
       run: |
@@ -172,14 +149,7 @@ jobs:
           show-channel-urls: true
           miniconda-version: latest
 
-      # Install your custom MDAnalysis branch for simulation tests as well
-      - name: Install MDAnalysis from dev branch
-        run: |
-          python -m pip install --upgrade pip
-          pip install "MDAnalysis @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
-          pip install "MDAnalysisTests @ git+https://github.com/amruthesht/mdanalysis.git@imdv3-dev"
-
-          - name: Install package
+      - name: Install package
         run: |
           python --version
           python -m pip install .  --no-deps 

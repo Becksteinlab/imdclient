@@ -1,5 +1,4 @@
 from imdclient.IMDClient import IMDClient
-from MDAnalysis.coordinates.IMD import IMDReader
 import pytest
 from pathlib import Path
 import os
