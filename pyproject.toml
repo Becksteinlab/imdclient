@@ -41,20 +41,20 @@ doc = [
 ]
 
 # [project.urls]
-# source = "https://github.com/becksteinlab/imdreader"
-# documentation = "https://imdreader.readthedocs.io"
+# source = "https://github.com/becksteinlab/imdclient"
+# documentation = "https://imdclient.readthedocs.io"
 
 [tool.setuptools]
 packages = ["imdclient"]
 
 # Installs tests datafiles
 [tool.setuptools.package-data]
-"imdreader" = ["data/*"]
+"imdclient" = ["data/*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "imdreader/tests",
+    "imdclient/tests",
 ]
 
 [tool.black]

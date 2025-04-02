@@ -23,7 +23,7 @@ IMDClient
 
 Receiver for [IMDv3 protocol](https://imdclient.readthedocs.io/en/latest/protocol_v3.html) from simulation engines like Gromacs, LAMMPS, and NAMD.
 
-IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdreader/blob/main/CODE_OF_CONDUCT.md).
+IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdclient/blob/main/CODE_OF_CONDUCT.md).
 
 ### Installation
 
@@ -53,8 +53,8 @@ conda activate imdclient
 <!-- Install the development and documentation dependencies:
 
 ```
-conda env update --name imdreader --file devtools/conda-envs/test_env.yaml
-conda env update --name imdreader --file docs/requirements.yaml
+conda env update --name imdclient --file devtools/conda-envs/test_env.yaml
+conda env update --name imdclient --file docs/requirements.yaml
 ``` -->
 
 Build this package from source:

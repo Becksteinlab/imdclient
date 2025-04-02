@@ -1,7 +1,7 @@
 Full walkthrough
 ================
 
-Create IMDReader mamba env
+Create IMDClient mamba env
 --------------------------
 
 Assuming you're in a login node to start, get a compute node:
@@ -9,16 +9,16 @@ Assuming you're in a login node to start, get a compute node:
 salloc -p general
 ```
 
-From the compute node, create env with name "imdreader-test":
+From the compute node, create env with name "imdclient-test":
 ```bash
 mkdir -p workspace
 cd workspace
-git clone https://github.com/Becksteinlab/imdreader.git
+git clone https://github.com/Becksteinlab/imdclient.git
 cd imdreader
 git checkout develop
 module load mamba/latest
 mamba env create --file devtools/conda-envs/test_env.yaml
-source activate imdreader-test
+source activate imdclient-test
 pip install -e .
 ```
 

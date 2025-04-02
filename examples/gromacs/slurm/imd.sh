@@ -17,7 +17,7 @@ env | grep ^SLURM | sort
 env | grep CUDA
 
 module load mamba/latest
-source activate imdreader-test
+source activate imdclient-test
 
 output_dir="output_${SLURM_JOB_ID}"
 mkdir -p $output_dir
@@ -36,7 +36,7 @@ while ! await_gmx_imd; do
     sleep 5
 done
 
-echo "GROMACS is ready. Running IMDReader"
+echo "GROMACS is ready. Running IMD-reader"
 
 python client.py
 

@@ -96,10 +96,6 @@ jobs:
     - name: Run IMDClient tests
       run: |
         pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
-  
-    - name: Run IMDReader tests
-      run: |
-        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdreader.py
 
     - name: codecov
       if: github.event_name != 'schedule'
