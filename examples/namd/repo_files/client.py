@@ -1,10 +1,10 @@
 import MDAnalysis as mda
-from MDAnalysis.coordinates.IMD import IMDReader
+from imdclient.tests.minimalReader import minimalReader
 import logging
 from imdclient.tests.datafiles import NAMD_TOPOL
 
 logger = logging.getLogger("imdclient.IMDClient")
-file_handler = logging.FileHandler("imdreader.log")
+file_handler = logging.FileHandler("imdclient.log")
 formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -13,8 +13,13 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u = mda.Universe(NAMD_TOPOL, "imd://localhost:8888")
-for ts in u.trajectory:
-    i += 1
+u = minimalReader("imd://localhost:8888")
+
+while True:
+    try:
+        u._read_next_frame()
+        i += 1
+    except EOFError:
+        break
 
 logger.info(f"Parsed {i} frames")
