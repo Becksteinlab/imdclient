@@ -90,7 +90,7 @@ def load_true_universe(topol_path, traj_path):
 
 def load_imd_universe(topol_path, tmp_path):
     # Pass atom_style (ignored if not using LAMMPS topol)
-    tmp_u = minimalReader(f"imd://localhost:8888", process_stream=True)
+    tmp_u = minimalReader(f"imd://localhost:8888")
     return tmp_u
 
 

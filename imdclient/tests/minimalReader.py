@@ -24,14 +24,12 @@ class minimalReader:
         keyword arguments passed to the constructed :class:`IMDClient`
     """
 
-    def __init__(self, filename, n_atoms=None, process_stream=False, **kwargs):
+    def __init__(self, filename, **kwargs):
 
         self.imd_frame = None
 
         # a trajectory of imd frames
-        self.trajectory = None
-
-        self.n_atoms = n_atoms
+        self.trajectory = []
 
         host, port = parse_host_port(filename)
 
@@ -42,8 +40,7 @@ class minimalReader:
 
         self._frame = -1
 
-        if process_stream:
-            self._process_stream()
+        self._process_stream()
 
     def _read_next_frame(self):
         try:
@@ -56,20 +53,15 @@ class minimalReader:
 
         logger.debug(f"minimalReader: Loaded frame {self._frame}")
 
-    def _add_frame_to_trajectory(self):
-        # Add the current frame to the trajectory
-        if self.trajectory is None:
-            self.trajectory = []
-        self.trajectory.append(self.imd_frame)
-        logger.debug(
-            f"minimalReader: Added frame {self._frame} to trajectory"
-        )
-        
+        return imd_frame
+
     def _process_stream(self):
         # Process the stream of frames
         while True:
             try:
-                self._read_next_frame()
-                self._add_frame_to_trajectory()
+                self.trajectory.append(self._read_next_frame().copy())
+                logger.debug(
+                    f"minimalReader: Added frame {self._frame} to trajectory"
+                )
             except EOFError:
                 break

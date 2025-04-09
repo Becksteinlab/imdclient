@@ -67,4 +67,4 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = minimalReader(f"imd://localhost:{port}", process_stream=True)
+        u = minimalReader(f"imd://localhost:{port}")
