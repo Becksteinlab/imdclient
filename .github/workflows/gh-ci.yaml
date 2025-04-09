@@ -113,8 +113,9 @@ jobs:
 
     - name: codecov
       if: github.event_name != 'schedule'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4.0.1
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.xml
         name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
         verbose: True
