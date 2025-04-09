@@ -90,7 +90,13 @@ def load_true_universe(topol_path, traj_path):
 
 def load_imd_universe(topol_path, tmp_path):
     # Pass atom_style (ignored if not using LAMMPS topol)
-    tmp_u = minimalReader(f"imd://localhost:8888")
+    u_mda = mda.Universe(
+        topol_path,
+        atom_style="id type x y z",
+        convert_units=False,
+    )
+    n_atoms = u_mda.atoms.n_atoms
+    tmp_u = minimalReader(f"imd://localhost:8888", n_atoms=n_atoms)
     return tmp_u
 
 

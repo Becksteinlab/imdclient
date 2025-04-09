@@ -104,7 +104,7 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 atol=1e-03,
             )
 
-    # Since NAMD does not write velocities, forces to the DCD file, we need to do so seperately by extracting that info from theri respective DCD files
+    # Since NAMD does not write velocities, forces to the DCD file, we need to do so seperately by extracting that info from their respective DCD files
     # Compare velocities
     def test_compare_imd_to_true_traj_vel(self, imd_u, true_u_vel, first_frame):
         for i in range(first_frame, len(true_u_vel.trajectory)):

@@ -128,7 +128,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = minimalReader(f"imd://localhost:{port}", process_stream=True)
+        mda_u = mda.Universe((tmp_path / topol))
+        n_atoms = mda_u.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        yield u
 
     @pytest.fixture()
     def true_u(self, topol, traj, imd_u, tmp_path):

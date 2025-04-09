@@ -67,4 +67,11 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = minimalReader(f"imd://localhost:{port}")
+        u_mda = mda.Universe(
+            (tmp_path / topol),
+            atom_style="id type x y z",
+            convert_units=False,
+        )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        yield u

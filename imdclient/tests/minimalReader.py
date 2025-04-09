@@ -24,12 +24,16 @@ class minimalReader:
         keyword arguments passed to the constructed :class:`IMDClient`
     """
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, n_atoms=None, **kwargs):
 
         self.imd_frame = None
 
         # a trajectory of imd frames
         self.trajectory = []
+
+        if n_atoms is None:
+            raise ValueError("minimalReader: n_atoms must be specified")
+        self.n_atoms = n_atoms
 
         host, port = parse_host_port(filename)
 
@@ -60,6 +64,7 @@ class minimalReader:
         while True:
             try:
                 self.trajectory.append(self._read_next_frame().copy())
+                # `.copy()` might not be required but adding it to cover any edge cases where a refernce gets passed
                 logger.debug(
                     f"minimalReader: Added frame {self._frame} to trajectory"
                 )
