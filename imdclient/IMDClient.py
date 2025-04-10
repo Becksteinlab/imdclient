@@ -207,9 +207,7 @@ class IMDClient:
             # /proc/sys/net/core/rmem_default
             # Max (linux):
             # /proc/sys/net/core/rmem_max
-            conn.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
-            )
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
             conn.connect((host, port))
@@ -307,8 +305,8 @@ class IMDClient:
             )
             self._conn.sendall(wait_packet)
             logger.debug(
-                "IMDClient: Attempted to change wait behavior to %s", 
-                not self._continue_after_disconnect 
+                "IMDClient: Attempted to change wait behavior to %s",
+                not self._continue_after_disconnect,
             )
 
     def _disconnect(self):
@@ -785,9 +783,7 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError(
-                "unpause_empty_proportion must be between 0 and 1"
-            )
+            raise ValueError("unpause_empty_proportion must be between 0 and 1")
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -854,9 +850,7 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(
-                f"IMDProducer: Error waiting for space in buffer: {e}"
-            )
+            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -902,9 +896,7 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while (
-                    self._full_q.qsize() == 0 and not self._producer_finished
-                ):
+                while self._full_q.qsize() == 0 and not self._producer_finished:
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:
@@ -938,7 +930,7 @@ class IMDFrameBuffer:
 class IMDFrame:
 
     def __init__(self, n_atoms, imdsinfo):
-        if imdsinfo.time:
+        if imdsinfo and imdsinfo.time:
             self.time = 0.0
             self.dt = 0.0
             self.step = 0.0
@@ -946,7 +938,7 @@ class IMDFrame:
             self.time = None
             self.dt = None
             self.step = None
-        if imdsinfo.energies:
+        if imdsinfo and imdsinfo.energies:
             self.energies = {
                 "step": 0,
                 "temperature": 0.0,
@@ -961,22 +953,40 @@ class IMDFrame:
             }
         else:
             self.energies = None
-        if imdsinfo.box:
+        if imdsinfo and imdsinfo.box:
             self.box = np.empty((3, 3), dtype=np.float32)
         else:
             self.box = None
-        if imdsinfo.positions:
+        if imdsinfo and imdsinfo.positions:
             self.positions = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.positions = None
-        if imdsinfo.velocities:
+        if imdsinfo and imdsinfo.velocities:
             self.velocities = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.velocities = None
-        if imdsinfo.forces:
+        if imdsinfo and imdsinfo.forces:
             self.forces = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.forces = None
+
+    def copy(self):
+        """
+        Returns a deep copy of the IMDFrame
+        """
+        new_frame = IMDFrame(
+            self.positions.shape[0] if self.positions is not None else 0, None
+        )
+        new_frame.time = self.time
+        new_frame.dt = self.dt
+        new_frame.step = self.step
+        new_frame.energies = self.energies.copy()
+        new_frame.box = np.copy(self.box)
+        new_frame.positions = np.copy(self.positions)
+        new_frame.velocities = np.copy(self.velocities)
+        new_frame.forces = np.copy(self.forces)
+
+        return new_frame
 
 
 def imdframe_memsize(n_atoms, imdsinfo) -> int:
