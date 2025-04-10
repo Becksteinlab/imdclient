@@ -1,5 +1,5 @@
 from imdclient.IMDClient import IMDClient
-from imdclient.IMD import IMDReader
+from .minimalReader import minimalReader
 import pytest
 from pathlib import Path
 import os
@@ -128,13 +128,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
-        with mda.Writer(
-            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
-        ) as w:
-            for ts in u.trajectory:
-                w.write(u.atoms)
-        yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
+        mda_u = mda.Universe((tmp_path / topol))
+        n_atoms = mda_u.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        yield u
 
     @pytest.fixture()
     def true_u(self, topol, traj, imd_u, tmp_path):

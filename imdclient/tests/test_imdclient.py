@@ -12,10 +12,9 @@ from .utils import (
     create_default_imdsinfo_v3,
 )
 from .server import InThreadIMDServer
-from MDAnalysisTests.coordinates.base import (
+from numpy.testing import (
     assert_allclose,
 )
-from MDAnalysisTests.coordinates.test_xdr import TRRReference
 import logging
 import pytest
 

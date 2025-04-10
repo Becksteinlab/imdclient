@@ -1,5 +1,4 @@
-import imdclient
-from imdclient.IMD import IMDReader
+from .minimalReader import minimalReader
 import MDAnalysis as mda
 from numpy.testing import assert_allclose
 import numpy as np
@@ -91,17 +90,14 @@ def load_true_universe(topol_path, traj_path):
 
 def load_imd_universe(topol_path, tmp_path):
     # Pass atom_style (ignored if not using LAMMPS topol)
-    tmp_u = mda.Universe(
+    u_mda = mda.Universe(
         topol_path,
-        "imd://localhost:8888",
         atom_style="id type x y z",
+        convert_units=False,
     )
-    tmp_traj_file = f"{tmp_path}/imd_test_traj.trr"
-    with mda.Writer(tmp_traj_file, tmp_u.atoms.n_atoms) as w:
-        for ts in tmp_u.trajectory:
-            w.write(tmp_u.atoms)
-    time.sleep(10)  # Give MPI ranks a chance to release FD
-    return mda.Universe(topol_path, tmp_traj_file, atom_style="id type x y z")
+    n_atoms = u_mda.atoms.n_atoms
+    tmp_u = minimalReader(f"imd://localhost:8888", n_atoms=n_atoms)
+    return tmp_u
 
 
 def test_compare_imd_to_true_traj_vel(imd_u, true_u_vel, first_frame):
