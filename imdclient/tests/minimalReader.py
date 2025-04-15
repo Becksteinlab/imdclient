@@ -17,30 +17,26 @@ class minimalReader:
         a string of the form "host:port" where host is the hostname
         or IP address of the listening MD engine server and port
         is the port number.
-    n_atoms : int (optional)
+    n_atoms : int
         number of atoms in the system. defaults to number of atoms
         in the topology. don't set this unless you know what you're doing.
     kwargs : dict (optional)
         keyword arguments passed to the constructed :class:`IMDClient`
     """
 
-    def __init__(self, filename, n_atoms=None, **kwargs):
+    def __init__(self, filename, n_atoms, **kwargs):
 
         self.imd_frame = None
 
         # a trajectory of imd frames
         self.trajectory = []
 
-        if n_atoms is None:
-            raise ValueError("minimalReader: n_atoms must be specified")
         self.n_atoms = n_atoms
 
         host, port = parse_host_port(filename)
 
         # This starts the simulation
         self._imdclient = IMDClient(host, port, n_atoms, **kwargs)
-
-        imdsinfo = self._imdclient.get_imdsessioninfo()
 
         self._frame = -1
 

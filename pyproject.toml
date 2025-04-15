@@ -40,9 +40,9 @@ doc = [
     "sphinx_rtd_theme",
 ]
 
-# [project.urls]
-# source = "https://github.com/becksteinlab/imdclient"
-# documentation = "https://imdclient.readthedocs.io"
+[project.urls]
+source = "https://github.com/becksteinlab/imdclient"
+documentation = "https://imdclient.readthedocs.io"
 
 [tool.setuptools]
 packages = ["imdclient"]
