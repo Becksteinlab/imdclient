@@ -970,6 +970,14 @@ class IMDFrame:
         else:
             self.forces = None
 
+    @property
+    def dimensions(self):
+        return self.box
+
+    @dimensions.setter
+    def dimensions(self, value):
+        self.box = value
+
     def copy(self):
         """
         Returns a deep copy of the IMDFrame
