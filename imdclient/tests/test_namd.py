@@ -86,11 +86,12 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 imd_u.trajectory[i - first_frame].time,
                 atol=1e-03,
             )
-            assert_allclose(
-                true_u.trajectory[i].dt,
-                imd_u.trajectory[i - first_frame].dt,
-                atol=1e-03,
-            )
+            # Issue #63
+            # assert_allclose(
+            #     true_u.trajectory[i].dt,
+            #     imd_u.trajectory[i - first_frame].dt,
+            #     atol=1e-03,
+            # )
             # step in DCDReader is frame index, not integration step
             # don't compare step
             assert_allclose_with_logging(
@@ -104,6 +105,7 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 atol=1e-03,
             )
 
+    # Since NAMD does not write velocities, forces to the DCD file, we need to do so seperately by extracting that info from their respective DCD files
     # Compare velocities
     def test_compare_imd_to_true_traj_vel(self, imd_u, true_u_vel, first_frame):
         for i in range(first_frame, len(true_u_vel.trajectory)):

@@ -1,4 +1,5 @@
 import MDAnalysis as mda
+from .minimalReader import minimalReader
 import pytest
 from pathlib import Path
 import logging
@@ -66,18 +67,11 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
             atom_style="id type x y z",
+            convert_units=False,
         )
-        with mda.Writer(
-            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
-        ) as w:
-            for ts in u.trajectory:
-                w.write(u.atoms)
-        yield mda.Universe(
-            (tmp_path / topol),
-            (tmp_path / "imd.trr"),
-            atom_style="id type x y z",
-        )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        yield u

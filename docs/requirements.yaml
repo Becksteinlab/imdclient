@@ -1,4 +1,4 @@
-name: imdreader-docs
+name: imdclient-docs
 channels:
 
   - conda-forge

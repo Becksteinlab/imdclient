@@ -1,5 +1,5 @@
 from imdclient.IMDClient import IMDClient
-from imdclient.IMD import IMDReader
+from .minimalReader import minimalReader
 import pytest
 from pathlib import Path
 import os
@@ -128,13 +128,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
-        with mda.Writer(
-            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
-        ) as w:
-            for ts in u.trajectory:
-                w.write(u.atoms)
-        yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
+        mda_u = mda.Universe((tmp_path / topol))
+        n_atoms = mda_u.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        yield u
 
     @pytest.fixture()
     def true_u(self, topol, traj, imd_u, tmp_path):
@@ -166,12 +163,13 @@ class IMDv3IntegrationTest:
                     imd_u.trajectory[i - first_frame].time,
                     atol=1e-03,
                 )
-            if comp_dt:
-                assert_allclose(
-                    true_u.trajectory[i].dt,
-                    imd_u.trajectory[i - first_frame].dt,
-                    atol=1e-03,
-                )
+            # Issue #63
+            # if comp_dt:
+            #     assert_allclose(
+            #         true_u.trajectory[i].dt,
+            #         imd_u.trajectory[i - first_frame].dt,
+            #         atol=1e-03,
+            #     )
             if comp_step:
                 assert_allclose(
                     true_u.trajectory[i].data["step"],
@@ -217,45 +215,56 @@ class IMDv3IntegrationTest:
     def test_continue_after_disconnect(
         self, docker_client, topol, tmp_path, port
     ):
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
-            continue_after_disconnect=True,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=True,
+        )
         # Though we disconnect here, the simulation should continue
-        u.trajectory.close()
+        # u.trajectory.close() # old IMDReader usage
+        u.close()
         # Wait for the simulation to finish running
         time.sleep(45)
 
         # Now, attempt to reconnect- should fail,
         # since the simulation should have continued
         with pytest.raises(IOError):
-            u = mda.Universe(
+            u_mda = mda.Universe(
                 (tmp_path / topol),
-                f"imd://localhost:{port}",
                 atom_style="id type x y z",
             )
+            n_atoms = u_mda.atoms.n_atoms
+            u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
-            # Could also use None here- just being explicit
-            continue_after_disconnect=False,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         )
-        u.trajectory.close()
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=False,
+        )
+        # u.trajectory.close() # old IMDReader usage
+        u.close()
         # Give the simulation engine
         # enough time to finish running (though it shouldn't)
         time.sleep(45)
 
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
             atom_style="id type x y z",
         )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
