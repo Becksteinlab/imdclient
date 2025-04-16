@@ -215,45 +215,56 @@ class IMDv3IntegrationTest:
     def test_continue_after_disconnect(
         self, docker_client, topol, tmp_path, port
     ):
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
-            continue_after_disconnect=True,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=True,
+        )
         # Though we disconnect here, the simulation should continue
-        u.trajectory.close()
+        # u.trajectory.close() # old IMDReader usage
+        u.close()
         # Wait for the simulation to finish running
         time.sleep(45)
 
         # Now, attempt to reconnect- should fail,
         # since the simulation should have continued
         with pytest.raises(IOError):
-            u = mda.Universe(
+            u_mda = mda.Universe(
                 (tmp_path / topol),
-                f"imd://localhost:{port}",
                 atom_style="id type x y z",
             )
+            n_atoms = u_mda.atoms.n_atoms
+            u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
-            # Could also use None here- just being explicit
-            continue_after_disconnect=False,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         )
-        u.trajectory.close()
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=False,
+        )
+        # u.trajectory.close() # old IMDReader usage
+        u.close()
         # Give the simulation engine
         # enough time to finish running (though it shouldn't)
         time.sleep(45)
 
-        u = mda.Universe(
+        u_mda = mda.Universe(
             (tmp_path / topol),
-            f"imd://localhost:{port}",
             atom_style="id type x y z",
         )
+        n_atoms = u_mda.atoms.n_atoms
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)

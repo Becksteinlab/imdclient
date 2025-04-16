@@ -73,3 +73,9 @@ class minimalReader:
                 )
             except EOFError:
                 break
+
+    def close(self):
+        """Gracefully shut down the reader. Stops the producer thread."""
+        logger.debug("minimalReader: close() called")
+        if self._imdclient is not None:
+            self._imdclient.stop()
