@@ -3,6 +3,7 @@ import select
 import time
 from imdclient.IMDClient import IMDClient
 from .utils import parse_host_port
+from MDAnalysis.coordinates import core
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -51,9 +52,15 @@ class minimalReader:
         self._frame += 1
         self.imd_frame = imd_frame
 
+        # Modify the box dimensions to be triclinic
+        self._modify_box_dimesions()
+
         logger.debug(f"minimalReader: Loaded frame {self._frame}")
 
-        return imd_frame
+        return self.imd_frame
+    
+    def _modify_box_dimesions(self):
+        self.imd_frame.dimensions = core.triclinic_box(*self.imd_frame.box)
 
     def _process_stream(self):
         # Process the stream of frames
