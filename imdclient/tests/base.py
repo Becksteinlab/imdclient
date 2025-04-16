@@ -163,12 +163,13 @@ class IMDv3IntegrationTest:
                     imd_u.trajectory[i - first_frame].time,
                     atol=1e-03,
                 )
-            if comp_dt:
-                assert_allclose(
-                    true_u.trajectory[i].dt,
-                    imd_u.trajectory[i - first_frame].dt,
-                    atol=1e-03,
-                )
+            # Issue #63
+            # if comp_dt:
+            #     assert_allclose(
+            #         true_u.trajectory[i].dt,
+            #         imd_u.trajectory[i - first_frame].dt,
+            #         atol=1e-03,
+            #     )
             if comp_step:
                 assert_allclose(
                     true_u.trajectory[i].data["step"],

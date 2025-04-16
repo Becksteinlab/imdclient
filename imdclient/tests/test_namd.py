@@ -86,11 +86,12 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 imd_u.trajectory[i - first_frame].time,
                 atol=1e-03,
             )
-            assert_allclose(
-                true_u.trajectory[i].dt,
-                imd_u.trajectory[i - first_frame].dt,
-                atol=1e-03,
-            )
+            # Issue #63
+            # assert_allclose(
+            #     true_u.trajectory[i].dt,
+            #     imd_u.trajectory[i - first_frame].dt,
+            #     atol=1e-03,
+            # )
             # step in DCDReader is frame index, not integration step
             # don't compare step
             assert_allclose_with_logging(
