@@ -930,7 +930,7 @@ class IMDFrameBuffer:
 class IMDFrame:
 
     def __init__(self, n_atoms, imdsinfo):
-        if imdsinfo and imdsinfo.time:
+        if imdsinfo.time:
             self.time = 0.0
             self.dt = 0.0
             self.step = 0.0
@@ -938,7 +938,7 @@ class IMDFrame:
             self.time = None
             self.dt = None
             self.step = None
-        if imdsinfo and imdsinfo.energies:
+        if imdsinfo.energies:
             self.energies = {
                 "step": 0,
                 "temperature": 0.0,
@@ -953,49 +953,22 @@ class IMDFrame:
             }
         else:
             self.energies = None
-        if imdsinfo and imdsinfo.box:
+        if imdsinfo.box:
             self.box = np.empty((3, 3), dtype=np.float32)
         else:
             self.box = None
-        if imdsinfo and imdsinfo.positions:
+        if imdsinfo.positions:
             self.positions = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.positions = None
-        if imdsinfo and imdsinfo.velocities:
+        if imdsinfo.velocities:
             self.velocities = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.velocities = None
-        if imdsinfo and imdsinfo.forces:
+        if imdsinfo.forces:
             self.forces = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.forces = None
-
-    @property
-    def dimensions(self):
-        return self.box
-
-    @dimensions.setter
-    def dimensions(self, value):
-        self.box = value
-
-    def copy(self):
-        """
-        Returns a deep copy of the IMDFrame
-        """
-        new_frame = IMDFrame(
-            self.positions.shape[0] if self.positions is not None else 0, None
-        )
-        new_frame.time = self.time
-        new_frame.dt = self.dt
-        new_frame.step = self.step
-        new_frame.energies = self.energies.copy()
-        new_frame.box = np.copy(self.box)
-        new_frame.positions = np.copy(self.positions)
-        new_frame.velocities = np.copy(self.velocities)
-        new_frame.forces = np.copy(self.forces)
-
-        return new_frame
-
 
 def imdframe_memsize(n_atoms, imdsinfo) -> int:
     """

@@ -1,6 +1,7 @@
 import logging
 import select
 import time
+import copy
 from imdclient.IMDClient import IMDClient
 from .utils import parse_host_port
 from MDAnalysis.coordinates import core
@@ -66,7 +67,7 @@ class minimalReader:
         # Process the stream of frames
         while True:
             try:
-                self.trajectory.append(self._read_next_frame().copy())
+                self.trajectory.append(copy.deepcopy(self._read_next_frame()))
                 # `.copy()` might not be required but adding it to cover any edge cases where a refernce gets passed
                 logger.debug(
                     f"minimalReader: Added frame {self._frame} to trajectory"
