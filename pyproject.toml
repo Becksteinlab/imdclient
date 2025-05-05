@@ -37,7 +37,12 @@ test = [
 ]
 doc = [
     "sphinx",
-    "sphinx_rtd_theme",
+    "mdanalysis-sphinx-theme>=1.0.1",
+]
+examples = [
+    "numpy",
+    "dynplot",
+    "matplotlib",
 ]
 
 [project.urls]

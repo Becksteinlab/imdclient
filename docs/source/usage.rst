@@ -8,7 +8,7 @@ To stream a trajectory from a simulation engine that supports IMDv3,
 first use the appropriate input options on the simulation engine 
 to prepare it for the IMDClient receiver.
 
-Below, we have proided brief instructions on how to setup the various 
+Below, we have provided brief instructions on how to setup the various 
 simulation engine to output stream data using IMDv3.
 
 GROMACS
@@ -16,7 +16,7 @@ GROMACS
 In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
 In GROMACS, you will know that the simulation is ready and waiting for the
-MDAnalysis IMDReader client when this line is printed to the terminal:
+IMDClient when this line is printed to the terminal:
 
 .. code-block:: none
 
@@ -51,7 +51,7 @@ following terminal message:
 
     Info: INTERACTIVE MD AWAITING CONNECTION
 
-You are now ready to connect to the simulation engine with a client.
+You are now ready to connect to the simulation engine with the IMDClient.
 
 LAMMPS
 ------
@@ -73,8 +73,9 @@ You are now ready to connect to the simulation engine with a client.
 Using IMDClient with MDAnalysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once the simulation is ready for a client connection, setup your MDAnalysis :class:`Universe`
-like this: ::
+MDAnalysis contains an IMDReader class to leverage IMDClient to generate on-the-fly simulation
+analysis. Once the simulation is ready for a client connection, setup your
+MDAnalysis :class:`Universe` like this: ::
 
     import MDAnalysis as mda
     from MDAnalysis.coordinates.IMD import IMDReader
