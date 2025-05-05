@@ -43,7 +43,7 @@ class IMDClient:
     socket_bufsize : int, (optional)
         Size of the socket buffer in bytes. Default is to use the system default
     buffer_size : int (optional)
-        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
+        :class:`IMDFrameBuffer` will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
     timeout : int, optional
         Timeout for the socket in seconds [``5``]
     continue_after_disconnect : bool, optional [``None``]
@@ -138,10 +138,11 @@ class IMDClient:
 
             self._producer.start()
 
-    def signal_handler(self, sig, frame):
-        """Catch SIGINT to allow clean shutdown on CTRL+C
+    def signal_handler(self):
+        """Catch SIGINT to allow clean shutdown on CTRL+C.
+
         This also ensures that main thread execution doesn't get stuck
-        waiting in buf.pop_full_imdframe()"""
+        waiting in ``buf.pop_full_imdframe()``"""
         logger.debug("Intercepted signal")
         self.stop()
         logger.debug("Shutdown success")
@@ -878,7 +879,7 @@ class IMDFrameBuffer:
             self._full_imdf_avail.notify()
 
     def pop_full_imdframe(self):
-        """Put empty_ts in the empty_q and get the next full timestep"""
+        """Put the contents of ``empty_ts`` in the ``empty_q`` attribute and get the next full timestep"""
         # Start timer- one frame of analysis is starting (including removal
         # from buffer)
         self._t1 = self._t2
