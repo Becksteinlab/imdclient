@@ -1,8 +1,10 @@
-import MDAnalysis as mda
-from .minimalReader import minimalReader
-import pytest
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import pytest
+import MDAnalysis as mda
+
+from .minimalReader import minimalReader
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
 

@@ -1,15 +1,16 @@
 import socket
 import struct
-import numpy as np
 import threading
-import time
+import logging
+
+import numpy as np
+
 from imdclient.IMDProtocol import (
     IMDHeaderType,
     create_header_bytes,
     create_energy_bytes,
     IMDHEADERSIZE,
 )
-import logging
 from imdclient.IMDClient import sock_contains_data, read_into_buf, IMDHeader
 
 logger = logging.getLogger("imdclient.IMDClient")

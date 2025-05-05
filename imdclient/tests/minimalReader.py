@@ -1,10 +1,10 @@
 import logging
-import select
-import time
 import copy
+
+from MDAnalysis.coordinates import core
+
 from imdclient.IMDClient import IMDClient
 from .utils import parse_host_port
-from MDAnalysis.coordinates import core
 
 logger = logging.getLogger("imdclient.IMDClient")
 

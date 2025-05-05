@@ -1,20 +1,17 @@
-from imdclient.IMDClient import IMDClient
-from .minimalReader import minimalReader
-import pytest
-from pathlib import Path
-import os
-import signal
-import subprocess
 import time
+import logging
+import shutil
+
+import pytest
+import numpy as np
 from numpy.testing import (
     assert_allclose,
 )
-import numpy as np
 import docker
-import logging
-import shutil
 import MDAnalysis as mda
+
 from .utils import get_free_port
+from .minimalReader import minimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 

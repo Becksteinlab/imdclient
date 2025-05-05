@@ -1,6 +1,8 @@
-import MDAnalysis as mda
-import pytest
 import logging
+from pathlib import Path
+
+import pytest
+
 from .base import IMDv3IntegrationTest
 from .datafiles import (
     GROMACS_GRO,
@@ -8,7 +10,6 @@ from .datafiles import (
     GROMACS_MDP_NST_1,
     GROMACS_MDP_NST_8,
 )
-from pathlib import Path
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("gromacs_test.log")

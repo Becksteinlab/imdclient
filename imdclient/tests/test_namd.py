@@ -1,6 +1,12 @@
-import MDAnalysis as mda
-import pytest
 import logging
+from pathlib import Path
+
+import pytest
+from numpy.testing import (
+    assert_allclose,
+)
+import MDAnalysis as mda
+
 from .base import IMDv3IntegrationTest, assert_allclose_with_logging
 from .datafiles import (
     NAMD_TOPOL,
@@ -8,10 +14,6 @@ from .datafiles import (
     NAMD_CONF_NST_8,
     NAMD_PARAMS,
     NAMD_PSF,
-)
-from pathlib import Path
-from numpy.testing import (
-    assert_allclose,
 )
 
 logger = logging.getLogger("imdclient.IMDClient")
