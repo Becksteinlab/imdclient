@@ -1,11 +1,10 @@
-from MDAnalysis.coordinates.IMD import IMDReader
-import MDAnalysis as mda
 import logging
-from imdclient.tests.datafiles import NAMD_TOPOL
-import matplotlib.pyplot as plt
-import numpy as np
 import subprocess
-import os
+
+import matplotlib.pyplot as plt
+import MDAnalysis as mda
+
+from imdclient.tests.datafiles import NAMD_TOPOL
 
 # Set up the FFmpeg command for streaming
 # ffmpeg_command = [

@@ -1,7 +1,5 @@
-import MDAnalysis as mda
 from imdclient.tests.minimalReader import minimalReader
 import logging
-from imdclient.tests.datafiles import LAMMPS_TOPOL
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("imdclient.log")
