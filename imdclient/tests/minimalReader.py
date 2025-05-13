@@ -26,7 +26,7 @@ class minimalReader:
         keyword arguments passed to the constructed :class:`IMDClient`
     """
 
-    def __init__(self, filename, n_atoms, **kwargs):
+    def __init__(self, filename, n_atoms, process_stream=False, **kwargs):
 
         self.imd_frame = None
 
@@ -42,7 +42,8 @@ class minimalReader:
 
         self._frame = -1
 
-        self._process_stream()
+        if process_stream:
+            self._process_stream()
 
     def _read_next_frame(self):
         try:

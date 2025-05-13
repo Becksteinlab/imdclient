@@ -96,7 +96,7 @@ def load_imd_universe(topol_path, tmp_path):
         convert_units=False,
     )
     n_atoms = u_mda.atoms.n_atoms
-    tmp_u = minimalReader(f"imd://localhost:8888", n_atoms=n_atoms)
+    tmp_u = minimalReader(f"imd://localhost:8888", n_atoms=n_atoms, process_stream=True)
     return tmp_u
 
 
