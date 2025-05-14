@@ -23,14 +23,14 @@ cellBasisVector2   0.0  31.66  0.0
 cellBasisVector3   0.0   0.0  32.89
 
 DCDfile	alanin.dcd
-DCDfreq	8
+DCDfreq	1
 DCDUnitCell    yes
 velDcdFile	alanin.vel.dcd
-velDcdFreq	8
+velDcdFreq	1
 forceDcdFile	alanin.force.dcd
-forceDcdFreq	8
+forceDcdFreq	1
 XSTFile     alanin.xst
-xstFreq		8
+xstFreq		1
 
 #restartname	alanin.restart
 #restartfreq	10
