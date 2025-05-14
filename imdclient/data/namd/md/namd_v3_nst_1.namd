@@ -1,7 +1,7 @@
 # This is a test namd configuration file
 
 timestep	0.5
-numsteps	10
+numsteps	100
 structure	alanin.psf
 parameters	alanin.params
 coordinates	alanin.pdb
