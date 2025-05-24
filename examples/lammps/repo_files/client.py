@@ -11,7 +11,11 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u = minimalReader("imd://localhost:8888")
+u_mda = mda.Universe(
+    LAMMPS_TOPOL, atom_style="id type x y z", convert_units=False
+)
+n_atoms = u_mda.atoms.n_atoms
+u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
 
 while True:
     try:

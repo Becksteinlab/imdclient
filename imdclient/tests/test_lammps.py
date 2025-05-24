@@ -75,5 +75,5 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
             convert_units=False,
         )
         n_atoms = u_mda.atoms.n_atoms
-        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
         yield u
