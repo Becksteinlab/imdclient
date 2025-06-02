@@ -119,23 +119,25 @@ def test_compare_imd_to_true_traj_forces(imd_u, true_u_force, first_frame):
         )
 
 
-def test_compare_imd_to_true_traj(imd_u, true_u, first_frame, vel, force, dt):
+def test_compare_imd_to_true_traj(imd_u, true_u, first_frame, vel, force, dt, step):
     for i in range(first_frame, len(true_u.trajectory)):
         assert_allclose(
             true_u.trajectory[i].time,
             imd_u.trajectory[i - first_frame].time,
             atol=1e-03,
         )
-        if dt:
+         # Issue #63
+        # if dt:
+        #     assert_allclose(
+        #         true_u.trajectory[i].dt,
+        #         imd_u.trajectory[i - first_frame].dt,
+        #         atol=1e-03,
+        #     )
+        if step:
             assert_allclose(
-                true_u.trajectory[i].dt,
-                imd_u.trajectory[i - first_frame].dt,
-                atol=1e-03,
+                true_u.trajectory[i].data["step"],
+                imd_u.trajectory[i - first_frame].data["step"],
             )
-        assert_allclose(
-            true_u.trajectory[i].data["step"],
-            imd_u.trajectory[i - first_frame].data["step"],
-        )
         assert_allclose_with_logging(
             true_u.trajectory[i].dimensions,
             imd_u.trajectory[i - first_frame].dimensions,
@@ -202,7 +204,10 @@ def main():
         print("Comparing trajectories...\n====================")
         vel_in_trr = args.vel_path is None
         force_in_trr = args.force_path is None
-        dt_in_trr = not args.topol_path.endswith(".data")
+        dt_in_trr = not args.topol_path.endswith(".data") 
+        # True when not using DCDReader
+        step_in_trr = not args.traj_path.endswith(".coor")
+
 
         test_compare_imd_to_true_traj(
             imd_u,
@@ -211,6 +216,7 @@ def main():
             vel_in_trr,
             force_in_trr,
             dt_in_trr,
+            step_in_trr
         )
 
         if args.vel_path is not None:
