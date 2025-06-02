@@ -70,24 +70,35 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with a client.
 
-Using IMDClient with MDAnalysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using IMDClient
+^^^^^^^^^^^^^^^
 
-MDAnalysis contains an IMDReader class to leverage IMDClient to generate on-the-fly simulation
-analysis. Once the simulation is ready for a client connection, setup your
-MDAnalysis :class:`Universe` like this: ::
+As a part of the IMDClient package, we have provided a minimal implementation of a Reader 
+Class viz. :class:`minimalReader`, which can be used to read trajectory data from the socket
+by leveraging :class:`IMDClient`. It however needs a function to process topology informaion 
+to get the number of atoms in the simulation. We do so below by using the ``MDAnalysis`` 
+library, which in principle can be done with any function that can read a topology file.
+
+Once the simulation is ready for a client connection, setup your
+:class:`minimalReader` object like this: ::
 
     import MDAnalysis as mda
-    from MDAnalysis.coordinates.IMD import IMDReader
+    from imdclient.tests.minimalReader import minimalReader
     # Pass host and port of the listening simulation
-    # engine as the trajectory argument
+    # engine as an argument to the Reader
 
     # GROMACS
-    u = mda.Universe("topology.gro", "imd://localhost:8888")
+    u_mda = mda.Universe("topology.gro")
+    n_atoms = u_mda.atoms.n_atoms
+    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
     # NAMD
-    u = mda.Universe("topology.psf", "imd://localhost:8888")
+    u_mda = mda.Universe("topology.psf")
+    n_atoms = u_mda.atoms.n_atoms
+    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
+    # LAMMPS
+    u_mda = mda.Universe("topology.data")
+    n_atoms = u_mda.atoms.n_atoms
+    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
 
-While this package allows the IMDReader to be automatically selected
-based on the trajectory URL matching the pattern 'imd://<host>:<port>',
-the format can be explicitly selected by passing the keyword argument
-'format="IMD"' to the :class:`Universe`.
+This example class can be used as a starting point to implement your own reader class to 
+read trajectory data from the socket and generate on-the-fly simulation analysis.
