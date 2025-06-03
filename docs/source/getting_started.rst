@@ -31,10 +31,6 @@ the package with documentation and testing dependencies::
 
     pip install -e <path/to/repo>[doc, test]
 
-Consider installing the dependencies for running our examples::
-
-    pip install -e <path/to/repo>[examples]
-
 Then, to install the development dependencies::
 
     conda env update --name imdclient --file devtools/conda-envs/test_env.yaml
