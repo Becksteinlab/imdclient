@@ -9,7 +9,7 @@ from .utils import parse_host_port
 logger = logging.getLogger("imdclient.IMDClient")
 
 
-class minimalReader:
+class MinimalReader:
     """
     Minimal reader for testing purposes
 
@@ -57,7 +57,7 @@ class minimalReader:
         # Modify the box dimensions to be triclinic
         self._modify_box_dimesions()
 
-        logger.debug(f"minimalReader: Loaded frame {self._frame}")
+        logger.debug(f"MinimalReader: Loaded frame {self._frame}")
 
         return self.imd_frame
     
@@ -71,13 +71,13 @@ class minimalReader:
                 self.trajectory.append(copy.deepcopy(self._read_next_frame()))
                 # `.copy()` might not be required but adding it to cover any edge cases where a refernce gets passed
                 logger.debug(
-                    f"minimalReader: Added frame {self._frame} to trajectory"
+                    f"MinimalReader: Added frame {self._frame} to trajectory"
                 )
             except EOFError:
                 break
 
     def close(self):
         """Gracefully shut down the reader. Stops the producer thread."""
-        logger.debug("minimalReader: close() called")
+        logger.debug("MinimalReader: close() called")
         if self._imdclient is not None:
             self._imdclient.stop()

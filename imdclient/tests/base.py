@@ -11,7 +11,7 @@ import docker
 import MDAnalysis as mda
 
 from .utils import get_free_port
-from .minimalReader import minimalReader
+from .MinimalReader import MinimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -127,7 +127,7 @@ class IMDv3IntegrationTest:
     def imd_u(self, docker_client, topol, tmp_path, port):
         mda_u = mda.Universe((tmp_path / topol))
         n_atoms = mda_u.atoms.n_atoms
-        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
+        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
         yield u
 
     @pytest.fixture()
@@ -219,7 +219,7 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         )
         n_atoms = u_mda.atoms.n_atoms
-        u = minimalReader(
+        u = MinimalReader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=True,
@@ -238,7 +238,7 @@ class IMDv3IntegrationTest:
                 atom_style="id type x y z",
             )
             n_atoms = u_mda.atoms.n_atoms
-            u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+            u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
         u_mda = mda.Universe(
@@ -248,7 +248,7 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         )
         n_atoms = u_mda.atoms.n_atoms
-        u = minimalReader(
+        u = MinimalReader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=False,
@@ -264,4 +264,4 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         )
         n_atoms = u_mda.atoms.n_atoms
-        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)

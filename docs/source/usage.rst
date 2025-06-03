@@ -74,31 +74,31 @@ Using IMDClient
 ^^^^^^^^^^^^^^^
 
 As a part of the IMDClient package, we have provided a minimal implementation of a Reader 
-Class viz. :class:`minimalReader`, which can be used to read trajectory data from the socket
+Class viz. :class:`MinimalReader`, which can be used to read trajectory data from the socket
 by leveraging :class:`IMDClient`. It however needs a function to process topology informaion 
 to get the number of atoms in the simulation. We do so below by using the ``MDAnalysis`` 
 library, which in principle can be done with any function that can read a topology file.
 
 Once the simulation is ready for a client connection, setup your
-:class:`minimalReader` object like this: ::
+:class:`MinimalReader` object like this: ::
 
     import MDAnalysis as mda
-    from imdclient.tests.minimalReader import minimalReader
+    from imdclient.tests.MinimalReader import MinimalReader
     # Pass host and port of the listening simulation
     # engine as an argument to the Reader
 
     # GROMACS
     u_mda = mda.Universe("topology.gro")
     n_atoms = u_mda.atoms.n_atoms
-    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
+    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
     # NAMD
     u_mda = mda.Universe("topology.psf")
     n_atoms = u_mda.atoms.n_atoms
-    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
+    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
     # LAMMPS
     u_mda = mda.Universe("topology.data")
     n_atoms = u_mda.atoms.n_atoms
-    u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
+    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
 
 This example class can be used as a starting point to implement your own reader class to 
 read trajectory data from the socket and generate on-the-fly simulation analysis.

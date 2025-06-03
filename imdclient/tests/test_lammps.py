@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import MDAnalysis as mda
 
-from .minimalReader import minimalReader
+from .MinimalReader import MinimalReader
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
 
@@ -75,5 +75,5 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
             convert_units=False,
         )
         n_atoms = u_mda.atoms.n_atoms
-        u = minimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
+        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
         yield u

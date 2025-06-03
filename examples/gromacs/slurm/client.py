@@ -1,5 +1,5 @@
 import MDAnalysis as mda
-from imdclient.tests.minimalReader import minimalReader
+from imdclient.tests.MinimalReader import MinimalReader
 import logging
 from imdclient.tests.datafiles import GROMACS_TOP
 
@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 i = 0
 u_mda = mda.Universe(GROMACS_TOP)
 n_atoms = u_mda.atoms.n_atoms
-u = minimalReader("imd://localhost:8888", n_atoms=n_atoms)
+u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
 
 while True:
     try:
