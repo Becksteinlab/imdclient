@@ -879,7 +879,7 @@ class IMDFrameBuffer:
             self._full_imdf_avail.notify()
 
     def pop_full_imdframe(self):
-        """Put the contents of ``empty_ts`` in the ``empty_q`` attribute and get the next full timestep"""
+        """Put empty_ts in the empty_q and get the next full timestep"""
         # Start timer- one frame of analysis is starting (including removal
         # from buffer)
         self._t1 = self._t2
