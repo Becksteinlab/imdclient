@@ -18,6 +18,7 @@ maintainers = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "numpy",
     "MDAnalysis",
 ]
 keywords = [
@@ -38,11 +39,6 @@ test = [
 doc = [
     "sphinx",
     "mdanalysis-sphinx-theme>=1.0.1",
-]
-examples = [
-    "numpy",
-    "dynplot",
-    "matplotlib",
 ]
 
 [project.urls]
