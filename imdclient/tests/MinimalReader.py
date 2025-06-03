@@ -21,7 +21,10 @@ class MinimalReader:
         is the port number.
     n_atoms : int
         number of atoms in the system. defaults to number of atoms
-        in the topology. don't set this unless you know what you're doing.
+        in the topology. don't set this unless you know what you're doing
+    process_stream : bool (optional)
+        if True, the reader will process the stream of frames and
+        store them in the `trajectory` attribute. defaults to False.
     kwargs : dict (optional)
         keyword arguments passed to the constructed :class:`IMDClient`
     """
