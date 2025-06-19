@@ -11,7 +11,7 @@ import docker
 import MDAnalysis as mda
 
 from .utils import get_free_port
-from .MinimalReader import MinimalReader
+from .minimalreader import minimalreader
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -125,9 +125,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        mda_u = mda.Universe((tmp_path / topol))
-        n_atoms = mda_u.atoms.n_atoms
-        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True)
+        n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
+        u = minimalreader(
+            f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
+        )
         yield u
 
     @pytest.fixture()
@@ -212,20 +213,18 @@ class IMDv3IntegrationTest:
     def test_continue_after_disconnect(
         self, docker_client, topol, tmp_path, port
     ):
-        u_mda = mda.Universe(
-            (tmp_path / topol),
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
-        )
-        n_atoms = u_mda.atoms.n_atoms
-        u = MinimalReader(
+        ).atoms.n_atoms
+        u = minimalreader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=True,
         )
         # Though we disconnect here, the simulation should continue
-        # u.trajectory.close() # old IMDReader usage
         u.close()
         # Wait for the simulation to finish running
         time.sleep(45)
@@ -233,35 +232,32 @@ class IMDv3IntegrationTest:
         # Now, attempt to reconnect- should fail,
         # since the simulation should have continued
         with pytest.raises(IOError):
-            u_mda = mda.Universe(
-                (tmp_path / topol),
+            n_atoms = mda.Universe(
+                tmp_path / topol,
                 atom_style="id type x y z",
-            )
-            n_atoms = u_mda.atoms.n_atoms
-            u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+            ).atoms.n_atoms
+            u = minimalreader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
-        u_mda = mda.Universe(
-            (tmp_path / topol),
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
-        )
-        n_atoms = u_mda.atoms.n_atoms
-        u = MinimalReader(
+        ).atoms.n_atoms
+        u = minimalreader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=False,
+            process_stream=True,
         )
-        # u.trajectory.close() # old IMDReader usage
         u.close()
         # Give the simulation engine
         # enough time to finish running (though it shouldn't)
         time.sleep(45)
 
-        u_mda = mda.Universe(
-            (tmp_path / topol),
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             atom_style="id type x y z",
-        )
-        n_atoms = u_mda.atoms.n_atoms
-        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        ).atoms.n_atoms
+        u = minimalreader(f"imd://localhost:{port}", n_atoms=n_atoms)

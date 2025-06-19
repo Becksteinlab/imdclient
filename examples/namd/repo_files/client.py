@@ -1,5 +1,5 @@
 import MDAnalysis as mda
-from imdclient.tests.MinimalReader import MinimalReader
+from imdclient.tests.minimalreader import minimalreader
 import logging
 from imdclient.tests.datafiles import NAMD_TOPOL
 
@@ -13,7 +13,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u = MinimalReader("imd://localhost:8888")
+u = minimalreader("imd://localhost:8888")
 
 while True:
     try:

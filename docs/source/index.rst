@@ -17,5 +17,3 @@ developers looking to produce on-the-fly analysis, avoiding storage of large tra
    usage
    api
    protocol_v3
-   header_def
-   protocol_v2
