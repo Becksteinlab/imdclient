@@ -20,8 +20,8 @@ The rules for this file:
 
 ### Authors
 <!-- GitHub usernames of contributors to this release -->
-@ljwoods2
-@hcho38
+https://github.com/ljwoods2
+https://github.com/hcho38
 
 ### Added
 <!-- New added features -->
