@@ -419,9 +419,9 @@ time packets were previously specified for this session in the :ref:`session inf
       1 (int32) Number of time packets being sent
 
    Body:
-      <val> (float64) Current integration time step (dt) for the simulation
+      <val> (float64) Simulation integrator time step (dt)
       <val> (float64) Current simulation time
-      <val> (int64) Current integration step counter of the simulation
+      <val> (int64) Current integration step of the simulation
 
 .. versionadded:: 3
 
