@@ -1,5 +1,6 @@
 import MDAnalysis as mda
-from imdclient.tests.minimalreader import minimalreader
+from imdclient.utils import parse_host_port
+from imdclient.IMDClient import IMDClient
 import logging
 from imdclient.tests.datafiles import LAMMPS_TOPOL
 
@@ -13,17 +14,19 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 i = 0
-u_mda = mda.Universe(
-    LAMMPS_TOPOL, atom_style="id type x y z", convert_units=False
-)
-n_atoms = u_mda.atoms.n_atoms
-u = minimalreader("imd://localhost:8888", n_atoms=n_atoms)
+# Parse the host and port from the IMD producer server address
+host, port = parse_host_port("imd://localhost:8888")
+
+n_atoms = mda.Universe(LAMMPS_TOPOL).atoms.n_atoms
+# This starts the simulation
+imdclient = IMDClient(host, port, n_atoms=n_atoms)
 
 while True:
     try:
-        u._read_next_frame()
-        i += 1
+        imd_frame = imdclient.get_imdframe()
     except EOFError:
         break
+    i += 1
+    logger.debug(f"IMDClient: Received frame {i}")
 
-logger.info(f"Parsed {i} frames")
+logger.info(f"IMDClient: Parsed {i} frames")

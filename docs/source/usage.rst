@@ -73,32 +73,31 @@ You are now ready to connect to the simulation engine with a client.
 Using IMDClient
 ^^^^^^^^^^^^^^^
 
-As a part of the IMDClient package, we have provided a minimal implementation of a Reader 
-Class viz. :class:`MinimalReader`, which can be used to read trajectory data from the socket
-by leveraging :class:`IMDClient`. It however needs a function to process topology informaion 
-to get the number of atoms in the simulation. We do so below by using the ``MDAnalysis`` 
-library, which in principle can be done with any function that can read a topology file.
+Once the simulation is ready for a client connection, one can setup
+one using the :class:`~imdclient.IMDClient` class: ::
 
-Once the simulation is ready for a client connection, setup your
-:class:`MinimalReader` object like this: ::
+    from imdclient.utils import parse_host_port
+    from imdclient.IMDClient import IMDClient
 
-    import MDAnalysis as mda
-    from imdclient.tests.MinimalReader import MinimalReader
-    # Pass host and port of the listening simulation
-    # engine as an argument to the Reader
+    host, port = parse_host_port("imd://localhost:8888")
 
-    # GROMACS
-    u_mda = mda.Universe("topology.gro")
-    n_atoms = u_mda.atoms.n_atoms
-    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
-    # NAMD
-    u_mda = mda.Universe("topology.psf")
-    n_atoms = u_mda.atoms.n_atoms
-    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
-    # LAMMPS
-    u_mda = mda.Universe("topology.data")
-    n_atoms = u_mda.atoms.n_atoms
-    u = MinimalReader("imd://localhost:8888", n_atoms=n_atoms)
+    # `n_atoms` is the number of atoms in the simulation
+    # Adjust this value according to your simulation setup
 
-This example class can be used as a starting point to implement your own reader class to 
-read trajectory data from the socket and generate on-the-fly simulation analysis.
+    # This forms the connection and starts the simulation 
+    # by sending the `IMD_GO`
+    client = IMDClient(host, port, n_atoms=1000)
+
+    # Read trajectory data from the IMDBuffer which stores
+    # data received from the socket
+
+    while True:
+        try:
+            frame = client.get_imdframe()
+            # Process and analyze the frame data as needed
+        except EOFError:
+            break
+    
+This example can be used as a starting point to implement your own reader 
+class that utilizes :class:`~imdclient.IMDClient` to read trajectory data 
+from the socket and generate on-the-fly simulation analysis.
