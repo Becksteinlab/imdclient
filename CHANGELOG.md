@@ -15,13 +15,109 @@ The rules for this file:
     * YYYY-MM-DD date format (following ISO 8601)
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
-
-## [v0.1.0]
+## [v0.1.4] - 2024-12-13
 
 ### Authors
 <!-- GitHub usernames of contributors to this release -->
-https://github.com/ljwoods2
-https://github.com/hcho38
+@ljwoods2 @hcho38
+
+### Added
+<!-- New added features -->
+* Simulation engine GPU + MPI testing by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/21
+* Add continue_after_disconnect option (wait packet implementation) by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/44
+* Reader test by @hcho38 in https://github.com/Becksteinlab/imdclient/pull/16
+
+### Fixed
+<!-- Bug fixes -->
+
+### Changed
+<!-- Changes in existing functionality -->
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
+
+## [v0.1.3] - 2024-11-29
+
+### Authors
+<!-- GitHub usernames of contributors to this release -->
+@ljwoods2 @orbeckst
+
+### Added
+<!-- New added features -->
+* Docker by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/30
+
+### Fixed
+<!-- Bug fixes -->
+* Better error messages, Context manager by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/34
+
+### Changed
+<!-- Changes in existing functionality -->
+* renamed IMDREADER to IMD by @orbeckst in https://github.com/Becksteinlab/imdclient/pull/38
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
+
+## [v0.1.2] - 2024-10-28
+
+### Authors
+<!-- GitHub usernames of contributors to this release -->
+@ljwoods2
+
+### Added
+<!-- New added features -->
+* Wait flag writeup by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/28
+
+### Fixed
+<!-- Bug fixes -->
+* URI, Docstring fixes by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/29
+
+### Changed
+<!-- Changes in existing functionality -->
+* Relicensing, version 0.1.1 by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/25
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
+
+## [v0.1.1] - 2024-10-14
+
+### Authors
+<!-- GitHub usernames of contributors to this release -->
+@ljwoods2
+
+### Added
+<!-- New added features -->
+
+### Fixed
+<!-- Bug fixes -->
+
+### Changed
+<!-- Changes in existing functionality -->
+* Re-release under the GPLv3 license
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
+
+## [v0.1.0] - 2024-10-13
+
+### Authors
+<!-- GitHub usernames of contributors to this release -->
+@ljwoods2 @hcho38
 
 ### Added
 <!-- New added features -->
@@ -35,11 +131,11 @@ https://github.com/hcho38
 
 ### Fixed
 <!-- Bug fixes -->
-* StreamReaderBase, Gromacs fixes by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/15
+* StreamReaderBase, GROMACS fixes by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/15
 
 ### Changed
 <!-- Changes in existing functionality -->
-* lammps updates by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/13
+* LAMMPS updates by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/13
 
 ### Deprecated
 <!-- Soon-to-be removed features -->
