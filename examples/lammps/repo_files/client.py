@@ -17,7 +17,9 @@ i = 0
 # Parse the host and port from the IMD producer server address
 host, port = parse_host_port("imd://localhost:8888")
 
-n_atoms = mda.Universe(LAMMPS_TOPOL).atoms.n_atoms
+n_atoms = mda.Universe(
+    LAMMPS_TOPOL, atom_style="id type x y z", convert_units=False
+).atoms.n_atoms
 # This starts the simulation
 imdclient = IMDClient(host, port, n_atoms=n_atoms)
 
