@@ -97,6 +97,10 @@ jobs:
       run: |
         pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
 
+    - name: Run package utilities tests
+      run: |
+        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_utils.py
+
     - name: codecov
       if: github.event_name != 'schedule'
       uses: codecov/codecov-action@v4.0.1
