@@ -43,6 +43,7 @@ class timeit(object):
         # always propagate exceptions forward
         return False
 
+
 def approximate_timestep_memsize(
     n_atoms, energies, dimensions, positions, velocities, forces
 ):
@@ -99,6 +100,7 @@ def sock_contains_data(sock, timeout) -> bool:
     )
     return sock in ready_to_read
 
+
 def parse_host_port(filename):
     """
     Parses a URL in the format 'imd://host:port' and returns the host and port.
@@ -126,16 +128,24 @@ def parse_host_port(filename):
         ... ValueError: IMDClient: URL must be in the format 'imd://host:port'
     """
     if not filename.startswith("imd://"):
-        raise ValueError("IMDClient: URL must be in the format 'imd://host:port'")
-    
+        raise ValueError(
+            "IMDClient: URL must be in the format 'imd://host:port'"
+        )
+
     # Check if the format is correct
     parts = filename.split("imd://")[1].split(":")
     if len(parts) == 2:
-        host = parts[0] 
+        host = parts[0]
+        if not host:
+            raise ValueError("IMDClient: Host cannot be empty")
+        if not parts[1]:
+            raise ValueError("IMDClient: Port cannot be empty")
         try:
             port = int(parts[1])
             return (host, port)
         except ValueError:
             raise ValueError("IMDClient: Port must be an integer")
     else:
-        raise ValueError("IMDClient: URL must be in the format 'imd://host:port'")
+        raise ValueError(
+            "IMDClient: URL must be in the format 'imd://host:port'"
+        )
