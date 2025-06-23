@@ -100,6 +100,31 @@ def sock_contains_data(sock, timeout) -> bool:
     return sock in ready_to_read
 
 def parse_host_port(filename):
+    """
+    Parses a URL in the format 'imd://host:port' and returns the host and port.
+    Parameters
+    ----------
+    filename : str
+        The URL to parse, must be in the format 'imd://host:port'.
+
+    Returns
+    -------
+    tuple[str, int]
+        A 2-tuple ``(host, port)`` where `host` is the host server name
+        and `port` is the TCP port number.
+    Raises
+    ------
+    ValueError
+        If the URL is not in the correct format or if the host or port is invalid.
+
+    Examples
+    --------
+    >>> parse_host_port("imd://localhost:8888")
+    ('localhost', 8888)
+    >>> parse_host_port("invalid://localhost:12345")
+    Traceback (most recent call last):
+        ... ValueError: IMDClient: URL must be in the format 'imd://host:port'
+    """
     if not filename.startswith("imd://"):
         raise ValueError("IMDClient: URL must be in the format 'imd://host:port'")
     
