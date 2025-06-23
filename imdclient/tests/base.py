@@ -249,7 +249,6 @@ class IMDv3IntegrationTest:
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=False,
-            process_stream=True,
         )
         u.close()
         # Give the simulation engine
