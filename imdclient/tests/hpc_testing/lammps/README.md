@@ -40,7 +40,7 @@ Or, for MPI builds,
 To validate against your own simulation files, see `validate_lmp.sh` for 
 command line arguments.
 
-### Compiling on ASU's Sol supercomputer
+### Compiling on ASU's Sol supercomputer with MPI and GPU support
 
 Allocate a GPU node on SOL and clone in https://github.com/ljwoods2/lammps/tree/imd-v3
 
@@ -57,6 +57,6 @@ module load openmpi/4.1.5
 mkdir -p build_gpu
 cd build_gpu
 
-cmake ../cmake/ -D PKG_MISC=yes -D PKG_GPU=on -D GPU_API=cuda -D PKG_H5MD=yes -D BUILD_MPI=yes -D LAMMPS_ASYNC_IMD=yes
+cmake ../cmake/ -D PKG_MISC=yes -D PKG_GPU=on -D GPU_API=cuda -D PKG_H5MD=yes -D BUILD_MPI=yes -DCMAKE_CXX_FLAGS="-DLAMMPS_ASYNC_IMD"
 make -j 4
 ```

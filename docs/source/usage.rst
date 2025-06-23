@@ -53,6 +53,23 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with a client.
 
+LAMMPS
+------
+To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
+
+.. code-block:: none
+
+    fix ID group-ID imd <port> trate <frequency> version 3 unwrap <on/off> time <on/off> box <on/off> coordinates <on/off> velocities <on/off> forces <on/off>
+
+Once the simulation is ready for a client connection, it will print 
+following terminal message:
+
+.. code-block:: none
+
+    Waiting for IMD connection on port <port>
+
+You are now ready to connect to the simulation engine with a client.
+
 Using IMDClient with MDAnalysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
