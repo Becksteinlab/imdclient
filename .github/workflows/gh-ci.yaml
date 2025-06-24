@@ -177,22 +177,16 @@ jobs:
         run: |
           docker pull ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu
   
-      # Uses private container
-      - name: Run NAMD tests
-        run: |
-          pytest -v --color=yes imdclient/tests/test_namd.py
-
       - name: Pull GROMACS + LAMMPS container
         run: |
           docker pull ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu
 
-      - name: Run GROMACS tests
+      - name: Run NAMD + GROMACS + LAMMPS tests
         run: |
-          pytest -v --color=yes imdclient/tests/test_gromacs.py
-    
-      - name: Run LAMMPS tests
-        run: |
-          pytest -v --color=yes imdclient/tests/test_lammps.py
+          pytest -v --color=yes \
+          imdclient/tests/test_namd.py \
+          imdclient/tests/test_gromacs.py \
+          imdclient/tests/test_lammps.py
 
   pylint_check:
     if: github.repository == 'Becksteinlab/imdclient'
