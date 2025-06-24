@@ -27,64 +27,75 @@ IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdrea
 
 ### Installation
 
-IMDClient is available via PyPi and can be installed with pip:
-```bash
+#### Install via conda (recommended)
+
+To install the latest release of IMDClient from conda-forge:
+
+```
+conda install -c conda-forge imdclient
+```
+
+#### Install via pip
+
+To install the latest release of IMDClient from PyPI:
+
+```
 pip install imdclient
 ```
 
-To build IMDClient from source,
-we highly recommend using virtual environments.
-If possible, we strongly recommend that you use
-[Anaconda](https://docs.conda.io/en/latest/) as your package manager.
-Below we provide instructions both for `conda` and
-for `pip`.
+---
 
-#### With conda
+### Building from Source
+To build IMDClient from source, we highly recommend using virtual environments.
+If possible, we strongly recommend that you use [Anaconda](https://docs.conda.io/en/latest/) as your package manager.
 
-Ensure that you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+Below we provide instructions both for `conda` and for `pip`.
 
-Create a virtual environment and activate it:
+#### Source build with conda
+
+1. Ensure you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+
+2. Create and activate a new environment:
 
 ```
 conda create --name imdclient
 conda activate imdclient
 ```
 
-<!-- Install the development and documentation dependencies:
-
-```
-conda env update --name imdreader --file devtools/conda-envs/test_env.yaml
-conda env update --name imdreader --file docs/requirements.yaml
-``` -->
-
-Build this package from source:
+3. Build and install IMDClient in editable mode:
 
 ```
 pip install -e .
 ```
 
-If you want to update your dependencies (which can be risky!), run:
+4. (Optional) Update dependencies:
 
 ```
 conda update --all
 ```
 
-And when you are finished, you can exit the virtual environment with:
+5. Deactivate the environment when finished:
 
 ```
 conda deactivate
 ```
 
-#### With pip
+#### Source build with pip
 
-To build the package from source, run:
+1. (Optional) Create and activate a virtual environment:
+
+```
+python -m venv venv
+source venv/bin/activate
+```
+
+2. Install IMDClient from source:
 
 ```
 pip install .
 ```
 
-If you want to create a development environment, install
-the dependencies required for tests and docs with:
+3. (Optional) For development (tests and docs):
 
 ```
 pip install ".[test,doc]"
@@ -102,4 +113,5 @@ Copyright (c) 2024, Lawson
  
 Project based on the 
 [MDAnalysis Cookiecutter](https://github.com/MDAnalysis/cookiecutter-mda) version 0.1.
-<!-- Please cite [MDAnalysis](https://github.com/MDAnalysis/mdanalysis#citation) when using IMDReader in published work. --> 
+
+**If you use IMDClient in your research, please cite [IMDClient](https://github.com/Becksteinlab/imdclient) in your publications.**
