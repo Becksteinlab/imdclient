@@ -65,6 +65,8 @@ LAMMPS
 ------
 The IMDv3 protocol is part of the official LAMMPS distribution since ``patch_4Feb2025``.
 It is available in the LAMMPS source code repository - https://github.com/lammps/lammps.
+Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation
+- https://docs.lammps.org/fix_imd.html
 
 To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
 
