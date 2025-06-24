@@ -124,6 +124,20 @@ jobs:
     if: github.repository == 'Becksteinlab/imdclient'
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: namd
+            image: ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu
+            script: imdclient/tests/test_namd.py
+          - name: gromacs
+            image: ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu
+            script: imdclient/tests/test_gromacs.py
+          - name: lammps
+            image: ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu
+            script: imdclient/tests/test_lammps.py
+
     permissions:
       contents: read
       packages: read
@@ -173,20 +187,13 @@ jobs:
           python --version
           python -m pip install .  --no-deps 
 
-      - name: Pull private NAMD container
+      - name: Pull container
         run: |
-          docker pull ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu
+          docker pull ${{ matrix.image }}
   
-      - name: Pull GROMACS + LAMMPS container
+      - name: Run simulation engine tests
         run: |
-          docker pull ghcr.io/becksteinlab/streaming-md-docker:main-common-cpu
-
-      - name: Run NAMD + GROMACS + LAMMPS tests
-        run: |
-          pytest -v --color=yes \
-          imdclient/tests/test_namd.py \
-          imdclient/tests/test_gromacs.py \
-          imdclient/tests/test_lammps.py
+          pytest -v --color=yes ${{ matrix.script }}
 
   pylint_check:
     if: github.repository == 'Becksteinlab/imdclient'
