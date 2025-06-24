@@ -4,12 +4,11 @@ from pathlib import Path
 import logging
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
+import re
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("lammps_test.log")
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
@@ -48,10 +47,16 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
         else:
             return 0
 
-    # Not present in lammps-produced H5MD
     @pytest.fixture()
-    def comp_dt(self):
-        return False
+    def dt(self, inp):
+        pattern = re.compile(r"^\s*timestep\s*(\S+)")
+        with open(inp, "r") as file:
+            for line in file:
+                match = pattern.match(line)
+                if match:
+                    return float(match.group(1))
+
+        raise ValueError(f"No dt found in {inp}")
 
     # This must wait until after imd stream has ended
     @pytest.fixture()
@@ -71,9 +76,7 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
             f"imd://localhost:{port}",
             atom_style="id type x y z",
         )
-        with mda.Writer(
-            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
-        ) as w:
+        with mda.Writer((tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms) as w:
             for ts in u.trajectory:
                 w.write(u.atoms)
         yield mda.Universe(
