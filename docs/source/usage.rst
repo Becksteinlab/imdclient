@@ -13,6 +13,10 @@ simulation engine to output stream data using IMDv3.
 
 GROMACS
 -------
+The IMDv3 protocol is currently not available as part of the official GROMACS release
+or source code repository. However, the feature is availabale for use here
+ - https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/tree/imd-v3?ref_type=heads
+
 In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
 In GROMACS, you will know that the simulation is ready and waiting for the
@@ -26,6 +30,10 @@ You are now ready to connect to the simulation engine with a client.
 
 NAMD
 ----
+The IMDv3 protocol has been implementaed in NAMD and will be made available through the
+official NAMD release in the near future. It is currently available as a part of the
+official NAMD GitLab repository - https://gitlab.com/tcbgUIUC/namd.
+
 To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
 
 .. code-block:: none
@@ -55,6 +63,9 @@ You are now ready to connect to the simulation engine with a client.
 
 LAMMPS
 ------
+The IMDv3 protocol is part of the official LAMMPS distribution since ``patch_4Feb2025``.
+It is available in the LAMMPS source code repository - https://github.com/lammps/lammps.
+
 To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
 
 .. code-block:: none
