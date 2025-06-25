@@ -160,7 +160,7 @@ class IMDv3IntegrationTest:
 
             assert_allclose(
                 true_u.trajectory[i].data["step"],
-                imd_u.trajectory[i - first_frame].data["step"],
+                imd_u.trajectory[i - first_frame].step,
             )
 
             if (

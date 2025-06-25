@@ -79,19 +79,19 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
         return 0
 
     # Compare coords, box, time, dt, step
-    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
             assert_allclose(
                 true_u.trajectory[i].time,
                 imd_u.trajectory[i - first_frame].time,
                 atol=1e-03,
             )
-            # Issue #63
-            # assert_allclose(
-            #     true_u.trajectory[i].dt,
-            #     imd_u.trajectory[i - first_frame].dt,
-            #     atol=1e-03,
-            # )
+
+            assert_allclose(
+                dt,
+                imd_u.trajectory[i - first_frame].dt,
+                atol=1e-03,
+            )
             # step in DCDReader is frame index, not integration step
             # don't compare step
             assert_allclose_with_logging(
