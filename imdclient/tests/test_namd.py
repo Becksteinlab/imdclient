@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import re
 
 import pytest
 from numpy.testing import (
@@ -47,6 +48,18 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
     @pytest.fixture()
     def topol(self):
         return Path(NAMD_TOPOL).name
+
+    @pytest.fixture()
+    def dt(self, inp):
+        pattern = re.compile(r"^\s*timestep\s*(\S+)")
+        with open(inp, "r") as file:
+            for line in file:
+                match = pattern.match(line)
+                if match:
+                    # NAMD timestep is in femtoseconds, convert to picoseconds
+                    # as IMDv3 expects dt in ps, 1fs = 0.001ps
+                    return float(match.group(1)) * 0.001
+        raise ValueError(f"No dt found in {inp}")
 
     @pytest.fixture()
     def true_u(self, topol, imd_u, tmp_path):
