@@ -140,39 +140,29 @@ class IMDv3IntegrationTest:
         yield u
 
     @pytest.fixture()
-    def comp_time(self):
-        return True
+    def dt(self, imd_u):
+        return imd_u.trajectory[0].dt
 
-    @pytest.fixture()
-    def comp_dt(self):
-        return True
-
-    @pytest.fixture()
-    def comp_step(self):
-        return True
-
-    def test_compare_imd_to_true_traj(
-        self, imd_u, true_u, first_frame, comp_time, comp_dt, comp_step
-    ):
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
-            if comp_time:
-                assert_allclose(
-                    true_u.trajectory[i].time,
-                    imd_u.trajectory[i - first_frame].time,
-                    atol=1e-03,
-                )
-            # Issue #63
-            # if comp_dt:
-            #     assert_allclose(
-            #         true_u.trajectory[i].dt,
-            #         imd_u.trajectory[i - first_frame].dt,
-            #         atol=1e-03,
-            #     )
-            if comp_step:
-                assert_allclose(
-                    true_u.trajectory[i].data["step"],
-                    imd_u.trajectory[i - first_frame].step,
-                )
+
+            assert_allclose(
+                true_u.trajectory[i].time,
+                imd_u.trajectory[i - first_frame].time,
+                atol=1e-03,
+            )
+
+            assert_allclose(
+                dt,
+                imd_u.trajectory[i - first_frame].dt,
+                atol=1e-03,
+            )
+
+            assert_allclose(
+                true_u.trajectory[i].data["step"],
+                imd_u.trajectory[i - first_frame].data["step"],
+            )
+
             if (
                 true_u.trajectory[i].dimensions is not None
                 and imd_u.trajectory[i - first_frame].dimensions is not None
