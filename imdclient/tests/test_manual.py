@@ -9,7 +9,9 @@ import logging
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("manual_test.log")
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
@@ -93,7 +95,9 @@ def load_imd_universe(topol_path, tmp_path):
         atom_style="id type x y z",
         convert_units=False,
     ).atoms.n_atoms
-    tmp_u = MinimalReader(f"imd://localhost:8888", n_atoms=n_atoms, process_stream=True)
+    tmp_u = MinimalReader(
+        f"imd://localhost:8888", n_atoms=n_atoms, process_stream=True
+    )
     return tmp_u
 
 
@@ -116,7 +120,9 @@ def test_compare_imd_to_true_traj_forces(imd_u, true_u_force, first_frame):
         )
 
 
-def test_compare_imd_to_true_traj(imd_u, true_u, first_frame, vel, force, dt, step):
+def test_compare_imd_to_true_traj(
+    imd_u, true_u, first_frame, vel, force, dt, step
+):
     for i in range(first_frame, len(true_u.trajectory)):
         assert_allclose(
             true_u.trajectory[i].time,
@@ -161,8 +167,12 @@ def test_compare_imd_to_true_traj(imd_u, true_u, first_frame, vel, force, dt, st
 
 def main():
     parser = argparse.ArgumentParser(description="IMDv3 Integration Test Tool")
-    parser.add_argument("--topol_path", required=True, help="Path to topology file")
-    parser.add_argument("--traj_path", required=True, help="Path to trajectory file")
+    parser.add_argument(
+        "--topol_path", required=True, help="Path to topology file"
+    )
+    parser.add_argument(
+        "--traj_path", required=True, help="Path to trajectory file"
+    )
     parser.add_argument(
         "--vel_path",
         required=False,
@@ -185,7 +195,9 @@ def main():
 
     args = parser.parse_args()
 
-    print("Writing IMD trajectory to temporary directory...\n====================")
+    print(
+        "Writing IMD trajectory to temporary directory...\n===================="
+    )
     imd_u = load_imd_universe(args.topol_path, args.tmp_path)
 
     print("Loading source of truth trajectory...\n====================")
@@ -218,10 +230,14 @@ def main():
             test_compare_imd_to_true_traj_vel(imd_u, true_vel, args.first_frame)
 
         if args.force_path is not None:
-            print("Loading source of truth force trajectory...\n====================")
+            print(
+                "Loading source of truth force trajectory...\n===================="
+            )
             true_force = load_true_universe(args.topol_path, args.force_path)
             print("Comparing forces...")
-            test_compare_imd_to_true_traj_forces(imd_u, true_force, args.first_frame)
+            test_compare_imd_to_true_traj_forces(
+                imd_u, true_force, args.first_frame
+            )
 
         print("All tests passed!")
 

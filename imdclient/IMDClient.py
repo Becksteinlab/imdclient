@@ -12,7 +12,7 @@ IMDClient
 
 .. autoclass:: IMDFrameBuffer
    :members:
-   
+
 """
 
 import socket
@@ -970,6 +970,7 @@ class IMDFrame:
             self.forces = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.forces = None
+
 
 def imdframe_memsize(n_atoms, imdsinfo) -> int:
     """
