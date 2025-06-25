@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import re
 
 import pytest
 
@@ -10,8 +11,6 @@ from .datafiles import (
     GROMACS_MDP_NST_1,
     GROMACS_MDP_NST_8,
 )
-from pathlib import Path
-import re
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("gromacs_test.log")

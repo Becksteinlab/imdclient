@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import re
 
 import pytest
 import MDAnalysis as mda
@@ -7,7 +8,6 @@ import MDAnalysis as mda
 from .minimalreader import MinimalReader
 from .base import IMDv3IntegrationTest
 from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
-import re
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("lammps_test.log")
@@ -60,7 +60,6 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
                 match = pattern.match(line)
                 if match:
                     return float(match.group(1))
-
         raise ValueError(f"No dt found in {inp}")
 
     # This must wait until after imd stream has ended
