@@ -11,7 +11,7 @@ import docker
 import MDAnalysis as mda
 
 from .utils import get_free_port
-from .minimalreader import minimalreader
+from .minimalreader import MinimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -126,7 +126,7 @@ class IMDv3IntegrationTest:
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
         n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
-        u = minimalreader(
+        u = MinimalReader(
             f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
         )
         yield u
@@ -200,16 +200,14 @@ class IMDv3IntegrationTest:
                     atol=1e-03,
                 )
 
-    def test_continue_after_disconnect(
-        self, docker_client, topol, tmp_path, port
-    ):
+    def test_continue_after_disconnect(self, docker_client, topol, tmp_path, port):
         n_atoms = mda.Universe(
             tmp_path / topol,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         ).atoms.n_atoms
-        u = minimalreader(
+        u = MinimalReader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=True,
@@ -226,7 +224,7 @@ class IMDv3IntegrationTest:
                 tmp_path / topol,
                 atom_style="id type x y z",
             ).atoms.n_atoms
-            u = minimalreader(f"imd://localhost:{port}", n_atoms=n_atoms)
+            u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
         n_atoms = mda.Universe(
@@ -235,7 +233,7 @@ class IMDv3IntegrationTest:
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
         ).atoms.n_atoms
-        u = minimalreader(
+        u = MinimalReader(
             f"imd://localhost:{port}",
             n_atoms=n_atoms,
             continue_after_disconnect=False,
@@ -249,4 +247,4 @@ class IMDv3IntegrationTest:
             tmp_path / topol,
             atom_style="id type x y z",
         ).atoms.n_atoms
-        u = minimalreader(f"imd://localhost:{port}", n_atoms=n_atoms)
+        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
