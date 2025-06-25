@@ -18,7 +18,9 @@ from .datafiles import (
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("namd_test.log")
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
@@ -117,7 +119,9 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
             )
 
     # Compare forces
-    def test_compare_imd_to_true_traj_forces(self, imd_u, true_u_force, first_frame):
+    def test_compare_imd_to_true_traj_forces(
+        self, imd_u, true_u_force, first_frame
+    ):
         for i in range(first_frame, len(true_u_force.trajectory)):
             assert_allclose_with_logging(
                 true_u_force.trajectory[i].positions,

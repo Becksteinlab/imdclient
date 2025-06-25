@@ -73,7 +73,9 @@ class MinimalReader:
             try:
                 self.trajectory.append(copy.deepcopy(self._read_next_frame()))
                 # `.copy()` might not be required but adding it to cover any edge cases where a refernce gets passed
-                logger.debug(f"MinimalReader: Added frame {self._frame} to trajectory")
+                logger.debug(
+                    f"MinimalReader: Added frame {self._frame} to trajectory"
+                )
             except EOFError:
                 break
 

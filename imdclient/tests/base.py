@@ -200,7 +200,9 @@ class IMDv3IntegrationTest:
                     atol=1e-03,
                 )
 
-    def test_continue_after_disconnect(self, docker_client, topol, tmp_path, port):
+    def test_continue_after_disconnect(
+        self, docker_client, topol, tmp_path, port
+    ):
         n_atoms = mda.Universe(
             tmp_path / topol,
             # Make sure LAMMPS topol can be read

@@ -15,7 +15,9 @@ import re
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("gromacs_test.log")
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
