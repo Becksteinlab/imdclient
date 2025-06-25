@@ -27,16 +27,14 @@ IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdrea
 
 ### Installation
 
-#### Install via conda (recommended)
-
+#### Install via mamba (recommended)
 To install the latest release of IMDClient from conda-forge:
 
 ```
-conda install -c conda-forge imdclient
+mamba install -c conda-forge imdclient
 ```
 
 #### Install via pip
-
 To install the latest release of IMDClient from PyPI:
 
 ```
@@ -47,37 +45,43 @@ pip install imdclient
 
 ### Building from Source
 To build IMDClient from source, we highly recommend using virtual environments.
-If possible, we strongly recommend that you use [Anaconda](https://docs.conda.io/en/latest/) as your package manager.
+If possible, we recommend that you use [mamba](https://mamba.readthedocs.io/en/latest/) as your package manager through [miniforge](https://github.com/conda-forge/miniforge). (You can substitute `conda` for `mamba` in the commands below if you prefer.)
 
-Below we provide instructions both for `conda` and for `pip`.
+Below we provide instructions both for `mamba` and for `pip`.
 
-#### Source build with conda
-
-1. Ensure you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+#### Source build with mamba
+1. Ensure you have [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) installed.
 
 2. Create and activate a new environment:
 
 ```
-conda create --name imdclient
-conda activate imdclient
+mamba create --name imdclient
+mamba activate imdclient
 ```
 
-3. Build and install IMDClient in editable mode:
+3. (Recommended) Install all dependencies using the provided environment YAML files for a clean and reproducible environment:
+
+```
+mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
+mamba env update --name imdclient --file docs/requirements.yaml
+```
+
+4. Build and install IMDClient in editable mode:
 
 ```
 pip install -e .
 ```
 
-4. (Optional) Update dependencies:
+5. (Optional) Update dependencies:
 
 ```
-conda update --all
+mamba update --all
 ```
 
-5. Deactivate the environment when finished:
+6. Deactivate the environment when finished:
 
 ```
-conda deactivate
+mamba deactivate
 ```
 
 #### Source build with pip

@@ -4,12 +4,12 @@ Getting Started
 Installation
 ############
 
-Install via conda (recommended)
+Install via mamba (recommended)
 -------------------------------
 
 To install the latest release of imdclient from conda-forge::
 
-    conda install -c conda-forge imdclient
+    mamba install -c conda-forge imdclient
 
 Install via pip
 ---------------
@@ -21,17 +21,22 @@ To install the latest release of imdclient from PyPI::
 Building from Source
 ####################
 
-We highly recommend using virtual environments to source-build IMDClient. If possible, we strongly recommend that you use `Anaconda <https://docs.conda.io/en/latest/>`_ as your package manager.
+We highly recommend using virtual environments to source-build IMDClient. If possible, we recommend that you use `mamba <https://mamba.readthedocs.io/en/latest/>`_ as your package manager through `miniforge <https://github.com/conda-forge/miniforge>`_.
 
-Source build with conda
+Source build with mamba
 -----------------------
 
-Ensure you have `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ installed.
+Ensure that you have `mamba <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`_ installed.
 
 Create and activate a new environment::
 
-    conda create --name imdclient
-    conda activate imdclient
+    mamba create --name imdclient
+    mamba activate imdclient
+
+(Recommended) Install all dependencies using the provided environment YAML files for a clean and reproducible environment::
+
+    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file docs/requirements.yaml
 
 Build this package from source::
 
@@ -57,10 +62,10 @@ To install development and documentation dependencies::
 
     pip install -e <path/to/repo>[doc,test]
 
-To update the development dependencies using conda::
+To update the development dependencies using mamba::
 
-    conda env update --name imdclient --file devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
 
 Or to update the documentation building dependencies::
 
-    conda env update --name imdclient --file docs/requirements.yaml
+    mamba env update --name imdclient --file docs/requirements.yaml
