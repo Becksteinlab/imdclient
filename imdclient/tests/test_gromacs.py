@@ -1,6 +1,8 @@
-import MDAnalysis as mda
-import pytest
 import logging
+from pathlib import Path
+
+import pytest
+
 from .base import IMDv3IntegrationTest
 from .datafiles import (
     GROMACS_GRO,

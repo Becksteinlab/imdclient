@@ -43,7 +43,7 @@ class IMDClient:
     socket_bufsize : int, (optional)
         Size of the socket buffer in bytes. Default is to use the system default
     buffer_size : int (optional)
-        IMDFramebuffer will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
+        :class:`IMDFrameBuffer` will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
     timeout : int, optional
         Timeout for the socket in seconds [``5``]
     continue_after_disconnect : bool, optional [``None``]
@@ -138,10 +138,11 @@ class IMDClient:
 
             self._producer.start()
 
-    def signal_handler(self, sig, frame):
-        """Catch SIGINT to allow clean shutdown on CTRL+C
+    def signal_handler(self):
+        """Catch SIGINT to allow clean shutdown on CTRL+C.
+
         This also ensures that main thread execution doesn't get stuck
-        waiting in buf.pop_full_imdframe()"""
+        waiting in ``buf.pop_full_imdframe()``"""
         logger.debug("Intercepted signal")
         self.stop()
         logger.debug("Shutdown success")
@@ -207,9 +208,7 @@ class IMDClient:
             # /proc/sys/net/core/rmem_default
             # Max (linux):
             # /proc/sys/net/core/rmem_max
-            conn.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
-            )
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
             conn.connect((host, port))
@@ -307,8 +306,8 @@ class IMDClient:
             )
             self._conn.sendall(wait_packet)
             logger.debug(
-                "IMDClient: Attempted to change wait behavior to %s", 
-                not self._continue_after_disconnect 
+                "IMDClient: Attempted to change wait behavior to %s",
+                not self._continue_after_disconnect,
             )
 
     def _disconnect(self):
@@ -785,9 +784,7 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError(
-                "unpause_empty_proportion must be between 0 and 1"
-            )
+            raise ValueError("unpause_empty_proportion must be between 0 and 1")
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -854,9 +851,7 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(
-                f"IMDProducer: Error waiting for space in buffer: {e}"
-            )
+            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -902,9 +897,7 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while (
-                    self._full_q.qsize() == 0 and not self._producer_finished
-                ):
+                while self._full_q.qsize() == 0 and not self._producer_finished:
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:
@@ -977,7 +970,6 @@ class IMDFrame:
             self.forces = np.empty((n_atoms, 3), dtype=np.float32)
         else:
             self.forces = None
-
 
 def imdframe_memsize(n_atoms, imdsinfo) -> int:
     """

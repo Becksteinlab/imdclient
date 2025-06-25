@@ -43,23 +43,6 @@ class timeit(object):
         # always propagate exceptions forward
         return False
 
-# NOTE: think of other edge cases as well- should be robust
-def parse_host_port(filename):
-    if not filename.startswith("imd://"):
-        raise ValueError("IMDReader: URL must be in the format 'imd://host:port'")
-    
-    # Check if the format is correct
-    parts = filename.split("imd://")[1].split(":")
-    if len(parts) == 2:
-        host = parts[0] 
-        try:
-            port = int(parts[1])
-            return (host, port)
-        except ValueError:
-            raise ValueError("IMDReader: Port must be an integer")
-    else:
-        raise ValueError("IMDReader: URL must be in the format 'imd://host:port'")
-
 
 def approximate_timestep_memsize(
     n_atoms, energies, dimensions, positions, velocities, forces
@@ -116,3 +99,53 @@ def sock_contains_data(sock, timeout) -> bool:
         [sock], [], [], timeout
     )
     return sock in ready_to_read
+
+
+def parse_host_port(filename):
+    """
+    Parses a URL in the format 'imd://host:port' and returns the host and port.
+    Parameters
+    ----------
+    filename : str
+        The URL to parse, must be in the format 'imd://host:port'.
+
+    Returns
+    -------
+    tuple[str, int]
+        A 2-tuple ``(host, port)`` where `host` is the host server name
+        and `port` is the TCP port number.
+    Raises
+    ------
+    ValueError
+        If the URL is not in the correct format or if the host or port is invalid.
+
+    Examples
+    --------
+    >>> parse_host_port("imd://localhost:8888")
+    ('localhost', 8888)
+    >>> parse_host_port("invalid://localhost:12345")
+    Traceback (most recent call last):
+        ... ValueError: IMDClient: URL must be in the format 'imd://host:port'
+    """
+    if not filename.startswith("imd://"):
+        raise ValueError(
+            "IMDClient: URL must be in the format 'imd://host:port'"
+        )
+
+    # Check if the format is correct
+    parts = filename.split("imd://")[1].split(":")
+    if len(parts) == 2:
+        host = parts[0]
+        if not host:
+            raise ValueError("IMDClient: Host cannot be empty")
+        if not parts[1]:
+            raise ValueError("IMDClient: Port cannot be empty")
+        try:
+            port = int(parts[1])
+            return (host, port)
+        except ValueError:
+            raise ValueError("IMDClient: Port must be an integer")
+    else:
+        raise ValueError(
+            "IMDClient: URL must be in the format 'imd://host:port'"
+        )

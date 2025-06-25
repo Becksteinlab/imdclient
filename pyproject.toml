@@ -18,7 +18,7 @@ maintainers = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "MDAnalysis>=2.7.0",
+    "numpy",
 ]
 keywords = [
     "molecular simulations",
@@ -32,29 +32,29 @@ test = [
     "pytest>=6.0",
     "pytest-xdist>=2.5",
     "pytest-cov>=3.0",
-    "MDAnalysisTests>=2.7.0",
-    "docker-py",
+    "MDAnalysis",
+    "MDAnalysisTests",
 ]
 doc = [
     "sphinx",
-    "sphinx_rtd_theme",
+    "mdanalysis-sphinx-theme>=1.0.1",
 ]
 
-# [project.urls]
-# source = "https://github.com/becksteinlab/imdreader"
-# documentation = "https://imdreader.readthedocs.io"
+[project.urls]
+source = "https://github.com/becksteinlab/imdclient"
+documentation = "https://imdclient.readthedocs.io"
 
 [tool.setuptools]
 packages = ["imdclient"]
 
 # Installs tests datafiles
 [tool.setuptools.package-data]
-"imdreader" = ["data/*"]
+"imdclient" = ["data/*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "imdreader/tests",
+    "imdclient/tests",
 ]
 
 [tool.black]

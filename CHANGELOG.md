@@ -20,21 +20,49 @@ The rules for this file:
 
 ### Authors
 <!-- GitHub usernames of contributors to this release -->
+@amruthesht @ljwoods2
 
 ### Added
 <!-- New added features -->
+* Updated installation instructions by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/74
+* MD engine links updated in IMDClient documnetation by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/73
+* Parse input files for DT when not in traj by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/71
 
 ### Fixed
 <!-- Bug fixes -->
 
 ### Changed
 <!-- Changes in existing functionality -->
+* IMDReader removed from imdclient by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/54
 
 ### Deprecated
 <!-- Soon-to-be removed features -->
 
 ### Removed
 <!-- Removed features -->
+
+
+
+## [v0.1.5-alpha] - 2025-06-24
+
+### Authors
+<!-- GitHub usernames of contributors to this release -->
+@orbeckst @amruthesht @hcho38 @ljwoods2
+
+### Added
+<!-- New added features -->
+* NAMD Testing with private image + Docs by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/46
+* Lammps usage docs by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/49
+* Instructions for various namd builds by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/51
+* chore: added client.py files and cleaned uo output data from examples by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/52
+* add codecov token to workflow by @orbeckst in https://github.com/Becksteinlab/imdclient/pull/60
+* add sphinx.configuration for RTD by @orbeckst in https://github.com/Becksteinlab/imdclient/pull/62
+* Updated CHANGELOG based on the release notes of IMDClient by @hcho38 in https://github.com/Becksteinlab/imdclient/pull/67
+* `IMD_TIME` packet definitions modified by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/68
+
+### Changed
+<!-- Changes in existing functionality -->
+* Run all simulation enegine tests regardless of failed tests by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/69
 
 
 

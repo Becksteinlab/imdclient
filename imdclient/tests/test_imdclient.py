@@ -1,10 +1,17 @@
 """Test for IMDClient functionality"""
 
+import logging
+
+import pytest
+from numpy.testing import (
+    assert_allclose,
+)
+import MDAnalysis as mda
 from MDAnalysisTests.datafiles import (
     COORDINATES_TOPOLOGY,
     COORDINATES_H5MD,
 )
-import MDAnalysis as mda
+
 from imdclient.IMDClient import imdframe_memsize, IMDClient
 from imdclient.IMDProtocol import IMDHeaderType
 from .utils import (
@@ -12,12 +19,6 @@ from .utils import (
     create_default_imdsinfo_v3,
 )
 from .server import InThreadIMDServer
-from MDAnalysisTests.coordinates.base import (
-    assert_allclose,
-)
-from MDAnalysisTests.coordinates.test_xdr import TRRReference
-import logging
-import pytest
 
 
 logger = logging.getLogger("imdclient.IMDClient")
