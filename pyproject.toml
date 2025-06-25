@@ -19,7 +19,6 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "numpy",
-    "MDAnalysis",
 ]
 keywords = [
     "molecular simulations",
@@ -33,8 +32,8 @@ test = [
     "pytest>=6.0",
     "pytest-xdist>=2.5",
     "pytest-cov>=3.0",
+    "MDAnalysis",
     "MDAnalysisTests",
-    "docker-py",
 ]
 doc = [
     "sphinx",
