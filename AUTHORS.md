@@ -19,5 +19,9 @@ The rules for this file:
   * Don't ever delete anything
 -->
 
+**2025**
+- Lawson <@ljwoods2>
+- Amruthesh Thirumalaiswamy <@amruthesht>
+
 **2024**
 - Lawson <@ljwoods2>
