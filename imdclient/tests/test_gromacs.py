@@ -1,6 +1,9 @@
-import MDAnalysis as mda
-import pytest
 import logging
+from pathlib import Path
+import re
+
+import pytest
+
 from .base import IMDv3IntegrationTest
 from .datafiles import (
     GROMACS_GRO,
@@ -8,7 +11,6 @@ from .datafiles import (
     GROMACS_MDP_NST_1,
     GROMACS_MDP_NST_8,
 )
-from pathlib import Path
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("gromacs_test.log")
@@ -45,6 +47,16 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
     @pytest.fixture()
     def topol(self):
         return Path(GROMACS_GRO).name
+
+    @pytest.fixture()
+    def dt(self, mdp):
+        pattern = re.compile(r"^\s*dt\s*=\s*(\S+)")
+        with open(mdp, "r") as file:
+            for line in file:
+                match = pattern.match(line)
+                if match:
+                    return float(match.group(1))
+        raise ValueError(f"No dt found in {mdp}")
 
     # @pytest.fixture()
     # def match_string(self):

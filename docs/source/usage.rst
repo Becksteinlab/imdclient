@@ -8,7 +8,7 @@ To stream a trajectory from a simulation engine that supports IMDv3,
 first use the appropriate input options on the simulation engine 
 to prepare it for the IMDClient receiver.
 
-Below, we have proided brief instructions on how to setup the various 
+Below, we have provided brief instructions on how to setup the various 
 simulation engine to output stream data using IMDv3.
 
 GROMACS
@@ -16,7 +16,7 @@ GROMACS
 In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
 In GROMACS, you will know that the simulation is ready and waiting for the
-MDAnalysis IMDReader client when this line is printed to the terminal:
+IMDClient when this line is printed to the terminal:
 
 .. code-block:: none
 
@@ -51,7 +51,7 @@ following terminal message:
 
     Info: INTERACTIVE MD AWAITING CONNECTION
 
-You are now ready to connect to the simulation engine with a client.
+You are now ready to connect to the simulation engine with the IMDClient.
 
 LAMMPS
 ------
@@ -70,23 +70,47 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with a client.
 
-Using IMDClient with MDAnalysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using IMDClient
+^^^^^^^^^^^^^^^
 
-Once the simulation is ready for a client connection, setup your MDAnalysis :class:`Universe`
-like this: ::
+Once the simulation is ready for a client connection, one can setup
+the client using the :class:`~imdclient.IMDClient` class: ::
 
-    from IMDClient.IMD import IMDReader
-    import MDAnalysis as mda
-    # Pass host and port of the listening simulation
-    # engine as the trajectory argument
+    from imdclient.utils import parse_host_port
+    from imdclient.IMDClient import IMDClient
 
-    # GROMACS
-    u = mda.Universe("topology.gro", "imd://localhost:8888")
-    # NAMD
-    u = mda.Universe("topology.psf", "imd://localhost:8888")
+    host, port = parse_host_port("imd://localhost:8888")
 
-While this package allows the IMDReader to be automatically selected
-based on the trajectory URL matching the pattern 'imd://<host>:<port>',
-the format can be explicitly selected by passing the keyword argument
-'format="IMD"' to the :class:`Universe`.
+    # `n_atoms` is the number of atoms in the simulation
+    # Adjust this value according to your simulation setup
+
+    # This forms the connection and starts the simulation 
+    # by sending the `IMD_GO`
+    client = IMDClient(host, port, n_atoms=1000)
+
+    # Read trajectory data from the IMDBuffer which stores
+    # data received from the socket
+
+    i = 0
+    while True:
+        try:
+            frame = client.get_imdframe()
+        except EOFError:
+            break
+        else:
+            i += 1
+            # Process and analyze the frame data as needed
+            # For example, print frame number, simulation time, and positions of atom 0
+            print(f"Frame {i}: time={frame.time}, atom 0 position={frame.positions[0]}")
+
+The :meth:`~imdclient.IMDClient.get_imdframe` method returns an 
+:class:`~imdclient.IMDFrame` object containing the frame data 
+read from the buffer and received from the socket.
+
+The above example can be used as a starting point to implement your own reader 
+class that utilizes :class:`~imdclient.IMDClient` to read trajectory data 
+from the socket and generate on-the-fly simulation analysis.
+
+.. SeeAlso::
+    `MDAnalysis <https://www.mdanalysis.org>`_ (from release 2.10.0 onwards) can
+    directly read IMDv3 streams.

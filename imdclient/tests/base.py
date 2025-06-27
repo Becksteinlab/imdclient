@@ -1,20 +1,17 @@
-from imdclient.IMDClient import IMDClient
-from imdclient.IMD import IMDReader
-import pytest
-from pathlib import Path
-import os
-import signal
-import subprocess
 import time
+import logging
+import shutil
+
+import pytest
+import numpy as np
 from numpy.testing import (
     assert_allclose,
 )
-import numpy as np
 import docker
-import logging
-import shutil
 import MDAnalysis as mda
+
 from .utils import get_free_port
+from .minimalreader import MinimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 
@@ -128,13 +125,11 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe((tmp_path / topol), f"imd://localhost:{port}")
-        with mda.Writer(
-            (tmp_path / "imd.trr").as_posix(), u.trajectory.n_atoms
-        ) as w:
-            for ts in u.trajectory:
-                w.write(u.atoms)
-        yield mda.Universe((tmp_path / topol), (tmp_path / "imd.trr"))
+        n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
+        u = MinimalReader(
+            f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
+        )
+        yield u
 
     @pytest.fixture()
     def true_u(self, topol, traj, imd_u, tmp_path):
@@ -144,118 +139,97 @@ class IMDv3IntegrationTest:
         )
         yield u
 
-    @pytest.fixture()
-    def comp_time(self):
-        return True
-
-    @pytest.fixture()
-    def comp_dt(self):
-        return True
-
-    @pytest.fixture()
-    def comp_step(self):
-        return True
-
-    def test_compare_imd_to_true_traj(
-        self, imd_u, true_u, first_frame, comp_time, comp_dt, comp_step
-    ):
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
-            if comp_time:
-                assert_allclose(
-                    true_u.trajectory[i].time,
-                    imd_u.trajectory[i - first_frame].time,
-                    atol=1e-03,
-                )
-            if comp_dt:
-                assert_allclose(
-                    true_u.trajectory[i].dt,
-                    imd_u.trajectory[i - first_frame].dt,
-                    atol=1e-03,
-                )
-            if comp_step:
-                assert_allclose(
-                    true_u.trajectory[i].data["step"],
-                    imd_u.trajectory[i - first_frame].data["step"],
-                )
-            if (
-                true_u.trajectory[i].dimensions is not None
-                and imd_u.trajectory[i - first_frame].dimensions is not None
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].dimensions,
-                    imd_u.trajectory[i - first_frame].dimensions,
-                    atol=1e-03,
-                )
-            if (
-                true_u.trajectory[i].has_positions
-                and imd_u.trajectory[i - first_frame].has_positions
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].positions,
-                    imd_u.trajectory[i - first_frame].positions,
-                    atol=1e-03,
-                )
-            if (
-                true_u.trajectory[i].has_velocities
-                and imd_u.trajectory[i - first_frame].has_velocities
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].velocities,
-                    imd_u.trajectory[i - first_frame].velocities,
-                    atol=1e-03,
-                )
-            if (
-                true_u.trajectory[i].has_forces
-                and imd_u.trajectory[i - first_frame].has_forces
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].forces,
-                    imd_u.trajectory[i - first_frame].forces,
-                    atol=1e-03,
-                )
+
+            assert_allclose(
+                true_u.trajectory[i].time,
+                imd_u.trajectory[i - first_frame].time,
+                atol=1e-03,
+            )
+
+            assert_allclose(
+                dt,
+                imd_u.trajectory[i - first_frame].dt,
+                atol=1e-03,
+            )
+
+            assert_allclose(
+                true_u.trajectory[i].data["step"],
+                imd_u.trajectory[i - first_frame].step,
+            )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].dimensions,
+                imd_u.trajectory[i - first_frame].dimensions,
+                atol=1e-03,
+            )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].positions,
+                atol=1e-03,
+            )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].velocities,
+                imd_u.trajectory[i - first_frame].velocities,
+                atol=1e-03,
+            )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].forces,
+                imd_u.trajectory[i - first_frame].forces,
+                atol=1e-03,
+            )
 
     def test_continue_after_disconnect(
         self, docker_client, topol, tmp_path, port
     ):
-        u = mda.Universe(
-            (tmp_path / topol),
-            f"imd://localhost:{port}",
-            continue_after_disconnect=True,
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
+        ).atoms.n_atoms
+        u = MinimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=True,
         )
         # Though we disconnect here, the simulation should continue
-        u.trajectory.close()
+        u.close()
         # Wait for the simulation to finish running
         time.sleep(45)
 
         # Now, attempt to reconnect- should fail,
         # since the simulation should have continued
         with pytest.raises(IOError):
-            u = mda.Universe(
-                (tmp_path / topol),
-                f"imd://localhost:{port}",
+            n_atoms = mda.Universe(
+                tmp_path / topol,
                 atom_style="id type x y z",
-            )
+            ).atoms.n_atoms
+            u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
 
     def test_wait_after_disconnect(self, docker_client, topol, tmp_path, port):
-        u = mda.Universe(
-            (tmp_path / topol),
-            f"imd://localhost:{port}",
-            # Could also use None here- just being explicit
-            continue_after_disconnect=False,
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             # Make sure LAMMPS topol can be read
             # Does nothing if not LAMMPS
             atom_style="id type x y z",
+        ).atoms.n_atoms
+        u = MinimalReader(
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            continue_after_disconnect=False,
         )
-        u.trajectory.close()
+        u.close()
         # Give the simulation engine
         # enough time to finish running (though it shouldn't)
         time.sleep(45)
 
-        u = mda.Universe(
-            (tmp_path / topol),
-            f"imd://localhost:{port}",
+        n_atoms = mda.Universe(
+            tmp_path / topol,
             atom_style="id type x y z",
-        )
+        ).atoms.n_atoms
+        u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
