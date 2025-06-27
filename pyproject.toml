@@ -17,7 +17,7 @@ maintainers = [
     {name = "Amruthesh Thirumalaiswamy", email = "athiru12@asu.edu"},
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
 ]

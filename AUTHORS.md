@@ -20,7 +20,6 @@ The rules for this file:
 -->
 
 **2025**
-- Lawson <@ljwoods2>
 - Amruthesh Thirumalaiswamy <@amruthesht>
 
 **2024**
