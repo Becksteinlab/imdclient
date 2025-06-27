@@ -1,10 +1,17 @@
 """
-
-IMDClient
-^^^^^^^^^
+IMDClient module
+================
 
 .. autoclass:: IMDClient
    :members:
+
+.. autoclass:: BaseIMDProducer
+   :members:
+   :inherited-members:
+
+.. autoclass:: IMDProducerV2
+   :members:
+   :inherited-members:
 
 .. autoclass:: IMDProducerV3
    :members:
@@ -13,6 +20,8 @@ IMDClient
 .. autoclass:: IMDFrameBuffer
    :members:
 
+.. autoclass:: IMDFrame
+   :members:
 """
 
 import socket

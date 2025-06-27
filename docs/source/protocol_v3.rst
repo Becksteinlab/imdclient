@@ -168,7 +168,7 @@ and its associated body packet (if present) is described in detail.
      - ✅
 
 Packet Header Definitions
-==========================
+-------------------------
 
 .. _disconnect:
 

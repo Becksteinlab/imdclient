@@ -74,7 +74,7 @@ Using IMDClient
 ^^^^^^^^^^^^^^^
 
 Once the simulation is ready for a client connection, one can setup
-one using the :class:`~imdclient.IMDClient` class: ::
+the client using the :class:`~imdclient.IMDClient` class: ::
 
     from imdclient.utils import parse_host_port
     from imdclient.IMDClient import IMDClient
@@ -101,3 +101,7 @@ one using the :class:`~imdclient.IMDClient` class: ::
 This example can be used as a starting point to implement your own reader 
 class that utilizes :class:`~imdclient.IMDClient` to read trajectory data 
 from the socket and generate on-the-fly simulation analysis.
+
+.. SeeAlso::
+    `MDAnalysis <https://www.mdanalysis.org>`_ (from release 2.10.0 onwards) can
+    directly read IMDv3 streams.
