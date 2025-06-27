@@ -25,64 +25,79 @@ IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdcli
 
 ### Installation
 
-IMDClient is available via PyPi and can be installed with pip:
-```bash
+#### Install via mamba (recommended)
+To install the latest release of IMDClient from conda-forge:
+
+```
+mamba install -c conda-forge imdclient
+```
+
+#### Install via pip
+To install the latest release of IMDClient from PyPI:
+
+```
 pip install imdclient
 ```
 
-To build IMDClient from source,
-we highly recommend using virtual environments.
-If possible, we strongly recommend that you use
-[Anaconda](https://docs.conda.io/en/latest/) as your package manager.
-Below we provide instructions both for `conda` and
-for `pip`.
+---
 
-#### With conda
+### Building from Source
+To build IMDClient from source, we highly recommend using virtual environments.
+If possible, we recommend that you use [mamba](https://mamba.readthedocs.io/en/latest/) as your package manager through [miniforge](https://github.com/conda-forge/miniforge). (You can substitute `conda` for `mamba` in the commands below if you prefer.)
 
-Ensure that you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed.
+Below we provide instructions both for `mamba` and for `pip`.
 
-Create a virtual environment and activate it:
+#### Source build with mamba
+1. Ensure you have [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) installed.
 
-```
-conda create --name imdclient
-conda activate imdclient
-```
-
-<!-- Install the development and documentation dependencies:
+2. Create and activate a new environment:
 
 ```
-conda env update --name imdclient --file devtools/conda-envs/test_env.yaml
-conda env update --name imdclient --file docs/requirements.yaml
-``` -->
+mamba create --name imdclient
+mamba activate imdclient
+```
 
-Build this package from source:
+3. (Recommended) Install all dependencies using the provided environment YAML files for a clean and reproducible environment:
+
+```
+mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
+mamba env update --name imdclient --file docs/requirements.yaml
+```
+
+4. Build and install IMDClient in editable mode:
 
 ```
 pip install -e .
 ```
 
-If you want to update your dependencies (which can be risky!), run:
+5. (Optional) Update dependencies:
 
 ```
-conda update --all
+mamba update --all
 ```
 
-And when you are finished, you can exit the virtual environment with:
+6. Deactivate the environment when finished:
 
 ```
-conda deactivate
+mamba deactivate
 ```
 
-#### With pip
+#### Source build with pip
 
-To build the package from source, run:
+1. (Optional) Create and activate a virtual environment:
+
+```
+python -m venv venv
+source venv/bin/activate
+```
+
+2. Install IMDClient from source:
 
 ```
 pip install .
 ```
 
-If you want to create a development environment, install
-the dependencies required for tests and docs with:
+3. (Optional) For development (tests and docs):
 
 ```
 pip install ".[test,doc]"
@@ -93,10 +108,12 @@ pip install ".[test,doc]"
 The IMDClient source code is hosted at https://github.com/becksteinlab/imdclient
 and is available under the MIT license (see the file [LICENSE](https://github.com/becksteinlab/imdclient/blob/main/LICENSE)).
 
-Copyright (c) 2024, Lawson
+Copyright (c) 2024-2025, imdclient [AUTHORS](https://github.com/Becksteinlab/imdclient/blob/main/AUTHORS.md)
 
 
 #### Acknowledgements
  
 Project based on the 
 [MDAnalysis Cookiecutter](https://github.com/MDAnalysis/cookiecutter-mda) version 0.1.
+
+**If you use IMDClient in your research, please cite [IMDClient](https://github.com/Becksteinlab/imdclient) in your publications.**

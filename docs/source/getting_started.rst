@@ -4,37 +4,68 @@ Getting Started
 Installation
 ############
 
-To build imdclient from source, we highly recommend using virtual environments.
-If possible, we strongly recommend that you use
-`Anaconda <https://docs.conda.io/en/latest/>`_ as your package manager.
-Below we provide instructions both for installing into a `conda` environment.
+Install via mamba (recommended)
+-------------------------------
 
-With conda
-----------
+To install the latest release of imdclient from conda-forge::
 
-Ensure that you have `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ installed.
+    mamba install -c conda-forge imdclient
 
-Create a virtual environment and activate it::
+Install via pip
+---------------
 
-    conda create --name imdclient
-    conda activate imdclient
+To install the latest release of imdclient from PyPI::
+
+    pip install imdclient
+
+Building from Source
+####################
+
+We highly recommend using virtual environments to source-build IMDClient. If possible, we recommend that you use `mamba <https://mamba.readthedocs.io/en/latest/>`_ as your package manager through `miniforge <https://github.com/conda-forge/miniforge>`_.
+
+Source build with mamba
+-----------------------
+
+Ensure that you have `mamba <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`_ installed.
+
+Create and activate a new environment::
+
+    mamba create --name imdclient
+    mamba activate imdclient
+
+(Recommended) Install all dependencies using the provided environment YAML files for a clean and reproducible environment::
+
+    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file docs/requirements.yaml
 
 Build this package from source::
 
     pip install -e <path/to/repo>
 
+Source build with pip
+---------------------
+
+(Optional) Create and activate a virtual environment::
+
+    python -m venv venv
+    source venv/bin/activate
+
+Install imdclient from source::
+
+    pip install <path/to/repo>
+
 Development environment installation
 ------------------------------------
+For development or documentation builds, use the following commands after activating your environment:
 
-After creating and activating a conda environment as described, install 
-the package with documentation and testing dependencies::
+To install development and documentation dependencies::
 
-    pip install -e <path/to/repo>[doc, test]
+    pip install -e <path/to/repo>[doc,test]
 
-Then, to install the development dependencies::
+To update the development dependencies using mamba::
 
-    conda env update --name imdclient --file devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
 
-Or the documentation building dependencies::
+Or to update the documentation building dependencies::
 
-    conda env update --name imdclient --file docs/requirements.yaml
+    mamba env update --name imdclient --file docs/requirements.yaml
