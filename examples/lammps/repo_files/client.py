@@ -13,7 +13,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
-i = 0
 # Parse the host and port from the IMD producer server address
 host, port = parse_host_port("imd://localhost:8888")
 
@@ -23,12 +22,23 @@ n_atoms = mda.Universe(
 # This starts the simulation
 imdclient = IMDClient(host, port, n_atoms=n_atoms)
 
+atom_index = 0
+
+i = 0
 while True:
     try:
         imd_frame = imdclient.get_imdframe()
     except EOFError:
         break
-    i += 1
-    logger.debug(f"IMDClient: Received frame {i}")
+    else:
+        i += 1
+        # `imd_frame` is an IMDFrame object containing frame data
+        # Below is an example of how to access the data
+        # For example, print frame number, simulation time, and positions of atom at `atom_index`
+        print(
+            f"Frame {i}: time={imd_frame.time}, atom {atom_index} position={imd_frame.positions[atom_index]}"
+        )
+        # You can also access other attributes like energies, box dimensions, velocities and forces,
+        logger.debug(f"IMDClient: Received frame {i}")
 
 logger.info(f"IMDClient: Parsed {i} frames")

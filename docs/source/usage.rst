@@ -91,14 +91,23 @@ the client using the :class:`~imdclient.IMDClient` class: ::
     # Read trajectory data from the IMDBuffer which stores
     # data received from the socket
 
+    i = 0
     while True:
         try:
             frame = client.get_imdframe()
-            # Process and analyze the frame data as needed
         except EOFError:
             break
-    
-This example can be used as a starting point to implement your own reader 
+        else:
+            i += 1
+            # Process and analyze the frame data as needed
+            # For example, print frame number, simulation time, and positions of atom 0
+            print(f"Frame {i}: time={frame.time}, atom 0 position={frame.positions[0]}")
+
+The :meth:`~imdclient.IMDClient.get_imdframe` method returns an 
+:class:`~imdclient.IMDFrame` object containing the frame data 
+read from the buffer and received from the socket.
+
+The above example can be used as a starting point to implement your own reader 
 class that utilizes :class:`~imdclient.IMDClient` to read trajectory data 
 from the socket and generate on-the-fly simulation analysis.
 
