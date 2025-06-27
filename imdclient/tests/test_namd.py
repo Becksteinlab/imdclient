@@ -96,72 +96,53 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
     # Compare coords, box, time, dt, step
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
-            if (
-                true_u.trajectory[i].time is not None
-                and imd_u.trajectory[i - first_frame].time is not None
-            ):
-                assert_allclose(
-                    true_u.trajectory[i].time,
-                    imd_u.trajectory[i - first_frame].time,
-                    atol=1e-03,
-                )
 
-            if (
-                dt is not None
-                and imd_u.trajectory[i - first_frame].dt is not None
-            ):
-                assert_allclose(
-                    dt,
-                    imd_u.trajectory[i - first_frame].dt,
-                    atol=1e-03,
-                )
+            assert_allclose(
+                true_u.trajectory[i].time,
+                imd_u.trajectory[i - first_frame].time,
+                atol=1e-03,
+            )
+
+            assert_allclose(
+                dt,
+                imd_u.trajectory[i - first_frame].dt,
+                atol=1e-03,
+            )
             # step in DCDReader is frame index, not integration step
             # don't compare step
-            if (
-                true_u.trajectory[i].dimensions is not None
-                and imd_u.trajectory[i - first_frame].dimensions is not None
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].dimensions,
-                    imd_u.trajectory[i - first_frame].dimensions,
-                    atol=1e-03,
-                )
-            if (
-                true_u.trajectory[i].has_positions
-                and imd_u.trajectory[i - first_frame].positions is not None
-            ):
-                assert_allclose_with_logging(
-                    true_u.trajectory[i].positions,
-                    imd_u.trajectory[i - first_frame].positions,
-                    atol=1e-03,
-                )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].dimensions,
+                imd_u.trajectory[i - first_frame].dimensions,
+                atol=1e-03,
+            )
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].positions,
+                atol=1e-03,
+            )
 
     # Since NAMD does not write velocities, forces to the DCD file, we need to do so seperately by extracting that info from their respective DCD files
     # Compare velocities
     def test_compare_imd_to_true_traj_vel(self, imd_u, true_u_vel, first_frame):
         for i in range(first_frame, len(true_u_vel.trajectory)):
-            if (
-                true_u_vel.trajectory[i].has_velocities
-                and imd_u.trajectory[i - first_frame].velocities is not None
-            ):
-                assert_allclose_with_logging(
-                    # Unit conversion
-                    true_u_vel.trajectory[i].positions * 20.45482706,
-                    imd_u.trajectory[i - first_frame].velocities,
-                    atol=1e-03,
-                )
+
+            assert_allclose_with_logging(
+                # Unit conversion
+                true_u_vel.trajectory[i].positions * 20.45482706,
+                imd_u.trajectory[i - first_frame].velocities,
+                atol=1e-03,
+            )
 
     # Compare forces
     def test_compare_imd_to_true_traj_forces(
         self, imd_u, true_u_force, first_frame
     ):
         for i in range(first_frame, len(true_u_force.trajectory)):
-            if (
-                true_u_force.trajectory[i].has_forces
-                and imd_u.trajectory[i - first_frame].forces is not None
-            ):
-                assert_allclose_with_logging(
-                    true_u_force.trajectory[i].positions,
-                    imd_u.trajectory[i - first_frame].forces,
-                    atol=1e-03,
-                )
+
+            assert_allclose_with_logging(
+                true_u_force.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].forces,
+                atol=1e-03,
+            )
