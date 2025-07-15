@@ -93,13 +93,9 @@ jobs:
         conda info
         conda list
 
-    - name: Run IMDClient tests
+    - name: Run tests with merged coverage
       run: |
-        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py
-
-    - name: Run package utilities tests
-      run: |
-        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_utils.py
+        pytest -n auto -v --cov=imdclient --cov-report=xml --color=yes imdclient/tests/test_imdclient.py imdclient/tests/test_utils.py
 
     - name: codecov
       if: github.event_name != 'schedule'
