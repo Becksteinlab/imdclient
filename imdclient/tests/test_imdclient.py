@@ -91,6 +91,23 @@ class TestIMDClientV3:
         client.stop()
         server.cleanup()
 
+    @pytest.fixture
+    def server_client_incorrect_atoms(self, universe, imdsinfo, port):
+        """Server and client with mismatched atom counts for testing error handling"""
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", port, first_frame=False)
+        # Client expects incorrect number of atoms (n_atoms + 1)
+        client = IMDClient(
+            f"localhost",
+            port,
+            universe.trajectory.n_atoms + 1,
+        )
+        server.join_accept_thread()
+        yield server, client
+        client.stop()
+        server.cleanup()
+
     def test_traj_unchanged(self, server_client, universe):
         server, client = server_client
         server.send_frames(0, 5)
@@ -167,6 +184,24 @@ class TestIMDClientV3:
         server.expect_packet(
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
+
+    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
+        """Test that incorrect number of atoms raises RuntimeError"""
+        server, client = server_client_incorrect_atoms
+        
+        # Send first frame from server
+        server.send_frame(0)
+        
+        # When client tries to get the frame, it should raise EOFError
+        # containing the RuntimeError about incorrect atom count
+        with pytest.raises(EOFError) as exc_info:
+            client.get_imdframe()
+        
+        # Check that the error message contains the expected text
+        error_msg = str(exc_info.value)
+        assert f"Expected n_atoms value {universe.trajectory.n_atoms + 1}" in error_msg
+        assert f"got {universe.trajectory.n_atoms}" in error_msg
+        assert "Ensure you are using the correct topology file" in error_msg
 
 
 class TestIMDClientV3ContextManager:
