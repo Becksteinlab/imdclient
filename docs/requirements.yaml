@@ -1,14 +1,11 @@
-name: imdreader-docs
+name: imdclient-docs
 channels:
-
   - conda-forge
-
 dependencies:
     # Base depends
   - python
-  - pip
-
   - mdanalysis-sphinx-theme >=1.0.1
+  - pip
   - sphinxcontrib-bibtex
     # Pip-only installs
-  #- pip:
+    # - pip:

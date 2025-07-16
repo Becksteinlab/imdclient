@@ -8,7 +8,7 @@ and the receiver can send forces and certain requests back to the simulation eng
 
 Version numbers in IMD are monotonically increasing integers. 
 IMDv3, the protocol version described in this document, builds upon IMDv2, which is implemented 
-at the time of writing in NAMD, VMD, GROMACS, and LAMMPS. IMDv2 is itself 
+at the time of writing in NAMD, GROMACS, and LAMMPS-4Feb2025. IMDv2 is itself 
 a modification of the original IMD protocol published in 2001 :cite:p:`IMDv1:2001`.
 
 .. list-table::
@@ -91,63 +91,84 @@ This table lists all header types available in IMDv3. Below, each header type
 and its associated body packet (if present) is described in detail.
 
 .. list-table::
-   :widths: 10 10 10
+   :widths: 10 10 10 10
    :header-rows: 1
 
    * - Header type
      - 32-bit integer enum value
-     - Present in IMDv2
+     - In IMDv2
+     - In IMDv3
    * - :ref:`disconnect`
      - 0
+     - ✅
      - ✅
    * - :ref:`energies`
      - 1
      - ✅
+     - ✅
    * - :ref:`coordinates`
      - 2
+     - ✅
      - ✅
    * - :ref:`go`
      - 3 
      - ✅
+     - ✅
    * - :ref:`handshake`
      - 4
+     - ✅
      - ✅
    * - :ref:`kill`
      - 5
      - ✅
+     - ✅
    * - :ref:`md-communication`
      - 6
+     - ✅
      - ✅
    * - :ref:`pause`
      - 7 
      - ✅
+     - ✅
    * - :ref:`transmission-rate`
      - 8
+     - ✅
      - ✅
    * - :ref:`io-error`
      - 9
      - ✅
+     - ✅
    * - :ref:`session-info`
      - 10
      - ❌
+     - ✅
    * - :ref:`resume`
      - 11
      - ❌
+     - ✅
    * - :ref:`time`
      - 12
      - ❌
+     - ✅
    * - :ref:`box`
      - 13
      - ❌
+     - ✅
    * - :ref:`velocities`
      - 14
      - ❌
+     - ✅
    * - :ref:`forces`
      - 15
      - ❌
+     - ✅
    * - :ref:`wait`
      - 16
      - ❌
+     - ✅
+
+Packet Header Definitions
+-------------------------
 
 .. _disconnect:
 
@@ -419,8 +440,8 @@ time packets were previously specified for this session in the :ref:`session inf
       1 (int32) Number of time packets being sent
 
    Body:
-      <val> (float64) dt for the simulation
-      <val> (float64) Current time of the simulation
+      <val> (float64) Simulation integrator time step (dt)
+      <val> (float64) Current simulation time
       <val> (int64) Current integration step of the simulation
 
 .. versionadded:: 3

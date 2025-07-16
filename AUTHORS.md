@@ -4,7 +4,7 @@ IMDClient was created by Lawson in 2024.
 
 
 <!-- All contributing authors are listed in this file below.
-The repository history at https://github.com/becksteinlab/imdreader
+The repository history at https://github.com/becksteinlab/imdclient
 and the CHANGELOG show individual code contributions. -->
 
 ## Chronological list of authors
@@ -18,6 +18,9 @@ The rules for this file:
   * Please start a new section for each new year
   * Don't ever delete anything
 -->
+
+**2025**
+- Amruthesh Thirumalaiswamy <@amruthesht>
 
 **2024**
 - Lawson <@ljwoods2>

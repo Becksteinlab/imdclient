@@ -1,1 +1,0 @@
-gmx mdrun -nt 1 -deffnm run -s imdclient/data/gromacs_topol.tpr 
