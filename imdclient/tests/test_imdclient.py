@@ -15,7 +15,6 @@ from MDAnalysisTests.datafiles import (
 from imdclient.IMDClient import imdframe_memsize, IMDClient
 from imdclient.IMDProtocol import IMDHeaderType
 from .utils import (
-    get_free_port,
     create_default_imdsinfo_v3,
 )
 from .server import InThreadIMDServer
@@ -47,10 +46,6 @@ IMDENERGYKEYS = [
 class TestIMDClientV3:
 
     @pytest.fixture
-    def port(self):
-        return get_free_port()
-
-    @pytest.fixture
     def universe(self):
         return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
 
@@ -59,13 +54,13 @@ class TestIMDClientV3:
         return create_default_imdsinfo_v3()
 
     @pytest.fixture
-    def server_client_two_frame_buf(self, universe, imdsinfo, port):
+    def server_client_two_frame_buf(self, universe, imdsinfo):
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", port, first_frame=False)
+        server.handshake_sequence("localhost", first_frame=False)
         client = IMDClient(
             f"localhost",
-            port,
+            server.port,
             universe.trajectory.n_atoms,
             buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo)
             * 2,
@@ -76,14 +71,14 @@ class TestIMDClientV3:
         server.cleanup()
 
     @pytest.fixture(params=[">", "<"])
-    def server_client(self, universe, imdsinfo, port, request):
+    def server_client(self, universe, imdsinfo, request):
         server = InThreadIMDServer(universe.trajectory)
         imdsinfo.endianness = request.param
         server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", port, first_frame=False)
+        server.handshake_sequence("localhost", first_frame=False)
         client = IMDClient(
             f"localhost",
-            port,
+            server.port,
             universe.trajectory.n_atoms,
         )
         server.join_accept_thread()
@@ -153,13 +148,13 @@ class TestIMDClientV3:
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
 
     @pytest.mark.parametrize("cont", [True, False])
-    def test_continue_after_disconnect(self, universe, imdsinfo, port, cont):
+    def test_continue_after_disconnect(self, universe, imdsinfo, cont):
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", port, first_frame=False)
+        server.handshake_sequence("localhost", first_frame=False)
         client = IMDClient(
             f"localhost",
-            port,
+            server.port,
             universe.trajectory.n_atoms,
             continue_after_disconnect=cont,
         )
@@ -171,10 +166,6 @@ class TestIMDClientV3:
 
 class TestIMDClientV3ContextManager:
     @pytest.fixture
-    def port(self):
-        return get_free_port()
-
-    @pytest.fixture
     def universe(self):
         return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
 
@@ -183,19 +174,19 @@ class TestIMDClientV3ContextManager:
         return create_default_imdsinfo_v3()
 
     @pytest.fixture
-    def server(self, universe, imdsinfo, port):
+    def server(self, universe, imdsinfo):
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
         yield server
         server.cleanup()
 
-    def test_context_manager_traj_unchanged(self, server, port, universe):
-        server.handshake_sequence("localhost", port, first_frame=False)
+    def test_context_manager_traj_unchanged(self, server, universe):
+        server.handshake_sequence("localhost", first_frame=False)
 
         i = 0
         with IMDClient(
             "localhost",
-            port,
+            server.port,
             universe.trajectory.n_atoms,
         ) as client:
             server.send_frames(0, 5)

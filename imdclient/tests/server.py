@@ -29,14 +29,25 @@ class InThreadIMDServer:
         self.listen_socket = None
         self.conn = None
         self.accept_thread = None
+        self._bound_port = None
 
     def set_imdsessioninfo(self, imdsinfo):
         self.imdsinfo = imdsinfo
 
-    def handshake_sequence(self, host, port, first_frame=True):
+    @property
+    def port(self):
+        """Get the port the server is bound to.
+        
+        Returns:
+            int: The port number, or None if not bound yet.
+        """
+        return self._bound_port
+
+    def handshake_sequence(self, host, first_frame=True):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((host, port))
-        logger.debug(f"InThreadIMDServer: Listening on {host}:{port}")
+        s.bind((host, 0))  # Bind to port 0 to get a free port
+        self._bound_port = s.getsockname()[1]  # Store the actual bound port
+        logger.debug(f"InThreadIMDServer: Listening on {host}:{self._bound_port}")
         s.listen(60)
         self.listen_socket = s
 
