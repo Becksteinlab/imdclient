@@ -93,7 +93,6 @@ class TestIMDClientV3:
 
     @pytest.fixture
     def server_client_incorrect_atoms(self, universe, imdsinfo, port):
-        """Server and client with mismatched atom counts for testing error handling"""
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", port, first_frame=False)
@@ -185,7 +184,6 @@ class TestIMDClientV3:
         )
 
     def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
-        """Test that incorrect number of atoms raises RuntimeError"""
         server, client = server_client_incorrect_atoms
         
         server.send_frame(0)
