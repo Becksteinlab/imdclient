@@ -16,24 +16,32 @@ The rules for this file:
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
 
-## [v0.2.0] - 2025-??-??
+## [v0.2.0] - 2025-07-18
+
+**Breaking change**: The removal of the IMDReader and the associated
+streaming analysis functionality will *break code* (see issue
+#53). The IMDReader is being integrated into MDAnalysis and should be
+available in MDAnalysis release 2.10.0.
 
 ### Authors
 <!-- GitHub usernames of contributors to this release -->
-@amruthesht @ljwoods2
+@amruthesht @ljwoods2 @hmacdope @jaclark5 @orbeckst
+
+### Changed
+<!-- Changes in existing functionality -->
+* IMDReader removed from imdclient by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/54 (issue #53)
+* added support for Python 3.13 (issue #90)
 
 ### Added
 <!-- New added features -->
 * Updated installation instructions by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/74
-* MD engine links updated in IMDClient documnetation by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/73
-* Parse input files for DT when not in traj by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/71
+* MD engine links updated in IMDClient documentation by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/73
+* Testing: Parse input files for DT when not in traj by @ljwoods2 in https://github.com/Becksteinlab/imdclient/pull/71
 
 ### Fixed
 <!-- Bug fixes -->
+* updated deployment workflow to use latest pypa/gh-action-pypi-publish@v1.12.4 action (PR #78)
 
-### Changed
-<!-- Changes in existing functionality -->
-* IMDReader removed from imdclient by @amruthesht in https://github.com/Becksteinlab/imdclient/pull/54
 
 ### Deprecated
 <!-- Soon-to-be removed features -->

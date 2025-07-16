@@ -19,8 +19,12 @@ The rules for this file:
   * Don't ever delete anything
 -->
 
-**2025**
-- Amruthesh Thirumalaiswamy <@amruthesht>
-
 **2024**
 - Lawson <@ljwoods2>
+
+**2025**
+- Amruthesh Thirumalaiswamy <@amruthesht>
+- Jennifer A. Clark <@jaclark5>
+- Hugo MacDermott-Opeskin <@hmacdope>
+- Oliver Beckstein <@orbeckst>
+- GitHub co-pilot <@copilot>
