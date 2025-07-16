@@ -171,7 +171,16 @@ jobs:
   
       - name: Run simulation engine tests
         run: |
-          pytest -v --color=yes ${{ matrix.script }}
+          pytest -v --cov=imdclient --cov-report=xml --color=yes ${{ matrix.script }}
+
+      - name: codecov
+        if: github.event_name != 'schedule'
+        uses: codecov/codecov-action@v5.4.3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          name: codecov-${{ matrix.name }}
+          verbose: True
 
   pylint_check:
     if: github.repository == 'Becksteinlab/imdclient'
