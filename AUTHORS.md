@@ -19,8 +19,14 @@ The rules for this file:
   * Don't ever delete anything
 -->
 
+**2024**
+- Lawson Woods <@ljwoods2>
+- Heekun Cho <@hcho38>
+- Oliver Beckstein <@orbeckst>
+
 **2025**
 - Amruthesh Thirumalaiswamy <@amruthesht>
-
-**2024**
-- Lawson <@ljwoods2>
+- Jennifer A. Clark <@jaclark5>
+- Hugo MacDermott-Opeskin <@hmacdope>
+- Matthias Heyden <@HeydenLabASU>
+- GitHub co-pilot <@copilot>

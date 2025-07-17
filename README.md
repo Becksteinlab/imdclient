@@ -25,6 +25,8 @@ IMDClient is bound by a [Code of Conduct](https://github.com/becksteinlab/imdcli
 
 ### Installation
 
+IMDClient requires Python 3.10 or higher.
+
 #### Install via mamba (recommended)
 To install the latest release of IMDClient from conda-forge:
 

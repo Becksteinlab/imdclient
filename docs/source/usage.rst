@@ -13,8 +13,18 @@ simulation engine to output stream data using IMDv3.
 
 GROMACS
 -------
+The IMDv3 protocol is currently not available as part of the official GROMACS release
+or source code repository. However, the feature is currently available for use in 
+the *imd-v3* branch of the forked repository
+https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/tree/imd-v3 ; clone the 
+repository and build GROMACS from source.
+
 In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
+Specific IMDv3 options were added to GROMACS, as documented in the
+GROMACS User Guide `Molecular dynamics parameters (.mdp options)`_ under
+*Interactive Molecular Dynamics (IMD)*.
+
 In GROMACS, you will know that the simulation is ready and waiting for the
 IMDClient when this line is printed to the terminal:
 
@@ -24,8 +34,18 @@ IMDClient when this line is printed to the terminal:
 
 You are now ready to connect to the simulation engine with a client.
 
+.. TODO: update to official GROMACS docs (issue #79)
+.. _`Molecular dynamics parameters (.mdp options)`:
+   https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/blob/imd-v3/docs/user-guide/mdp-options.rst?ref_type=heads&plain=1
+
+
+
 NAMD
 ----
+The IMDv3 protocol has been implementaed in NAMD and will be made available through the
+official NAMD release in the near future. It is currently available as a part of the
+official NAMD GitLab repository - https://gitlab.com/tcbgUIUC/namd.
+
 To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
 
 .. code-block:: none
@@ -55,6 +75,11 @@ You are now ready to connect to the simulation engine with the IMDClient.
 
 LAMMPS
 ------
+The IMDv3 protocol is part of the official LAMMPS distribution since ``patch_4Feb2025``.
+It is available in the LAMMPS source code repository - https://github.com/lammps/lammps.
+Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation
+- https://docs.lammps.org/fix_imd.html
+
 To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
 
 .. code-block:: none

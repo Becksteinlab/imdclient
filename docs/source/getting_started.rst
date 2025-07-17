@@ -4,6 +4,8 @@ Getting Started
 Installation
 ############
 
+IMDClient requires Python 3.10 or higher.
+
 Install via mamba (recommended)
 -------------------------------
 
