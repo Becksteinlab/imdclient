@@ -99,7 +99,7 @@ class TestIMDClientV3:
         client = IMDClient(
             f"localhost",
             port,
-            universe.trajectory.n_atoms + 1,
+            universe.atoms.n_atoms + 1,
         )
         server.join_accept_thread()
         yield server, client
@@ -192,8 +192,8 @@ class TestIMDClientV3:
             client.get_imdframe()
         
         error_msg = str(exc_info.value)
-        assert f"Expected n_atoms value {universe.trajectory.n_atoms + 1}" in error_msg
-        assert f"got {universe.trajectory.n_atoms}" in error_msg
+        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
 
 
