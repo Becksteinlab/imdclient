@@ -79,7 +79,22 @@ class TestIMDClientV3:
         client = IMDClient(
             f"localhost",
             server.port,
-            universe.trajectory.n_atoms,
+            universe.atoms.n_atoms,
+        )
+        server.join_accept_thread()
+        yield server, client
+        client.stop()
+        server.cleanup()
+
+    @pytest.fixture
+    def server_client_incorrect_atoms(self, universe, imdsinfo):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            server.port,
+            universe.atoms.n_atoms + 1,
         )
         server.join_accept_thread()
         yield server, client
@@ -162,6 +177,19 @@ class TestIMDClientV3:
         server.expect_packet(
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
+
+    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
+        server, client = server_client_incorrect_atoms
+        
+        server.send_frame(0)
+        
+        with pytest.raises(EOFError) as exc_info:
+            client.get_imdframe()
+        
+        error_msg = str(exc_info.value)
+        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        assert f"got {universe.atoms.n_atoms}" in error_msg
+        assert "Ensure you are using the correct topology file" in error_msg
 
 
 class TestIMDClientV3ContextManager:
