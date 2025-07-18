@@ -48,7 +48,7 @@ source = "https://github.com/becksteinlab/imdclient"
 documentation = "https://imdclient.readthedocs.io"
 
 [tool.setuptools]
-packages = ["imdclient"]
+packages = ["imdclient", "imdclient.data", "imdclient.tests"]
 
 # Installs tests datafiles
 [tool.setuptools.package-data]
