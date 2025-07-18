@@ -8,7 +8,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "imdclient"
 description = "Receiver for IMD v2 and v3 data from simulation engines like Gromacs, LAMMPS, and NAMD"
-license = {file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE", "AUTHORS.md"]
 authors = [
     {name = "Lawson", email = "ljwoods2@asu.edu"},
 ]
