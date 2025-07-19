@@ -15,6 +15,25 @@ The rules for this file:
     * YYYY-MM-DD date format (following ISO 8601)
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
+## [v0.2.1] - 2025-07-??
+### Authors
+@orbeckst
+
+### Changed
+* manual tests (tests/hpc_testing) were moved to docs/hpc_testing and are
+  not included in the packaged distribution (issue #98, PR #100)
+
+### Added
+
+### Fixed
+* updated license string in package metadata (issue #97)
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
 
 ## [v0.2.0] - 2025-07-18
 

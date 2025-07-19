@@ -1,10 +1,14 @@
 # Codecov configuration to make it a bit less noisy
 coverage:
   status:
-    patch: false
+    patch:
+      default:
+        threshold: 1%
+        target: auto
     project:
       default:
-        threshold: 50%
+        threshold: 1%
+        target: auto
 comment:
   layout: "header"
   require_changes: false
@@ -13,7 +17,5 @@ comment:
   flags: null
   paths: null
 ignore:
-  - "imdclient/_version.py"
   - "imdclient/data"
   - "imdclient/tests"
-  - "examples"

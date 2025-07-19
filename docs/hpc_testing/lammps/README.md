@@ -23,7 +23,7 @@ source activate imdclient-test
 
 Then, to run the tests, do:
 ```bash
-cd imdclient/tests/hpc_testing/lammps
+cd docs/hpc_testing/lammps
 chmod +x validate_lmp.sh
 
 ./validate_lmp.sh \

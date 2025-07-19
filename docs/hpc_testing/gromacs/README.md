@@ -23,7 +23,7 @@ source activate imdclient-test
 
 Then, to run the tests, do:
 ```bash
-cd imdclient/tests/hpc_testing/gromacs
+cd docs/hpc_testing/gromacs
 chmod +x validate_gmx.sh
 
 ./validate_gmx.sh \
@@ -104,9 +104,9 @@ source activate imdclient-test
 
 mkdir tmp_test
 
-python imdclient/tests/test_manual.py \
-    --topol_arg imdclient/tests/hpc_testing/gromacs/struct.gro \
-    --traj_arg imdclient/tests/hpc_testing/gromacs/gmx_gpu_test.trr \
+python docs/hpc_testing/test_manual.py \
+    --topol_arg docs/hpc_testing/gromacs/struct.gro \
+    --traj_arg docs/hpc_testing/gromacs/gmx_gpu_test.trr \
     --first_frame_arg 0 \
     --tmp_path tmp_test
 ``` -->

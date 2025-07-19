@@ -1,4 +1,4 @@
-from .minimalreader import MinimalReader
+from imdclient.tests.minimalreader import MinimalReader
 import MDAnalysis as mda
 from numpy.testing import assert_allclose
 import numpy as np
@@ -22,7 +22,7 @@ Tool for running IMDv3 integration tests via the command line.
 To use, start the simulation, wait for it to be ready for an IMD connection,
 and then run this command relative to the root of the cloned respository:
 
-python imdclient/tests/test_manual.py \
+python docs/hpc_testing/test_manual.py \
     --topol_path <path/to/topology> \
     --traj_path <path/to/trajectory> \
     --first_frame <first frame to compare> \
