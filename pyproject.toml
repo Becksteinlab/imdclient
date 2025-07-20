@@ -8,7 +8,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "imdclient"
 description = "Receiver for IMD v2 and v3 data from simulation engines like Gromacs, LAMMPS, and NAMD"
-license = {file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE", "AUTHORS.md"]
 authors = [
     {name = "Lawson", email = "ljwoods2@asu.edu"},
 ]
@@ -47,7 +48,7 @@ source = "https://github.com/becksteinlab/imdclient"
 documentation = "https://imdclient.readthedocs.io"
 
 [tool.setuptools]
-packages = ["imdclient"]
+packages = ["imdclient", "imdclient.data", "imdclient.tests"]
 
 # Installs tests datafiles
 [tool.setuptools.package-data]

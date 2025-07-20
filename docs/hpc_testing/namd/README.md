@@ -23,7 +23,7 @@ source activate imdclient-test
 
 Then, to run the test, do:
 ```bash
-cd imdclient/tests/hpc_testing/namd
+cd docs/hpc_testing/namd
 chmod +x validate_namd.sh
 
 ./validate_namd.sh \
@@ -65,7 +65,7 @@ tar xf v8.0.0.tar.gz
 
 Then, NAMD can be built with the following options:
 
-#### Muticore version
+#### Multicore version
 
 ```bash
 module load gcc-11.2.0-gcc-11.2.0
