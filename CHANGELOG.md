@@ -15,6 +15,26 @@ The rules for this file:
     * YYYY-MM-DD date format (following ISO 8601)
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
+
+## [v0.2.2] - 2025-07-20
+### Authors
+@hmacdope
+
+### Changed
+
+### Added
+
+### Fixed
+* removed a stray binary file that prevented conda-forge packaging (#103)
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
+
+
 ## [v0.2.1] - 2025-07-20
 ### Authors
 @orbeckst
