@@ -36,6 +36,18 @@ from typing import Union, Dict
 import signal
 import atexit
 
+# Custom STATUS logging level
+STATUS_LEVEL_NUM = 15
+logging.addLevelName(STATUS_LEVEL_NUM, "STATUS")
+
+
+def status(self, message, *args, **kwargs):
+    if self.isEnabledFor(STATUS_LEVEL_NUM):
+        self._log(STATUS_LEVEL_NUM, message, args, **kwargs)
+
+
+logging.Logger.status = status
+
 logger = logging.getLogger(__name__)
 
 
@@ -592,7 +604,7 @@ class IMDProducerV2(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
-        logger.debug(
+        logger.status(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
         pause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
@@ -608,7 +620,7 @@ class IMDProducerV2(BaseIMDProducer):
 
     def _unpause(self):
         self._conn.settimeout(self._timeout)
-        logger.debug("IMDProducer: Unpausing simulation, buffer has space")
+        logger.status("IMDProducer: Unpausing simulation, buffer has space")
         unpause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
         try:
             self._conn.sendall(unpause)
@@ -659,7 +671,7 @@ class IMDProducerV3(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
-        logger.debug(
+        logger.status(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
         pause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
@@ -675,7 +687,7 @@ class IMDProducerV3(BaseIMDProducer):
 
     def _unpause(self):
         self._conn.settimeout(self._timeout)
-        logger.debug("IMDProducer: Unpausing simulation, buffer has space")
+        logger.status("IMDProducer: Unpausing simulation, buffer has space")
         unpause = create_header_bytes(IMDHeaderType.IMD_RESUME, 0)
         try:
             self._conn.sendall(unpause)
