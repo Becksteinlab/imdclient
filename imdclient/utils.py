@@ -5,43 +5,79 @@ import select
 logger = logging.getLogger("imdclient.IMDClient")
 
 
-class timeit(object):
-    """measure time spend in context
+class Timing:
+    """
+    A class to store timing data for various operations.
+    """
 
-    :class:`timeit` is a context manager (to be used with the :keyword:`with`
-    statement) that records the execution time for the enclosed context block
-    in :attr:`elapsed`.
+    def __init__(self):
+        self.timings = {}
+
+    def add_timing(self, key, duration):
+        if key not in self.timings:
+            self.timings[key] = []
+        self.timings[key].append(duration)
+
+    def get_timings(self):
+        return self.timings
+
+
+class timeit:
+    """
+    Context manager to measure execution time of a code block.
+
+    Parameters
+    ----------
+    key : str, optional
+        A unique identifier for the code block being timed. If provided, the timing
+        data will be stored in the associated Timing object.
+    timing_obj : Timing, optional
+        An instance of the Timing class where the timing data will be stored.
 
     Attributes
     ----------
     elapsed : float
-        Time in seconds that elapsed between entering
-        and exiting the context.
+        The time elapsed during the execution of the code block, in seconds.
 
-    Example
-    -------
-    Use as a context manager::
+    Examples
+    --------
+    To store timing data in a `Timing` object:
 
-       with timeit() as total:
-          # code to be timed
+    >>> timing = Timing()
+    >>> with timeit("example_block", timing):
+    ...     # Code block to be timed
+    ...     time.sleep(1)
+    >>> print(timing.get_timings())
+    {'example_block': [1.0]}
 
-       print(total.elapsed, "seconds")
+    To access elapsed time directly:
+
+    >>> with timeit() as t:
+    ...     # Code block to be timed
+    ...     time.sleep(1)
+    >>> print(t.elapsed)
+    1.0
 
     See Also
     --------
+    Timing : A class to store and retrieve timing data.
     :func:`time.time`
-
     """
+
+    def __init__(self, key=None, timing_obj=None):
+        self.key = key
+        self.timing_obj = timing_obj
+        self.start_time = None
+        self.elapsed = None
 
     def __enter__(self):
         self._start_time = time.time()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        end_time = time.time()
-        self.elapsed = end_time - self._start_time
-        # always propagate exceptions forward
-        return False
+        self.elapsed = time.time() - self._start_time
+        if self.key and self.timing_obj:
+            self.timing_obj.add_timing(self.key, self.elapsed)
 
 
 def approximate_timestep_memsize(
