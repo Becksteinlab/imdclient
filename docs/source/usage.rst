@@ -139,3 +139,39 @@ from the socket and generate on-the-fly simulation analysis.
 .. SeeAlso::
     `MDAnalysis <https://www.mdanalysis.org>`_ (from release 2.10.0 onwards) can
     directly read IMDv3 streams.
+
+
+Logging Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+IMDClient provides detailed logging to help monitor connection status, buffer management, and simulation flow control. The library uses Python's standard logging module with several predefined levels.
+
+Logging Levels
+--------------
+
+IMDClient supports the following logging levels (in order of verbosity):
+
+* **DEBUG (10)**: Detailed diagnostic information including frame processing, buffer management, socket operations, and internal state changes. Most verbose level.
+
+  .. code-block:: python
+
+      logger.setLevel(logging.DEBUG)
+
+* **STATUS (15)**: *Custom level* - Captures pause/resume events with timestamps when the client automatically pauses the simulation due to buffer management. This level provides critical flow control information without the overhead of DEBUG logging.
+
+  .. code-block:: python
+
+      logger.setLevel(logging.getLevelName('STATUS'))
+
+* **INFO (20)**: General informational messages about client operations.
+
+  .. code-block:: python
+
+      logger.setLevel(logging.INFO)
+
+Recommended Logging Levels
+--------------------------
+
+* **For development/debugging**: Use DEBUG level (10) for detailed diagnostics
+* **For streaming monitoring**: Use STATUS level (15) to track pause/resume events  
+* **For general usage**: Use INFO level (20) for basic operational information
