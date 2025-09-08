@@ -48,7 +48,7 @@ The IMDv3 protocol has been implementaed in NAMD and will be made available thro
 official NAMD release in the near future. It is currently available as a part of the
 official NAMD GitLab repository https://gitlab.com/tcbgUIUC/namd .
 
-NAMD **does** support multiple concurrent connections to the same IMD port.
+NAMD *does* support multiple concurrent connections to the same IMD port.
 
 To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
 
