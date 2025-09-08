@@ -82,7 +82,7 @@ LAMMPS
 The IMDv3 protocol is part of the official LAMMPS distribution since **patch_4Feb2025**.
 It is available in the LAMMPS source code repository https://github.com/lammps/lammps.
 Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation for 
-`fix_imd`_.
+`fix imd`_.
 
 LAMMPS does *not* support multiple concurrent connections to the same IMD port.
 
@@ -101,7 +101,7 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with a client.
 
-.. _`fix_imd`: https://docs.lammps.org/fix_imd.html
+.. _`fix imd`: https://docs.lammps.org/fix_imd.html
 
 Using IMDClient
 ^^^^^^^^^^^^^^^
