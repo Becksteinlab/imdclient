@@ -26,8 +26,9 @@ IMDClient module
 
 import socket
 import threading
+import struct
 from .IMDProtocol import *
-from .utils import read_into_buf, sock_contains_data, timeit
+from .utils import read_into_buf, sock_contains_data, timeit, Timing
 import logging
 import queue
 import time
@@ -71,6 +72,10 @@ class IMDClient:
         If True, the client will attempt to change the simulation engine's waiting behavior to
         non-blocking after the client disconnects. If False, the client will attempt to change it
         to blocking. If None, the client will not attempt to change the simulation engine's behavior.
+    enable_timing : bool or None, optional [``None``]
+        If True, enables timing of various operations within the client for performance analysis.
+        If False, disables all timing calculations.
+        If None, enables timing only when logger level requires timing (auto-timing).
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
     """
@@ -83,14 +88,27 @@ class IMDClient:
         socket_bufsize=None,
         multithreaded=True,
         continue_after_disconnect=None,
+        enable_timing=None,  # Flag to enable timing (None=auto, True=always, False=never)
         **kwargs,
     ):
 
         self._stopped = False
-        self._conn = self._connect_to_server(host, port, socket_bufsize)
-        self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
         self._continue_after_disconnect = continue_after_disconnect
+        
+        # Determine if timing should be enabled
+        if enable_timing is True:
+            self.timing = Timing()
+        elif enable_timing is False:
+            self.timing = False
+        elif enable_timing is None:
+            # Auto-timing: based on if it is needed
+            self.timing = None
+        else:
+            raise ValueError("enable_timing must be True, False, or None")
+        
+        self._conn = self._connect_to_server(host, port, socket_bufsize)
+        self._imdsinfo = self._await_IMD_handshake()
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -110,6 +128,7 @@ class IMDClient:
                 n_atoms,
                 multithreaded,
                 self._error_queue,
+                timing=self.timing,  # Pass timing object or None
                 **kwargs,
             )
         elif self._imdsinfo.version == 3:
@@ -120,6 +139,7 @@ class IMDClient:
                 n_atoms,
                 multithreaded,
                 self._error_queue,
+                timing=self.timing,  # Pass timing object or None
                 **kwargs,
             )
 
@@ -223,6 +243,7 @@ class IMDClient:
         """
         Establish connection with the server, failing out instantly if server is not running
         """
+
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if socket_bufsize is not None:
             # Default (linux):
@@ -232,7 +253,11 @@ class IMDClient:
             conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
-            conn.connect((host, port))
+            if self.timing is True:
+                with timeit("connect_to_server", self.timing):
+                    conn.connect((host, port))
+            else:
+                conn.connect((host, port))
         except ConnectionRefusedError:
             raise ConnectionRefusedError(
                 f"IMDClient: Connection to {host}:{port} refused"
@@ -244,72 +269,82 @@ class IMDClient:
         Wait for the server to send a handshake packet, then determine
         IMD session information.
         """
-        end = ">"
-        ver = None
 
-        self._conn.settimeout(5)
+        def _perform_handshake():
+            end = ">"
+            ver = None
 
-        h_buf = bytearray(IMDHEADERSIZE)
-        try:
-            read_into_buf(self._conn, h_buf)
-        except (ConnectionError, TimeoutError, Exception) as e:
-            logger.debug("IMDClient: No handshake packet received: %s", e)
-            raise ConnectionError("IMDClient: No handshake packet received")
+            self._conn.settimeout(5)
 
-        header = IMDHeader(h_buf)
+            h_buf = bytearray(IMDHEADERSIZE)
+            try:
+                read_into_buf(self._conn, h_buf)
+            except (ConnectionError, TimeoutError, Exception) as e:
+                logger.debug("IMDClient: No handshake packet received: %s", e)
+                raise ConnectionError("IMDClient: No handshake packet received")
 
-        if header.type != IMDHeaderType.IMD_HANDSHAKE:
-            raise ValueError(
-                f"Expected header type `IMD_HANDSHAKE`, got {header.type}"
-            )
-
-        if header.length not in IMDVERSIONS:
-            # Try swapping endianness
-            swapped = struct.unpack("<i", struct.pack(">i", header.length))[0]
-            if swapped not in IMDVERSIONS:
-                err_version = min(swapped, header.length)
-                # NOTE: Add test for this
-                raise ValueError(
-                    f"Incompatible IMD version. Expected version in {IMDVERSIONS}, got {err_version}"
-                )
-            else:
-                end = "<"
-                ver = swapped
-        else:
-            ver = header.length
-
-        sinfo = None
-        if ver == 2:
-            # IMD v2 does not send a configuration handshake body packet
-            sinfo = IMDSessionInfo(
-                version=ver,
-                endianness=end,
-                wrapped_coords=False,
-                time=False,
-                energies=True,
-                box=False,
-                positions=True,
-                velocities=False,
-                forces=False,
-            )
-
-        elif ver == 3:
-            read_into_buf(self._conn, h_buf)
             header = IMDHeader(h_buf)
-            if header.type != IMDHeaderType.IMD_SESSIONINFO:
-                raise ValueError(
-                    f"Expected header type `IMD_SESSIONINFO`, got {header.type}"
-                )
-            if header.length != 7:
-                raise ValueError(
-                    f"Expected header length 7, got {header.length}"
-                )
-            data = bytearray(7)
-            read_into_buf(self._conn, data)
-            sinfo = parse_imdv3_session_info(data, end)
-            logger.debug(f"IMDClient: Received IMDv3 session info: {sinfo}")
 
-        return sinfo
+            if header.type != IMDHeaderType.IMD_HANDSHAKE:
+                raise ValueError(
+                    f"Expected header type `IMD_HANDSHAKE`, got {header.type}"
+                )
+
+            if header.length not in IMDVERSIONS:
+                # Try swapping endianness
+                swapped = struct.unpack("<i", struct.pack(">i", header.length))[
+                    0
+                ]
+                if swapped not in IMDVERSIONS:
+                    err_version = min(swapped, header.length)
+                    # NOTE: Add test for this
+                    raise ValueError(
+                        f"Incompatible IMD version. Expected version in {IMDVERSIONS}, got {err_version}"
+                    )
+                else:
+                    end = "<"
+                    ver = swapped
+            else:
+                ver = header.length
+
+            sinfo = None
+            if ver == 2:
+                # IMD v2 does not send a configuration handshake body packet
+                sinfo = IMDSessionInfo(
+                    version=ver,
+                    endianness=end,
+                    wrapped_coords=False,
+                    time=False,
+                    energies=True,
+                    box=False,
+                    positions=True,
+                    velocities=False,
+                    forces=False,
+                )
+
+            elif ver == 3:
+                read_into_buf(self._conn, h_buf)
+                header = IMDHeader(h_buf)
+                if header.type != IMDHeaderType.IMD_SESSIONINFO:
+                    raise ValueError(
+                        f"Expected header type `IMD_SESSIONINFO`, got {header.type}"
+                    )
+                if header.length != 7:
+                    raise ValueError(
+                        f"Expected header length 7, got {header.length}"
+                    )
+                data = bytearray(7)
+                read_into_buf(self._conn, data)
+                sinfo = parse_imdv3_session_info(data, end)
+                logger.debug(f"IMDClient: Received IMDv3 session info: {sinfo}")
+
+            return sinfo
+
+        if self.timing is True:
+            with timeit("await_IMD_handshake", self.timing):
+                return _perform_handshake()
+        else:
+            return _perform_handshake()
 
     def _go(self):
         """
@@ -345,6 +380,15 @@ class IMDClient:
             )
         finally:
             self._conn.close()
+
+    def get_timing_data(self):
+        """
+        Retrieve all timing data.
+        """
+        if self.timing is not False:
+            return self.timing.get_timings()
+        else:
+            raise ValueError("Timing data is not available")
 
     def __enter__(self):
         return self
@@ -386,6 +430,7 @@ class BaseIMDProducer(threading.Thread):
         n_atoms,
         multithreaded,
         error_queue,
+        timing=None,  # Default to None if timing is not provided
         timeout=5,
         **kwargs,
     ):
@@ -395,6 +440,7 @@ class BaseIMDProducer(threading.Thread):
         self._paused = False
 
         self.error_queue = error_queue
+        self.timing = timing  # Store timing object or None
         # Timeout for first frame should be longer
         # than rest of frames
         self._timeout = timeout
@@ -414,6 +460,8 @@ class BaseIMDProducer(threading.Thread):
             self._imdf = None
 
         self._header = bytearray(IMDHEADERSIZE)
+
+        self._pause_time = None  # Track when the producer is paused
 
     def _parse_imdframe(self):
         raise NotImplementedError
@@ -447,40 +495,20 @@ class BaseIMDProducer(threading.Thread):
         logger.debug("IMDProducer: Starting run loop")
         try:
             while True:
-                with timeit() as t:
-                    logger.debug("IMDProducer: Checking for pause")
-
-                    if not self._paused:
-                        logger.debug("IMDProducer: Not paused")
-                        if self._buf.is_full():
-                            self._pause()
-                            self._paused = True
-
-                    logger.debug("IMDProducer: Checking for unpause")
-
-                    if self._paused:
-                        logger.debug("IMDProducer: Paused")
-                        # wait for socket to empty before unpausing
-                        if not sock_contains_data(self._conn, 0):
-                            logger.debug("IMDProducer: Checked sock for data")
-                            self._buf.wait_for_space()
-                            self._unpause()
-                            self._paused = False
-
-                    self._imdf = self._buf.pop_empty_imdframe()
-
-                    logger.debug("IMDProducer: Got empty frame")
-
-                    self._parse_imdframe()
-
-                    self._buf.push_full_imdframe(self._imdf)
-
+                if self.timing or (self.timing is None and logger.isEnabledFor(STATUS_LEVEL_NUM)):
+                    # Timing is enabled, use timeit context manager
+                    with timeit("frame_parse_time", self.timing) as t:
+                        self._process_frame()
+                        logger.debug(
+                            "IMDProducer: Frame %d parsed in %d seconds",
+                            self._frame,
+                            t.elapsed,
+                        )
+                else:
+                    # Timing is disabled, process frame without timing
+                    self._process_frame()
+                    logger.debug("IMDProducer: Frame %d processed", self._frame)
                 self._frame += 1
-                logger.debug(
-                    "IMDProducer: Frame %d parsed in %d seconds",
-                    self._frame,
-                    t.elapsed,
-                )
         except EOFError:
             # simulation ended in a way
             # that we expected
@@ -494,6 +522,35 @@ class BaseIMDProducer(threading.Thread):
             logger.debug("IMDProducer: Stopping run loop")
             # Tell consumer not to expect more frames to be added
             self._buf.notify_producer_finished()
+
+    def _process_frame(self):
+        # Process the frame
+        logger.debug("IMDProducer: Checking for pause")
+
+        if not self._paused:
+            logger.debug("IMDProducer: Not paused")
+            if self._buf.is_full():
+                self._pause()
+                self._paused = True
+
+        logger.debug("IMDProducer: Checking for unpause")
+
+        if self._paused:
+            logger.debug("IMDProducer: Paused")
+            # wait for socket to empty before unpausing
+            if not sock_contains_data(self._conn, 0):
+                logger.debug("IMDProducer: Checked sock for data")
+                self._buf.wait_for_space()
+                self._unpause()
+                self._paused = False
+
+        self._imdf = self._buf.pop_empty_imdframe()
+
+        logger.debug("IMDProducer: Got empty frame")
+
+        self._parse_imdframe()
+
+        self._buf.push_full_imdframe(self._imdf)
 
     def _expect_header(self, expected_type, expected_value=None):
 
@@ -604,6 +661,8 @@ class IMDProducerV2(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
+        if self.timing is not None:
+            self._pause_time = time.time()  # Record the pause time
         logger.status(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
@@ -620,7 +679,21 @@ class IMDProducerV2(BaseIMDProducer):
 
     def _unpause(self):
         self._conn.settimeout(self._timeout)
-        logger.status("IMDProducer: Unpausing simulation, buffer has space")
+        if (
+            hasattr(self, "_pause_time")
+            and self._pause_time is not None
+            and self.timing is not None
+        ):
+            paused_duration = time.time() - self._pause_time
+            logger.status(
+                f"IMDProducer: Unpausing simulation after {paused_duration:.2f} seconds, buffer has space"
+            )
+            self.timing.add_timing("pause_duration", paused_duration)
+            self._pause_time = None  # Reset the pause time
+        else:
+            logger.status(
+                "IMDProducer: Unpausing simulation, buffer has space"
+            )
         unpause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
         try:
             self._conn.sendall(unpause)
@@ -671,6 +744,8 @@ class IMDProducerV3(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
+        if self.timing is not None:
+            self._pause_time = time.time()  # Record the pause time
         logger.status(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
@@ -698,6 +773,19 @@ class IMDProducerV3(BaseIMDProducer):
             raise EOFError
         # Edge case: pause & unpause occured in the time between server sends its last frame and closing socket
         # in this case, the simulation isn't actually unpaused but over
+        if (
+            hasattr(self, "_pause_time")
+            and self._pause_time is not None
+            and self.timing is not None
+        ):
+            paused_duration = time.time() - self._pause_time
+            logger.status(
+                f"IMDProducer: Resuming simulation after {paused_duration:.2f} seconds, buffer has space"
+            )
+            self.timing.add_timing("pause_duration", paused_duration)
+            self._pause_time = None  # Reset the pause time
+        else:
+            logger.status("IMDProducer: Resuming simulation, buffer has space")
 
     def _parse_imdframe(self):
         if self._imdsinfo.time:
@@ -719,12 +807,14 @@ class IMDProducerV3(BaseIMDProducer):
             self._imdf.energies.update(
                 parse_energy_bytes(self._energies, self._imdsinfo.endianness)
             )
+
         if self._imdsinfo.box:
             self._expect_header(IMDHeaderType.IMD_BOX, expected_value=1)
             self._read(self._box)
             self._imdf.box = parse_box_bytes(
                 self._box, self._imdsinfo.endianness
             )
+
         if self._imdsinfo.positions:
             self._expect_header(
                 IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
@@ -736,6 +826,7 @@ class IMDProducerV3(BaseIMDProducer):
                     self._positions, dtype=f"{self._imdsinfo.endianness}f"
                 ).reshape((self._n_atoms, 3)),
             )
+
         if self._imdsinfo.velocities:
             self._expect_header(
                 IMDHeaderType.IMD_VELOCITIES, expected_value=self._n_atoms
@@ -747,6 +838,7 @@ class IMDProducerV3(BaseIMDProducer):
                     self._velocities, dtype=f"{self._imdsinfo.endianness}f"
                 ).reshape((self._n_atoms, 3)),
             )
+
         if self._imdsinfo.forces:
             self._expect_header(
                 IMDHeaderType.IMD_FORCES, expected_value=self._n_atoms
