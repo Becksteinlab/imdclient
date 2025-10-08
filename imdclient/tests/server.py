@@ -37,7 +37,7 @@ class InThreadIMDServer:
     @property
     def port(self):
         """Get the port the server is bound to.
-        
+
         Returns:
             int: The port number, or None if not bound yet.
         """
@@ -47,7 +47,9 @@ class InThreadIMDServer:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((host, 0))  # Bind to port 0 to get a free port
         self._bound_port = s.getsockname()[1]  # Store the actual bound port
-        logger.debug(f"InThreadIMDServer: Listening on {host}:{self._bound_port}")
+        logger.debug(
+            f"InThreadIMDServer: Listening on {host}:{self._bound_port}"
+        )
         s.listen(60)
         self.listen_socket = s
 
@@ -121,15 +123,7 @@ class InThreadIMDServer:
         endianness = self.imdsinfo.endianness
 
         if self.imdsinfo.time:
-            time_header = create_header_bytes(IMDHeaderType.IMD_TIME, 1)
-            time = struct.pack(
-                f"{endianness}ddQ",
-                self.traj[i].dt,
-                self.traj[i].time,
-                self.traj[i].frame,
-            )
-
-            self.conn.sendall(time_header + time)
+            self.send_time_packet(i)
 
         if self.imdsinfo.energies:
             energy_header = create_header_bytes(IMDHeaderType.IMD_ENERGIES, 1)
@@ -186,6 +180,17 @@ class InThreadIMDServer:
             ).tobytes()
 
             self.conn.sendall(force_header + force)
+
+    def send_time_packet(self, i):
+        time_header = create_header_bytes(IMDHeaderType.IMD_TIME, 1)
+        time = struct.pack(
+            f"{self.imdsinfo.endianness}ddQ",
+            self.traj[i].dt,
+            self.traj[i].time,
+            self.traj[i].frame,
+        )
+
+        self.conn.sendall(time_header + time)
 
     def expect_packet(self, packet_type, expected_length=None):
         head_buf = bytearray(IMDHEADERSIZE)
