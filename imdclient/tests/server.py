@@ -47,9 +47,7 @@ class InThreadIMDServer:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((host, 0))  # Bind to port 0 to get a free port
         self._bound_port = s.getsockname()[1]  # Store the actual bound port
-        logger.debug(
-            f"InThreadIMDServer: Listening on {host}:{self._bound_port}"
-        )
+        logger.debug(f"InThreadIMDServer: Listening on {host}:{self._bound_port}")
         s.listen(60)
         self.listen_socket = s
 
@@ -197,9 +195,7 @@ class InThreadIMDServer:
         read_into_buf(self.conn, head_buf)
         header = IMDHeader(head_buf)
         if header.type != packet_type:
-            raise ValueError(
-                f"Expected {packet_type} packet, got {header.type}"
-            )
+            raise ValueError(f"Expected {packet_type} packet, got {header.type}")
         if expected_length is not None and header.length != expected_length:
             raise ValueError(
                 f"Expected packet length {expected_length}, got {header.length}"

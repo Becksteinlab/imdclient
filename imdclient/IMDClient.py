@@ -247,9 +247,7 @@ class IMDClient:
         header = IMDHeader(h_buf)
 
         if header.type != IMDHeaderType.IMD_HANDSHAKE:
-            raise ValueError(
-                f"Expected header type `IMD_HANDSHAKE`, got {header.type}"
-            )
+            raise ValueError(f"Expected header type `IMD_HANDSHAKE`, got {header.type}")
 
         if header.length not in IMDVERSIONS:
             # Try swapping endianness
@@ -289,9 +287,7 @@ class IMDClient:
                     f"Expected header type `IMD_SESSIONINFO`, got {header.type}"
                 )
             if header.length != 7:
-                raise ValueError(
-                    f"Expected header length 7, got {header.length}"
-                )
+                raise ValueError(f"Expected header length 7, got {header.length}")
             data = bytearray(7)
             read_into_buf(self._conn, data)
             sinfo = parse_imdv3_session_info(data, end)
@@ -310,9 +306,7 @@ class IMDClient:
 
         if self._continue_after_disconnect is not None:
             wait_behavior = (int)(not self._continue_after_disconnect)
-            wait_packet = create_header_bytes(
-                IMDHeaderType.IMD_WAIT, wait_behavior
-            )
+            wait_packet = create_header_bytes(IMDHeaderType.IMD_WAIT, wait_behavior)
             self._conn.sendall(wait_packet)
             logger.debug(
                 "IMDClient: Attempted to change wait behavior to %s",
@@ -522,9 +516,7 @@ class BaseIMDProducer(threading.Thread):
             # OSError: Occurs when main thread disconnects from the server and closes the socket, but producer thread attempts to read another frame
             # Exception: Something unexpected happened
             if e.isinstance(BlockingIOError):
-                logger.debug(
-                    "IMDProducer: BlockingIOError occurred, Amru called it"
-                )
+                logger.debug("IMDProducer: BlockingIOError occurred, Amru called it")
             raise EOFError
 
 
@@ -564,9 +556,7 @@ class IMDProducerV2(BaseIMDProducer):
             )
             self._prev_energies = self._imdf.energies
 
-            self._expect_header(
-                IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
-            )
+            self._expect_header(IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms)
             self._read(self._positions)
             np.copyto(
                 self._imdf.positions,
@@ -575,8 +565,7 @@ class IMDProducerV2(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
         elif (
-            header.type == IMDHeaderType.IMD_FCOORDS
-            and header.length == self._n_atoms
+            header.type == IMDHeaderType.IMD_FCOORDS and header.length == self._n_atoms
         ):
             # If we received positions but no energies
             # use the last energies received
@@ -596,9 +585,7 @@ class IMDProducerV2(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
-        logger.debug(
-            "IMDProducer: Pausing simulation because buffer is almost full"
-        )
+        logger.debug("IMDProducer: Pausing simulation because buffer is almost full")
         pause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
         try:
             self._conn.sendall(pause)
@@ -663,9 +650,7 @@ class IMDProducerV3(BaseIMDProducer):
 
     def _pause(self):
         self._conn.settimeout(0)
-        logger.debug(
-            "IMDProducer: Pausing simulation because buffer is almost full"
-        )
+        logger.debug("IMDProducer: Pausing simulation because buffer is almost full")
         pause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
         try:
             self._conn.sendall(pause)
@@ -714,13 +699,9 @@ class IMDProducerV3(BaseIMDProducer):
         if self._imdsinfo.box:
             self._expect_header(IMDHeaderType.IMD_BOX, expected_value=1)
             self._read(self._box)
-            self._imdf.box = parse_box_bytes(
-                self._box, self._imdsinfo.endianness
-            )
+            self._imdf.box = parse_box_bytes(self._box, self._imdsinfo.endianness)
         if self._imdsinfo.positions:
-            self._expect_header(
-                IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
-            )
+            self._expect_header(IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms)
             self._read(self._positions)
             np.copyto(
                 self._imdf.positions,
@@ -740,9 +721,7 @@ class IMDProducerV3(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
         if self._imdsinfo.forces:
-            self._expect_header(
-                IMDHeaderType.IMD_FORCES, expected_value=self._n_atoms
-            )
+            self._expect_header(IMDHeaderType.IMD_FORCES, expected_value=self._n_atoms)
             self._read(self._forces)
             np.copyto(
                 self._imdf.forces,
@@ -806,13 +785,9 @@ class IMDFrameBuffer:
         # even if they aren't sent every frame. Can be optimized if needed
         imdf_memsize = imdframe_memsize(n_atoms, imdsinfo)
         self._total_imdf = buffer_size // imdf_memsize
-        logger.debug(
-            f"IMDFrameBuffer: Total IMDFrames allocated: {self._total_imdf}"
-        )
+        logger.debug(f"IMDFrameBuffer: Total IMDFrames allocated: {self._total_imdf}")
         if self._total_imdf == 0:
-            raise ValueError(
-                "Buffer size is too small to hold a single IMDFrame"
-            )
+            raise ValueError("Buffer size is too small to hold a single IMDFrame")
         for i in range(self._total_imdf):
             self._empty_q.put(IMDFrame(n_atoms, imdsinfo))
 
@@ -824,10 +799,7 @@ class IMDFrameBuffer:
 
     def is_full(self):
         logger.debug("IMDFrameBuffer: Checking if full")
-        if (
-            self._empty_q.qsize() / self._total_imdf
-            <= self._pause_empty_proportion
-        ):
+        if self._empty_q.qsize() / self._total_imdf <= self._pause_empty_proportion:
             return True
 
         logger.debug(
@@ -840,8 +812,7 @@ class IMDFrameBuffer:
 
         # Before acquiring the lock, check if we can return immediately
         if (
-            self._empty_q.qsize() / self._total_imdf
-            >= self._unpause_empty_proportion
+            self._empty_q.qsize() / self._total_imdf >= self._unpause_empty_proportion
         ) and not self._consumer_finished:
             return
         try:
@@ -856,9 +827,7 @@ class IMDFrameBuffer:
                     )
                     self._empty_imdf_avail.wait()
 
-            logger.debug(
-                "IMDProducer: Got space in buffer or consumer finished"
-            )
+            logger.debug("IMDProducer: Got space in buffer or consumer finished")
 
             if self._consumer_finished:
                 logger.debug("IMDProducer: Noticing consumer finished")

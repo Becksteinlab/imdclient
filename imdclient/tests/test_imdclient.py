@@ -22,9 +22,7 @@ from .server import InThreadIMDServer
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
@@ -62,8 +60,7 @@ class TestIMDClientV3:
             f"localhost",
             server.port,
             universe.trajectory.n_atoms,
-            buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo)
-            * 2,
+            buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo) * 2,
         )
         server.join_accept_thread()
         yield server, client
@@ -112,9 +109,7 @@ class TestIMDClientV3:
             assert_allclose(universe.trajectory[i].positions, imdf.positions)
             assert_allclose(universe.trajectory[i].velocities, imdf.velocities)
             assert_allclose(universe.trajectory[i].forces, imdf.forces)
-            assert_allclose(
-                universe.trajectory[i].triclinic_dimensions, imdf.box
-            )
+            assert_allclose(universe.trajectory[i].triclinic_dimensions, imdf.box)
 
     def test_pause_resume_continue(self, server_client_two_frame_buf):
         server, client = server_client_two_frame_buf
@@ -174,13 +169,9 @@ class TestIMDClientV3:
             continue_after_disconnect=cont,
         )
         server.join_accept_thread()
-        server.expect_packet(
-            IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
-        )
+        server.expect_packet(IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont))
 
-    def test_incorrect_atom_count(
-        self, server_client_incorrect_atoms, universe
-    ):
+    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
         server, client = server_client_incorrect_atoms
 
         server.send_frame(0)
@@ -189,9 +180,7 @@ class TestIMDClientV3:
             client.get_imdframe()
 
         error_msg = str(exc_info.value)
-        assert (
-            f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
-        )
+        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
         assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
 
@@ -203,6 +192,8 @@ class TestIMDClientV3:
 
         server.send_time_packet(2)
 
+        client.get_imdframe()
+        client.get_imdframe()
         # i expect this will instantly fail out
         client.get_imdframe()
 
@@ -239,16 +230,10 @@ class TestIMDClientV3ContextManager:
                 assert_allclose(universe.trajectory[i].time, imdf.time)
                 assert_allclose(universe.trajectory[i].dt, imdf.dt)
                 assert_allclose(universe.trajectory[i].data["step"], imdf.step)
-                assert_allclose(
-                    universe.trajectory[i].positions, imdf.positions
-                )
-                assert_allclose(
-                    universe.trajectory[i].velocities, imdf.velocities
-                )
+                assert_allclose(universe.trajectory[i].positions, imdf.positions)
+                assert_allclose(universe.trajectory[i].velocities, imdf.velocities)
                 assert_allclose(universe.trajectory[i].forces, imdf.forces)
-                assert_allclose(
-                    universe.trajectory[i].triclinic_dimensions, imdf.box
-                )
+                assert_allclose(universe.trajectory[i].triclinic_dimensions, imdf.box)
                 i += 1
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
         assert i == 5
