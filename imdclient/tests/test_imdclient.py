@@ -185,12 +185,16 @@ class TestIMDClientV3:
         assert "Ensure you are using the correct topology file" in error_msg
 
     def test_partial_frame_in_paused_state(self, server_client_two_frame_buf):
+        import time
+
         server, client = server_client_two_frame_buf
         server.send_frames(0, 2)
         # Client's buffer is filled. client should send pause
         server.expect_packet(IMDHeaderType.IMD_PAUSE)
 
         server.send_time_packet(2)
+
+        time.sleep(6)
 
         client.get_imdframe()
         client.get_imdframe()
