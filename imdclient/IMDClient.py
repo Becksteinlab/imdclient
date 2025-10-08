@@ -515,12 +515,16 @@ class BaseIMDProducer(threading.Thread):
         """Wraps `read_into_buf` call to give uniform error handling which indicates end of stream"""
         try:
             read_into_buf(self._conn, buf)
-        except (ConnectionError, TimeoutError, BlockingIOError, Exception):
+        except (ConnectionError, TimeoutError, BlockingIOError, Exception) as e:
             # ConnectionError: Server is definitely done sending frames, socket is closed
             # TimeoutError: Server is *likely* done sending frames.
             # BlockingIOError: Occurs when timeout is 0 in place of a TimeoutError. Server is *likely* done sending frames
             # OSError: Occurs when main thread disconnects from the server and closes the socket, but producer thread attempts to read another frame
             # Exception: Something unexpected happened
+            if e.isinstance(BlockingIOError):
+                logger.debug(
+                    "IMDProducer: BlockingIOError occurred, Amru called it"
+                )
             raise EOFError
 
 
