@@ -25,6 +25,8 @@ Specific IMDv3 options were added to GROMACS, as documented in the
 GROMACS User Guide `Molecular dynamics parameters (.mdp options)`_ under
 *Interactive Molecular Dynamics (IMD)*.
 
+GROMACS does *not* support multiple concurrent connections to the same IMD port.
+
 In GROMACS, you will know that the simulation is ready and waiting for the
 IMDClient when this line is printed to the terminal:
 
@@ -44,7 +46,9 @@ NAMD
 ----
 The IMDv3 protocol has been implementaed in NAMD and will be made available through the
 official NAMD release in the near future. It is currently available as a part of the
-official NAMD GitLab repository - https://gitlab.com/tcbgUIUC/namd.
+official NAMD GitLab repository https://gitlab.com/tcbgUIUC/namd .
+
+NAMD *does* in principle support multiple concurrent connections to the same IMD port, however, this behavior has not been tested with IMDv3 and therefore should not relied upon. Instead, we suggest rewriting a singular client's trajectory data processing code to perform all tasks that multiple clients would have performed. This method will likely also reduce the TCP latency overhead of maintaining multiple client connections. If you have a use-case that this method doesn't cover, please `raise an issue`_.
 
 To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
 
@@ -75,10 +79,12 @@ You are now ready to connect to the simulation engine with the IMDClient.
 
 LAMMPS
 ------
-The IMDv3 protocol is part of the official LAMMPS distribution since ``patch_4Feb2025``.
-It is available in the LAMMPS source code repository - https://github.com/lammps/lammps.
-Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation
-- https://docs.lammps.org/fix_imd.html
+The IMDv3 protocol is part of the official LAMMPS distribution since **patch_4Feb2025**.
+It is available in the LAMMPS source code repository https://github.com/lammps/lammps.
+Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation for 
+`fix imd`_.
+
+LAMMPS does *not* support multiple concurrent connections to the same IMD port.
 
 To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
 
@@ -95,6 +101,8 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with a client.
 
+.. _`fix imd`: https://docs.lammps.org/fix_imd.html
+.. _`raise an issue`: https://github.com/Becksteinlab/imdclient/issues
 Using IMDClient
 ^^^^^^^^^^^^^^^
 
