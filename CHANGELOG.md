@@ -24,6 +24,8 @@ The rules for this file:
 ### Added
 
 ### Fixed
+* Changed signal handler method to accept arbitrary args to prevent
+  error being raised in new jupyter version (Issue #116, PR #117)
 * Removed timeout changes during pause/resume for IMDv2 and IMv3
   (Issue #96, PR #118)
 
