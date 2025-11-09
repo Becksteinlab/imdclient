@@ -73,7 +73,6 @@ class IMDClient:
         continue_after_disconnect=None,
         **kwargs,
     ):
-
         self._stopped = False
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
@@ -147,7 +146,7 @@ class IMDClient:
 
             self._producer.start()
 
-    def signal_handler(self):
+    def signal_handler(self, *args, **kwargs):
         """Catch SIGINT to allow clean shutdown on CTRL+C.
 
         This also ensures that main thread execution doesn't get stuck
@@ -484,7 +483,6 @@ class BaseIMDProducer(threading.Thread):
             self._buf.notify_producer_finished()
 
     def _expect_header(self, expected_type, expected_value=None):
-
         header = self._get_header()
 
         if header.type != expected_type:
@@ -934,7 +932,6 @@ class IMDFrameBuffer:
 
 
 class IMDFrame:
-
     def __init__(self, n_atoms, imdsinfo):
         if imdsinfo.time:
             self.time = 0.0
