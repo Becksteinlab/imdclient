@@ -163,3 +163,67 @@ def parse_header_bytes(data):
     type = IMDHeaderType(msg_type)
     # NOTE: add error checking for invalid packet msg_type here
     return IMDHeader(type, length)
+
+
+class IMDFrame:
+    def __init__(self, n_atoms, imdsinfo):
+        if imdsinfo.time:
+            self.time = 0.0
+            self.dt = 0.0
+            self.step = 0
+        else:
+            self.time = None
+            self.dt = None
+            self.step = None
+        if imdsinfo.energies:
+            self.energies = {
+                "step": 0,
+                "temperature": 0.0,
+                "total_energy": 0.0,
+                "potential_energy": 0.0,
+                "van_der_walls_energy": 0.0,
+                "coulomb_energy": 0.0,
+                "bonds_energy": 0.0,
+                "angles_energy": 0.0,
+                "dihedrals_energy": 0.0,
+                "improper_dihedrals_energy": 0.0,
+            }
+        else:
+            self.energies = None
+        if imdsinfo.box:
+            self.box = np.empty((3, 3), dtype=np.float32)
+        else:
+            self.box = None
+        if imdsinfo.positions:
+            self.positions = np.empty((n_atoms, 3), dtype=np.float32)
+        else:
+            self.positions = None
+        if imdsinfo.velocities:
+            self.velocities = np.empty((n_atoms, 3), dtype=np.float32)
+        else:
+            self.velocities = None
+        if imdsinfo.forces:
+            self.forces = np.empty((n_atoms, 3), dtype=np.float32)
+        else:
+            self.forces = None
+
+
+def imdframe_memsize(n_atoms, imdsinfo) -> int:
+    """
+    Calculate the memory size of an IMDFrame in bytes
+    """
+    memsize = 0
+    if imdsinfo.time:
+        memsize += 8 * 3
+    if imdsinfo.energies:
+        memsize += 4 * 10
+    if imdsinfo.box:
+        memsize += 4 * 9
+    if imdsinfo.positions:
+        memsize += 4 * 3 * n_atoms
+    if imdsinfo.velocities:
+        memsize += 4 * 3 * n_atoms
+    if imdsinfo.forces:
+        memsize += 4 * 3 * n_atoms
+
+    return memsize
