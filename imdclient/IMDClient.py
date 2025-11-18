@@ -54,7 +54,7 @@ class IMDClient:
     buffer_size : int (optional)
         :class:`IMDFrameBuffer` will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
     timeout : int, optional
-        Timeout for the socket in seconds [``5``]
+        Timeout for the socket in seconds [``600``]
     continue_after_disconnect : bool, optional [``None``]
         If True, the client will attempt to change the simulation engine's waiting behavior to
         non-blocking after the client disconnects. If False, the client will attempt to change it
@@ -362,7 +362,7 @@ class BaseIMDProducer(threading.Thread):
     error_queue: queue.Queue
         Queue to hold errors produced by the producer thread
     timeout : int, optional
-        Timeout for the socket in seconds [``5``]
+        Timeout for the socket in seconds [``600``]
     """
 
     def __init__(
@@ -373,7 +373,7 @@ class BaseIMDProducer(threading.Thread):
         n_atoms,
         multithreaded,
         error_queue,
-        timeout=5,
+        timeout=600,
         **kwargs,
     ):
         super(BaseIMDProducer, self).__init__(daemon=True)
