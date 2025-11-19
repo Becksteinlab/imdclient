@@ -226,7 +226,6 @@ class TestIMDClientV3:
         imdf = client.get_imdframe()
         assert_allclose(universe.trajectory[0].positions, imdf.positions)
 
-        yield server, client
         client.stop()
         server.cleanup()
 
@@ -260,7 +259,6 @@ class TestIMDClientV3:
 
         assert TimeoutError in exception_chain
 
-        yield server, client
         client.stop()
         server.cleanup()
 
