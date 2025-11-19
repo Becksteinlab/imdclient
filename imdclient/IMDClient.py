@@ -73,6 +73,14 @@ class IMDClient:
         continue_after_disconnect=None,
         **kwargs,
     ):
+
+        # Warn if timeout is overly optimistic
+        if "timeout" in kwargs and kwargs["timeout"] <= 1:
+            logger.warning(
+                f"IMDClient: timeout value of {kwargs['timeout']} second(s) is very low and may lead to "
+                "premature disconnection by the client. Consider using a higher value (default is 600 seconds)."
+            )
+
         self._stopped = False
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
@@ -244,7 +252,9 @@ class IMDClient:
             read_into_buf(self._conn, h_buf)
         except (ConnectionError, TimeoutError, Exception) as e:
             logger.debug("IMDClient: No handshake packet received: %s", e)
-            raise ConnectionError("IMDClient: No handshake packet received") from e
+            raise ConnectionError(
+                "IMDClient: No handshake packet received"
+            ) from e
 
         header = IMDHeader(h_buf)
 
@@ -608,7 +618,9 @@ class IMDProducerV2(BaseIMDProducer):
             self._conn.sendall(pause)
         except ConnectionResetError as e:
             # Simulation has already ended by the time we paused
-            raise EOFError("Simulation has already ended by the time we paused") from e
+            raise EOFError(
+                "Simulation has already ended by the time we paused"
+            ) from e
         # Edge case: pause occured in the time between server sends its last frame
         # and closing socket
         # Simulation is not actually paused but is over, but we still want to read remaining data
@@ -623,7 +635,9 @@ class IMDProducerV2(BaseIMDProducer):
             # Edge case: pause occured in the time between server sends its last frame
             # and closing socket
             # Simulation was never actually paused in this case and is now over
-            raise EOFError("Simulation was never actually paused as pause was sent after the last frame; simulation is now over") from e
+            raise EOFError(
+                "Simulation was never actually paused as pause was sent after the last frame; simulation is now over"
+            ) from e
         # Edge case: pause & unpause occured in the time between server sends its last frame and closing socket
         # in this case, the simulation isn't actually unpaused but over
 
@@ -673,7 +687,9 @@ class IMDProducerV3(BaseIMDProducer):
             self._conn.sendall(pause)
         except ConnectionResetError as e:
             # Simulation has already ended by the time we paused
-            raise EOFError("Simulation has already ended by the time we paused") from e
+            raise EOFError(
+                "Simulation has already ended by the time we paused"
+            ) from e
         # Edge case: pause occured in the time between server sends its last frame
         # and closing socket
         # Simulation is not actually paused but is over, but we still want to read remaining data
@@ -688,7 +704,9 @@ class IMDProducerV3(BaseIMDProducer):
             # Edge case: pause occured in the time between server sends its last frame
             # and closing socket
             # Simulation was never actually paused in this case and is now over
-            raise EOFError("Simulation was never actually paused as pause was sent after the last frame; simulation is now over") from e
+            raise EOFError(
+                "Simulation was never actually paused as pause was sent after the last frame; simulation is now over"
+            ) from e
         # Edge case: pause & unpause occured in the time between server sends its last frame and closing socket
         # in this case, the simulation isn't actually unpaused but over
 
