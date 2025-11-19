@@ -1,6 +1,7 @@
 """Test for IMDClient functionality"""
 
 import logging
+import time
 
 import pytest
 from numpy.testing import (
@@ -178,16 +179,105 @@ class TestIMDClientV3:
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
 
-    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
-        server, client = server_client_incorrect_atoms
-        
-        server.send_frame(0)
-        
+    def test_timeout_warning_low_value(self, universe, imdsinfo, caplog):
+        """Test that warning is issued for timeout values <= 1 second"""
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+
+        with caplog.at_level(logging.WARNING):
+            client = IMDClient(
+                f"localhost",
+                server.port,
+                universe.trajectory.n_atoms,
+                timeout=1,
+            )
+
+        server.join_accept_thread()
+
+        # Check that warning was logged
+        assert any(
+            "timeout value of 1 second(s) is very low" in record.message
+            for record in caplog.records
+        )
+
+        client.stop()
+        server.cleanup()
+
+    @pytest.mark.parametrize("timeout_val", [2, 10])
+    def test_timeout_within_limit(self, universe, imdsinfo, timeout_val):
+        """Test that timeout does not trigger when server responds within timeout period"""
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            server.port,
+            universe.trajectory.n_atoms,
+            timeout=timeout_val,
+        )
+        server.join_accept_thread()
+
+        # Sleep for less than timeout before sending frames
+        time.sleep(timeout_val - 1)
+        server.send_frames(0)
+
+        # Should successfully receive frame without timeout
+        imdf = client.get_imdframe()
+        assert_allclose(universe.trajectory[0].positions, imdf.positions)
+
+        yield server, client
+        client.stop()
+        server.cleanup()
+
+    @pytest.mark.parametrize("timeout_val", [2, 10])
+    def test_timeout_when_exceeded(self, universe, imdsinfo, timeout_val):
+        """Test that timeout triggers EOFError when server doesn't respond within timeout period"""
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        client = IMDClient(
+            f"localhost",
+            server.port,
+            universe.trajectory.n_atoms,
+            timeout=timeout_val,
+        )
+        server.join_accept_thread()
+
+        # Sleep for longer than timeout without sending any frames
+        time.sleep(timeout_val + 1)
+
+        # Client should timeout and raise EOFError when trying to get first frame
         with pytest.raises(EOFError) as exc_info:
             client.get_imdframe()
-        
+
+        # Verify TimeoutError is somewhere in the exception chain
+        exception_chain = []
+        current = exc_info.value
+        while current is not None:
+            exception_chain.append(type(current))
+            current = current.__cause__
+
+        assert TimeoutError in exception_chain
+
+        yield server, client
+        client.stop()
+        server.cleanup()
+
+    def test_incorrect_atom_count(
+        self, server_client_incorrect_atoms, universe
+    ):
+        server, client = server_client_incorrect_atoms
+
+        server.send_frame(0)
+
+        with pytest.raises(EOFError) as exc_info:
+            client.get_imdframe()
+
         error_msg = str(exc_info.value)
-        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        assert (
+            f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        )
         assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
 
