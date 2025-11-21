@@ -184,10 +184,12 @@ class IMDClient:
                 self._disconnect()
                 self._stopped = True
 
-                if self._error_queue.qsize():
-                    error = self._error_queue.get()
+                try:
+                    error = self._error_queue.get_nowait()
+                except queue.Empty:
+                    raise EOFError from e
+                else:
                     raise EOFError(str(error)) from error
-                raise EOFError from e
         else:
             try:
                 return self._producer._get_imdframe()
@@ -488,6 +490,7 @@ class BaseIMDProducer(threading.Thread):
             # i.e. consumer stopped or read_into_buf didn't find
             # full token of data
             logger.debug("IMDProducer: %s", e)
+            self.error_queue.put(e)
             logger.debug("IMDProducer: Simulation ended normally, cleaning up")
         except Exception as e:
             logger.debug("IMDProducer: An unexpected error occurred: %s", e)
