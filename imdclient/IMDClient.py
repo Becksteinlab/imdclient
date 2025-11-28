@@ -333,6 +333,18 @@ class IMDClient:
         finally:
             self._conn.close()
 
+    def _kill(self):
+        """
+        Send a kill packet to the server to terminate the simulation
+        """
+        try:
+            kill_packet = create_header_bytes(IMDHeaderType.IMD_KILL, 0)
+            self._conn.sendall(kill_packet)
+            logger.debug("IMDClient: Sent kill packet to server")
+        except ConnectionResetError as e:
+            # Simulation has already ended by the time we sent kill packet
+            raise EOFError
+
     def __enter__(self):
         return self
 
