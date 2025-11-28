@@ -345,6 +345,18 @@ class IMDClient:
             # Simulation has already ended by the time we sent kill packet
             raise EOFError
 
+    def _trate(self, transmission_rate: int):
+        """
+        Send a trate packet to the server to change its transfer rate
+        """
+        try:
+            trate_packet = create_header_bytes(IMDHeaderType.IMD_TRATE, transmission_rate)
+            self._conn.sendall(trate_packet)
+            logger.debug("IMDClient: Sent trate packet to server")
+        except ConnectionResetError as e:
+            # Simulation has already ended by the time we sent trate packet
+            raise EOFError
+
     def __enter__(self):
         return self
 
