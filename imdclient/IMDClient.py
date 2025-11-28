@@ -308,15 +308,7 @@ class IMDClient:
         logger.debug("IMDClient: Sent go packet to server")
 
         if self._continue_after_disconnect is not None:
-            wait_behavior = (int)(not self._continue_after_disconnect)
-            wait_packet = create_header_bytes(
-                IMDHeaderType.IMD_WAIT, wait_behavior
-            )
-            self._conn.sendall(wait_packet)
-            logger.debug(
-                "IMDClient: Attempted to change wait behavior to %s",
-                not self._continue_after_disconnect,
-            )
+            self._wait(not self._continue_after_disconnect)
 
     def _disconnect(self):
         # MUST disconnect before stopping execution
@@ -333,6 +325,19 @@ class IMDClient:
         finally:
             self._conn.close()
 
+    def _wait(self, wait_after_disconnect: bool = True):
+        """
+        Send a wait packet to the server to change its waiting behavior
+        """
+        try:
+            waiting_behavior = int(wait_after_disconnect)
+            wait_packet = create_header_bytes(IMDHeaderType.IMD_WAIT, waiting_behavior)
+            self._conn.sendall(wait_packet)
+            logger.debug("IMDClient: Attempted to change server waiting behavior to %s", wait_after_disconnect)
+        except ConnectionResetError as e:
+            # Simulation has already ended by the time we sent wait packet
+            raise EOFError
+
     def _kill(self):
         """
         Send a kill packet to the server to terminate the simulation
@@ -340,7 +345,7 @@ class IMDClient:
         try:
             kill_packet = create_header_bytes(IMDHeaderType.IMD_KILL, 0)
             self._conn.sendall(kill_packet)
-            logger.debug("IMDClient: Sent kill packet to server")
+            logger.debug("IMDClient: Attempted to kill server simulation")
         except ConnectionResetError as e:
             # Simulation has already ended by the time we sent kill packet
             raise EOFError
@@ -352,7 +357,7 @@ class IMDClient:
         try:
             trate_packet = create_header_bytes(IMDHeaderType.IMD_TRATE, transmission_rate)
             self._conn.sendall(trate_packet)
-            logger.debug("IMDClient: Sent trate packet to server")
+            logger.debug("IMDClient: Attempted to change server transmission rate to %d", transmission_rate)
         except ConnectionResetError as e:
             # Simulation has already ended by the time we sent trate packet
             raise EOFError
