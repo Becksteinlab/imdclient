@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.14"
 
       - id: get-compatible-python
         uses: MDAnalysis/mdanalysis-compatible-python@main
@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macOS-latest, ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
     - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
         add-pip-as-python-dependency: true
         architecture: ${{ env.ARCHITECTURE }}
 
-        channels: conda-forge, defaults
+        channels: conda-forge
 
         activate-environment: imdclient-test
         auto-update-conda: true
@@ -147,12 +147,12 @@ jobs:
       - name: Install conda dependencies
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: "3.11"
+          python-version: "3.14"
           environment-file: devtools/conda-envs/test_env.yaml
           add-pip-as-python-dependency: true
           architecture: x64
 
-          channels: conda-forge, defaults
+          channels: conda-forge
 
           activate-environment: imdclient-test
           auto-update-conda: true
