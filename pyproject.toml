@@ -11,14 +11,14 @@ description = "Receiver for IMD v2 and v3 data from simulation engines like Grom
 license = "MIT"
 license-files = ["LICENSE", "AUTHORS.md"]
 authors = [
-    {name = "Lawson", email = "ljwoods2@asu.edu"},
+    {name = "Lawson Woods", email = "ljwoods2@asu.edu"},
 ]
 maintainers = [
-    {name = "Lawson", email = "ljwoods2@asu.edu"},
+    {name = "Lawson Woods", email = "ljwoods2@asu.edu"},
     {name = "Amruthesh Thirumalaiswamy", email = "athiru12@asu.edu"},
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy",
 ]
