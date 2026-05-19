@@ -21,7 +21,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash -l {0} 
+    shell: bash -el {0} 
 
 jobs:
   environment-config:
@@ -73,12 +73,14 @@ jobs:
         architecture: ${{ env.ARCHITECTURE }}
 
         channels: conda-forge
+        conda-remove-defaults: true
 
         activate-environment: imdclient-test
         auto-update-conda: true
         auto-activate-base: false
         show-channel-urls: true
         miniconda-version: latest
+        conda-solver: libmamba
 
     - name: Install imdclient
       run: |
@@ -153,13 +155,15 @@ jobs:
           architecture: x64
 
           channels: conda-forge
-
+          conda-remove-defaults: true
+        
           activate-environment: imdclient-test
           auto-update-conda: true
           auto-activate-base: false
           show-channel-urls: true
           miniconda-version: latest
-
+          conda-solver: libmamba
+        
       - name: Install package
         run: |
           python --version
