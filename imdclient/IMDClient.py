@@ -73,7 +73,6 @@ class IMDClient:
         continue_after_disconnect=None,
         **kwargs,
     ):
-
         self._stopped = False
         self._conn = self._connect_to_server(host, port, socket_bufsize)
         self._imdsinfo = self._await_IMD_handshake()
@@ -147,7 +146,7 @@ class IMDClient:
 
             self._producer.start()
 
-    def signal_handler(self):
+    def signal_handler(self, *args, **kwargs):
         """Catch SIGINT to allow clean shutdown on CTRL+C.
 
         This also ensures that main thread execution doesn't get stuck
@@ -484,7 +483,6 @@ class BaseIMDProducer(threading.Thread):
             self._buf.notify_producer_finished()
 
     def _expect_header(self, expected_type, expected_value=None):
-
         header = self._get_header()
 
         if header.type != expected_type:
@@ -591,7 +589,6 @@ class IMDProducerV2(BaseIMDProducer):
             raise RuntimeError("IMDProducer: Unexpected packet type or length")
 
     def _pause(self):
-        self._conn.settimeout(0)
         logger.debug(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
@@ -607,7 +604,6 @@ class IMDProducerV2(BaseIMDProducer):
         # from the socket
 
     def _unpause(self):
-        self._conn.settimeout(self._timeout)
         logger.debug("IMDProducer: Unpausing simulation, buffer has space")
         unpause = create_header_bytes(IMDHeaderType.IMD_PAUSE, 0)
         try:
@@ -658,7 +654,6 @@ class IMDProducerV3(BaseIMDProducer):
             self._forces = bytearray(xvf_bytes)
 
     def _pause(self):
-        self._conn.settimeout(0)
         logger.debug(
             "IMDProducer: Pausing simulation because buffer is almost full"
         )
@@ -674,7 +669,6 @@ class IMDProducerV3(BaseIMDProducer):
         # from the socket
 
     def _unpause(self):
-        self._conn.settimeout(self._timeout)
         logger.debug("IMDProducer: Unpausing simulation, buffer has space")
         unpause = create_header_bytes(IMDHeaderType.IMD_RESUME, 0)
         try:
@@ -938,7 +932,6 @@ class IMDFrameBuffer:
 
 
 class IMDFrame:
-
     def __init__(self, n_atoms, imdsinfo):
         if imdsinfo.time:
             self.time = 0.0

@@ -15,6 +15,32 @@ The rules for this file:
     * YYYY-MM-DD date format (following ISO 8601)
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
+## [v0.2.4] - UNPUBLISHED
+@orbeckst
+
+### Changed
+* support Python 3.11--3.14 following SPEC0 (#124)
+
+## [v0.2.3] - 2025-11-08
+### Authors
+@ljwoods2
+
+### Changed
+
+### Added
+
+### Fixed
+* Changed signal handler method to accept arbitrary args to prevent
+  error being raised in new jupyter version (Issue #116, PR #117)
+* Removed timeout changes during pause/resume for IMDv2 and IMv3
+  (Issue #96, PR #118)
+
+### Deprecated
+<!-- Soon-to-be removed features -->
+
+### Removed
+<!-- Removed features -->
+
 
 ## [v0.2.2] - 2025-07-20
 ### Authors
