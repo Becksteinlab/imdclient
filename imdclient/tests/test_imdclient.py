@@ -239,6 +239,23 @@ class TestIMDClientV3:
         assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
 
+    def test_single_threaded_client_reads_frame_and_eof(
+        self, server_client, universe
+    ):
+        server, client = server_client(multithreaded=False)
+
+        server.send_frame(0)
+
+        # Check one frame data by comparing positions
+        imdf = client.get_imdframe()
+        assert_allclose(universe.trajectory[0].positions, imdf.positions)
+
+        # diconnect to check EOF handling in singlethreaded code
+        server.disconnect()
+
+        with pytest.raises(EOFError):
+            client.get_imdframe()
+
 
 class TestIMDClientV3ContextManager:
     @pytest.fixture
