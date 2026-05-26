@@ -13,7 +13,11 @@ from MDAnalysisTests.datafiles import (
     COORDINATES_H5MD,
 )
 
-from imdclient.IMDClient import imdframe_memsize, IMDClient
+from imdclient.IMDClient import (
+    IMDFrameBuffer,
+    imdframe_memsize,
+    IMDClient,
+)
 from imdclient.IMDProtocol import IMDHeaderType
 from .utils import (
     create_default_imdsinfo_v3,
@@ -302,3 +306,21 @@ class TestIMDClientV3ContextManager:
                 i += 1
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
         assert i == 5
+
+
+class TestIMDFrameBuffer:
+    @pytest.fixture
+    def imdsinfo(self):
+        return create_default_imdsinfo_v3()
+
+    def test_pop_empty_imdframe_raises_when_consumer_finished(
+        self, imdsinfo
+    ):
+        buffer_size = imdframe_memsize(1, imdsinfo)
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
+
+        buffer.pop_empty_imdframe()
+        buffer.notify_consumer_finished()
+
+        with pytest.raises(EOFError, match="Consumer has finished"):
+            buffer.pop_empty_imdframe()
