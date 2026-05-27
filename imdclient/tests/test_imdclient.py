@@ -324,3 +324,77 @@ class TestIMDFrameBuffer:
 
         with pytest.raises(EOFError, match="Consumer has finished"):
             buffer.pop_empty_imdframe()
+
+
+class TestBaseIMDProducer:
+    @pytest.fixture
+    def universe(self):
+        return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+
+    @pytest.fixture
+    def imdsinfo(self):
+        return create_default_imdsinfo_v3()
+
+    @pytest.fixture
+    def server_client(self, universe, imdsinfo):
+        created = []
+
+        def _server_client(endianness=None, **client_kwargs):
+            server = InThreadIMDServer(universe.trajectory)
+            if endianness is not None:
+                imdsinfo.endianness = endianness
+            server.set_imdsessioninfo(imdsinfo)
+
+            n_atoms = client_kwargs.pop("n_atoms", universe.atoms.n_atoms)
+            server.handshake_sequence("localhost", first_frame=False)
+            client = IMDClient(
+                "localhost",
+                server.port,
+                n_atoms,
+                **client_kwargs,
+            )
+            server.join_accept_thread()
+            created.append((server, client))
+            return server, client
+
+        yield _server_client
+
+        for server, client in created:
+            try:
+                client.stop()
+            except Exception:
+                pass
+            try:
+                server.cleanup()
+            except Exception:
+                pass
+
+    def test_get_imdframe_reraises_eoferror(self, server_client, monkeypatch):
+        server, client = server_client(multithreaded=False)
+
+        def _raise_eoferror():
+            raise EOFError("test EOF")
+
+        monkeypatch.setattr(client._producer, "_parse_imdframe", _raise_eoferror)
+
+        with pytest.raises(EOFError):
+            client._producer._get_imdframe()
+
+    def test_get_imdframe_wraps_unexpected_errors(
+        self, server_client, monkeypatch
+    ):
+        server, client = server_client(multithreaded=False)
+
+        def _raise_valueerror():
+            raise ValueError("test ValueError")
+
+        monkeypatch.setattr(
+            client._producer,
+            "_parse_imdframe",
+            _raise_valueerror,
+        )
+
+        with pytest.raises(RuntimeError, match="An unexpected error occurred"):
+            client._producer._get_imdframe()
+
+
