@@ -99,7 +99,7 @@ class TestIMDClientV3:
         buffer_size = (
             imdframe_memsize(universe.trajectory.n_atoms, imdsinfo) * 2
         )
-        timeout = 5 # to speed up no disconnect test
+        timeout = 5  # to speed up no disconnect test
         server, client = server_client(buffer_size=buffer_size, timeout=timeout)
         yield server, client
 
@@ -313,9 +313,7 @@ class TestIMDFrameBuffer:
     def imdsinfo(self):
         return create_default_imdsinfo_v3()
 
-    def test_pop_empty_imdframe_raises_when_consumer_finished(
-        self, imdsinfo
-    ):
+    def test_pop_empty_imdframe_raises_when_consumer_finished(self, imdsinfo):
         buffer_size = imdframe_memsize(1, imdsinfo)
         buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
 
@@ -375,7 +373,9 @@ class TestBaseIMDProducer:
         def _raise_eoferror():
             raise EOFError("test EOF")
 
-        monkeypatch.setattr(client._producer, "_parse_imdframe", _raise_eoferror)
+        monkeypatch.setattr(
+            client._producer, "_parse_imdframe", _raise_eoferror
+        )
 
         with pytest.raises(EOFError):
             client._producer._get_imdframe()
@@ -396,5 +396,3 @@ class TestBaseIMDProducer:
 
         with pytest.raises(RuntimeError, match="An unexpected error occurred"):
             client._producer._get_imdframe()
-
-
