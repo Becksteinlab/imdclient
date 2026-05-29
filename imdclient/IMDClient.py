@@ -548,9 +548,10 @@ class IMDProducerV2(BaseIMDProducer):
         # Even if they are sent, energies might not be sent every frame
         # cache the last energies received
 
-        # Either receive energies + positions or just positions
+        # Consume any leading energy packets first, then handle positions.
         header = self._get_header()
-        if header.type == IMDHeaderType.IMD_ENERGIES and header.length == 1:
+        leading_energies = 0
+        while header.type == IMDHeaderType.IMD_ENERGIES and header.length == 1:
             self._imdsinfo.energies = True
             self._read(self._energies)
             self._imdf.energies.update(
@@ -558,17 +559,15 @@ class IMDProducerV2(BaseIMDProducer):
             )
             self._prev_energies = self._imdf.energies
 
-            self._expect_header(
-                IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
-            )
-            self._read(self._positions)
-            np.copyto(
-                self._imdf.positions,
-                np.frombuffer(
-                    self._positions, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
-        elif (
+            leading_energies += 1
+            if leading_energies == 2:
+                logger.warning(
+                    "IMDProducer: Received multiple leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
+                )
+
+            header = self._get_header()
+
+        if (
             header.type == IMDHeaderType.IMD_FCOORDS
             and header.length == self._n_atoms
         ):
