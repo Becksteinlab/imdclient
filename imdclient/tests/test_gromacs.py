@@ -4,12 +4,14 @@ import re
 
 import pytest
 
-from .base import IMDv3IntegrationTest
+from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
 from .datafiles import (
     GROMACS_GRO,
     GROMACS_TOP,
-    GROMACS_MDP_NST_1,
-    GROMACS_MDP_NST_8,
+    GROMACS_MDP_V3_NST_1,
+    GROMACS_MDP_V3_NST_8,
+    GROMACS_MDP_V2_NST_1,
+    GROMACS_MDP_V2_NST_8,
 )
 
 logger = logging.getLogger("imdclient.IMDClient")
@@ -22,11 +24,8 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDv3Gromacs(IMDv3IntegrationTest):
-
-    @pytest.fixture(params=[GROMACS_MDP_NST_1, GROMACS_MDP_NST_8])
-    def mdp(self, request):
-        return request.param
+class TestIMDGromacs:
+    __test__ = False
 
     @pytest.fixture()
     def setup_command(self, mdp):
@@ -65,3 +64,17 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
     @pytest.fixture()
     def first_frame(self):
         return 0
+
+
+class TestIMDv3Gromacs(TestIMDGromacs, IMDv3IntegrationTest):
+
+    @pytest.fixture(params=[GROMACS_MDP_V3_NST_1, GROMACS_MDP_V3_NST_8])
+    def mdp(self, request):
+        return request.param
+
+
+class TestIMDv2Gromacs(TestIMDGromacs, IMDv2IntegrationTest):
+
+    @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
+    def mdp(self, request):
+        return request.param

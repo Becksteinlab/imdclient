@@ -6,8 +6,14 @@ import pytest
 import MDAnalysis as mda
 
 from .minimalreader import MinimalReader
-from .base import IMDv3IntegrationTest
-from .datafiles import LAMMPS_TOPOL, LAMMPS_IN_NST_1, LAMMPS_IN_NST_8
+from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
+from .datafiles import (
+    LAMMPS_TOPOL,
+    LAMMPS_IN_V3_NST_1,
+    LAMMPS_IN_V3_NST_8,
+    LAMMPS_IN_V2_NST_1,
+    LAMMPS_IN_V2_NST_8,
+)
 
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("lammps_test.log")
@@ -19,11 +25,8 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDv3Lammps(IMDv3IntegrationTest):
-
-    @pytest.fixture(params=[LAMMPS_IN_NST_1, LAMMPS_IN_NST_8])
-    def inp(self, request):
-        return request.param
+class TestIMDLammps:
+    __test__ = False
 
     @pytest.fixture()
     def simulation_command(self, inp):
@@ -47,7 +50,7 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
 
     @pytest.fixture()
     def first_frame(self, inp):
-        if inp == LAMMPS_IN_NST_1:
+        if inp == LAMMPS_IN_V3_NST_1:
             return 1
         else:
             return 0
@@ -84,3 +87,17 @@ class TestIMDv3Lammps(IMDv3IntegrationTest):
             f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
         )
         yield u
+
+
+class TestIMDv3Lammps(TestIMDLammps, IMDv3IntegrationTest):
+
+    @pytest.fixture(params=[LAMMPS_IN_V3_NST_1, LAMMPS_IN_V3_NST_8])
+    def inp(self, request):
+        return request.param
+
+
+class TestIMDv2Lammps(TestIMDLammps, IMDv2IntegrationTest):
+
+    @pytest.fixture(params=[LAMMPS_IN_V2_NST_1, LAMMPS_IN_V2_NST_8])
+    def inp(self, request):
+        return request.param

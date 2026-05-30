@@ -8,11 +8,17 @@ from numpy.testing import (
 )
 import MDAnalysis as mda
 
-from .base import IMDv3IntegrationTest, assert_allclose_with_logging
+from .base import (
+    IMDv2IntegrationTest,
+    IMDv3IntegrationTest,
+    assert_allclose_with_logging,
+)
 from .datafiles import (
     NAMD_TOPOL,
-    NAMD_CONF_NST_1,
-    NAMD_CONF_NST_8,
+    NAMD_CONF_V3_NST_1,
+    NAMD_CONF_V3_NST_8,
+    NAMD_CONF_V2_NST_1,
+    NAMD_CONF_V2_NST_8,
     NAMD_PARAMS,
     NAMD_PSF,
 )
@@ -27,15 +33,12 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDv3NAMD(IMDv3IntegrationTest):
+class TestIMDNAMD:
+    __test__ = False
 
     @pytest.fixture()
     def container_name(self):
         return "ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu"
-
-    @pytest.fixture(params=[NAMD_CONF_NST_1, NAMD_CONF_NST_8])
-    def inp(self, request):
-        return request.param
 
     @pytest.fixture()
     def simulation_command(self, inp):
@@ -70,6 +73,17 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
         yield u
 
     @pytest.fixture()
+    def first_frame(self):
+        return 0
+
+
+class TestIMDv3NAMD(TestIMDNAMD, IMDv3IntegrationTest):
+
+    @pytest.fixture(params=[NAMD_CONF_V3_NST_1, NAMD_CONF_V3_NST_8])
+    def inp(self, request):
+        return request.param
+
+    @pytest.fixture()
     def true_u_vel(self, topol, imd_u, tmp_path):
         u = mda.Universe(
             (tmp_path / topol),
@@ -88,10 +102,6 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
     # @pytest.fixture()
     # def match_string(self):
     #     return "INTERACTIVE MD AWAITING CONNECTION"
-
-    @pytest.fixture()
-    def first_frame(self):
-        return 0
 
     # Compare coords, box, time, dt, step
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
@@ -146,3 +156,10 @@ class TestIMDv3NAMD(IMDv3IntegrationTest):
                 imd_u.trajectory[i - first_frame].forces,
                 atol=1e-03,
             )
+
+
+class TestIMDv2NAMD(TestIMDNAMD, IMDv2IntegrationTest):
+
+    @pytest.fixture(params=[NAMD_CONF_V2_NST_1, NAMD_CONF_V2_NST_8])
+    def inp(self, request):
+        return request.param

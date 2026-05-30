@@ -59,7 +59,7 @@ def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
         print("All values are within tolerance.")
 
 
-class IMDv3IntegrationTest:
+class IMDIntegrationTest:
 
     @pytest.fixture()
     def container_name(self):
@@ -138,6 +138,8 @@ class IMDv3IntegrationTest:
             (tmp_path / traj),
         )
         yield u
+
+class IMDv3IntegrationTest(IMDIntegrationTest):
 
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
@@ -233,3 +235,14 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         ).atoms.n_atoms
         u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+
+class IMDv2IntegrationTest(IMDIntegrationTest):
+
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
+        for i in range(first_frame, len(true_u.trajectory)):
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].positions,
+                atol=1e-03,
+            )

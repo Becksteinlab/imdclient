@@ -65,6 +65,9 @@ class MinimalReader:
         return self.imd_frame
 
     def _modify_box_dimesions(self):
+        if self.imd_frame.box is None:
+            self.imd_frame.dimensions = None
+            return
         self.imd_frame.dimensions = core.triclinic_box(*self.imd_frame.box)
 
     def _process_stream(self):
