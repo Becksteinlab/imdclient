@@ -560,12 +560,13 @@ class IMDProducerV2(BaseIMDProducer):
             self._prev_energies = self._imdf.energies
 
             leading_energies += 1
-            if leading_energies == 2:
-                logger.warning(
-                    "IMDProducer: Received multiple leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
-                )
 
             header = self._get_header()
+
+        if (leading_energies == 0 or leading_energies > 1):
+            logger.warning(
+                f"IMDProducer: Received {leading_energies} leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
+            )
 
         if (
             header.type == IMDHeaderType.IMD_FCOORDS
