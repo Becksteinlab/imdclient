@@ -238,7 +238,7 @@ class IMDv3IntegrationTest(IMDIntegrationTest):
 
 class IMDv2IntegrationTest(IMDIntegrationTest):
 
-    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
         for i in range(first_frame, len(true_u.trajectory)):
 
             assert_allclose_with_logging(
