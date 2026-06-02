@@ -58,13 +58,13 @@ class MinimalReader:
         self.imd_frame = imd_frame
 
         # Modify the box dimensions to be triclinic
-        self._modify_box_dimesions()
+        self._modify_box_dimensions()
 
         logger.debug(f"MinimalReader: Loaded frame {self._frame}")
 
         return self.imd_frame
 
-    def _modify_box_dimesions(self):
+    def _modify_box_dimensions(self):
         if self.imd_frame.box is None:
             self.imd_frame.dimensions = None
             return
