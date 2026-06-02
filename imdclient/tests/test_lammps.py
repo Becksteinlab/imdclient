@@ -49,13 +49,6 @@ class TestIMDLammps:
     #     return "Waiting for IMD connection on port 8888"
 
     @pytest.fixture()
-    def first_frame(self, inp):
-        if inp == LAMMPS_IN_V3_NST_1:
-            return 1
-        else:
-            return 0
-
-    @pytest.fixture()
     def dt(self, inp):
         pattern = re.compile(r"^\s*timestep\s*(\S+)")
         with open(inp, "r") as file:
@@ -94,6 +87,13 @@ class TestIMDv3Lammps(TestIMDLammps, IMDv3IntegrationTest):
     @pytest.fixture(params=[LAMMPS_IN_V3_NST_1, LAMMPS_IN_V3_NST_8])
     def inp(self, request):
         return request.param
+    
+    @pytest.fixture()
+    def first_frame(self, inp):
+        if inp == LAMMPS_IN_V3_NST_1:
+            return 1
+        else:
+            return 0
 
 
 class TestIMDv2Lammps(TestIMDLammps, IMDv2IntegrationTest):
@@ -101,3 +101,10 @@ class TestIMDv2Lammps(TestIMDLammps, IMDv2IntegrationTest):
     @pytest.fixture(params=[LAMMPS_IN_V2_NST_1, LAMMPS_IN_V2_NST_8])
     def inp(self, request):
         return request.param
+    
+    @pytest.fixture()
+    def first_frame(self, inp):
+        if inp == LAMMPS_IN_V2_NST_1:
+            return 1
+        else:
+            return 0
