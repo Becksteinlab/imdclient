@@ -77,3 +77,13 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
     @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
     def mdp(self, request):
         return request.param
+
+    @pytest.fixture()
+    def simulation_command(self):
+        # Run mdrun, then do molecule-whole PBC treatment from the trajectory
+        # so it matches the mol-whole coordinates sent by default in GROMACS IMD v2.
+        return (
+            "gmx mdrun -s topol.tpr -o ci.trr -imdport 8888 -imdwait"
+            " && echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_nopbc.trr -pbc mol"
+            " && mv ci_nopbc.trr ci.trr"
+        )
