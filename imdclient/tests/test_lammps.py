@@ -25,8 +25,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDLammps:
-    __test__ = False
+class IMDLammpsTest:
 
     @pytest.fixture()
     def simulation_command(self, inp):
@@ -82,7 +81,7 @@ class TestIMDLammps:
         yield u
 
 
-class TestIMDv3Lammps(TestIMDLammps, IMDv3IntegrationTest):
+class TestIMDv3Lammps(IMDLammpsTest, IMDv3IntegrationTest):
 
     @pytest.fixture(params=[LAMMPS_IN_V3_NST_1, LAMMPS_IN_V3_NST_8])
     def inp(self, request):
@@ -96,7 +95,7 @@ class TestIMDv3Lammps(TestIMDLammps, IMDv3IntegrationTest):
             return 0
 
 
-class TestIMDv2Lammps(TestIMDLammps, IMDv2IntegrationTest):
+class TestIMDv2Lammps(IMDLammpsTest, IMDv2IntegrationTest):
 
     @pytest.fixture(params=[LAMMPS_IN_V2_NST_1, LAMMPS_IN_V2_NST_8])
     def inp(self, request):

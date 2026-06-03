@@ -33,8 +33,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDNAMD:
-    __test__ = False
+class IMDNAMDTest:
 
     @pytest.fixture()
     def container_name(self):
@@ -77,7 +76,7 @@ class TestIMDNAMD:
         return 0
 
 
-class TestIMDv3NAMD(TestIMDNAMD, IMDv3IntegrationTest):
+class TestIMDv3NAMD(IMDNAMDTest, IMDv3IntegrationTest):
 
     @pytest.fixture(params=[NAMD_CONF_V3_NST_1, NAMD_CONF_V3_NST_8])
     def inp(self, request):
@@ -158,7 +157,7 @@ class TestIMDv3NAMD(TestIMDNAMD, IMDv3IntegrationTest):
             )
 
 
-class TestIMDv2NAMD(TestIMDNAMD, IMDv2IntegrationTest):
+class TestIMDv2NAMD(IMDNAMDTest, IMDv2IntegrationTest):
 
     @pytest.fixture(params=[NAMD_CONF_V2_NST_1, NAMD_CONF_V2_NST_8])
     def inp(self, request):

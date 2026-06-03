@@ -24,8 +24,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDGromacs:
-    __test__ = False
+class IMDGromacsTest:
 
     @pytest.fixture()
     def setup_command(self, mdp):
@@ -66,14 +65,14 @@ class TestIMDGromacs:
         return 0
 
 
-class TestIMDv3Gromacs(TestIMDGromacs, IMDv3IntegrationTest):
+class TestIMDv3Gromacs(IMDGromacsTest, IMDv3IntegrationTest):
 
     @pytest.fixture(params=[GROMACS_MDP_V3_NST_1, GROMACS_MDP_V3_NST_8])
     def mdp(self, request):
         return request.param
 
 
-class TestIMDv2Gromacs(TestIMDGromacs, IMDv2IntegrationTest):
+class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
 
     @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
     def mdp(self, request):
