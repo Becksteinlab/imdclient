@@ -117,6 +117,10 @@ class IMDIntegrationTest:
         # a container
         time.sleep(30)
 
+        print("\n=== Container logs ===")
+        print(container.logs().decode("utf-8", errors="replace"))
+        print("=== End container logs ===\n")
+
         yield
         try:
             container.stop()
