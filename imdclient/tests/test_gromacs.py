@@ -84,8 +84,8 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
         # so it matches the mol-whole coordinates sent by default in GROMACS IMD v2.
         return (
             f"gmx mdrun -s topol.tpr -o ci.trr -imdport 8888 -imdwait && "
-            f"echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_whole.trr -pbc mol && "
+            f"echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_whole.trr -pbc whole && "
             f"mv ci_whole.trr ci.trr && "
-            f"echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_nopbc.trr -pbc nojump && "
+            f"echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_nopbc.trr -pbc mol && "
             f"mv ci_nopbc.trr ci.trr"
         )
