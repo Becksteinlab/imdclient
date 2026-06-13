@@ -101,7 +101,7 @@ jobs:
 
     - name: codecov
       if: github.event_name != 'schedule'
-      uses: codecov/codecov-action@v5.4.3
+      uses: codecov/codecov-action@v7.0.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.xml
@@ -179,7 +179,7 @@ jobs:
 
       - name: codecov
         if: github.event_name != 'schedule'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
