@@ -70,6 +70,10 @@ class IMDIntegrationTest:
         return None
 
     @pytest.fixture()
+    def post_simulation_command(self):
+        return None
+
+    @pytest.fixture()
     def port(self):
         yield get_free_port()
 
@@ -80,6 +84,7 @@ class IMDIntegrationTest:
         input_files,
         setup_command,
         simulation_command,
+        post_simulation_command,
         port,
         container_name,
     ):
@@ -100,6 +105,8 @@ class IMDIntegrationTest:
             cmdstring += " && " + setup_command
 
         cmdstring += " && " + simulation_command
+        if post_simulation_command is not None:
+            cmdstring += " && " + post_simulation_command
 
         # Start the container, mount tmp_path, run simulation
         container = docker_client.containers.run(
@@ -117,11 +124,8 @@ class IMDIntegrationTest:
         # a container
         time.sleep(30)
 
-        print("\n=== Container logs ===")
-        print(container.logs().decode("utf-8", errors="replace"))
-        print("=== End container logs ===\n")
+        yield container
 
-        yield
         try:
             container.stop()
         except docker.errors.NotFound:
@@ -136,12 +140,16 @@ class IMDIntegrationTest:
         yield u
 
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client):
+        # imd_u finishes when the IMD stream closes; wait for any post-processing in post_simulation_command
+        # in the container before reading the reference trajectory from disk.
+        docker_client.wait()
         u = mda.Universe(
             (tmp_path / topol),
             (tmp_path / traj),
         )
         yield u
+
 
 class IMDv3IntegrationTest(IMDIntegrationTest):
 
@@ -239,6 +247,7 @@ class IMDv3IntegrationTest(IMDIntegrationTest):
             atom_style="id type x y z",
         ).atoms.n_atoms
         u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+
 
 class IMDv2IntegrationTest(IMDIntegrationTest):
 

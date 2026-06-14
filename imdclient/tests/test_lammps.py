@@ -57,9 +57,10 @@ class IMDLammpsTest:
                     return float(match.group(1))
         raise ValueError(f"No dt found in {inp}")
 
-    # This must wait until after imd stream has ended
+    # This must wait until after imd stream and post-simulation processing has ended
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client):
+        docker_client.wait()
         u = mda.Universe(
             (tmp_path / topol),
             (tmp_path / traj),
@@ -86,7 +87,7 @@ class TestIMDv3Lammps(IMDLammpsTest, IMDv3IntegrationTest):
     @pytest.fixture(params=[LAMMPS_IN_V3_NST_1, LAMMPS_IN_V3_NST_8])
     def inp(self, request):
         return request.param
-    
+
     @pytest.fixture()
     def first_frame(self, inp):
         if inp == LAMMPS_IN_V3_NST_1:
@@ -100,7 +101,7 @@ class TestIMDv2Lammps(IMDLammpsTest, IMDv2IntegrationTest):
     @pytest.fixture(params=[LAMMPS_IN_V2_NST_1, LAMMPS_IN_V2_NST_8])
     def inp(self, request):
         return request.param
-    
+
     @pytest.fixture()
     def first_frame(self, inp):
         if inp == LAMMPS_IN_V2_NST_1:
