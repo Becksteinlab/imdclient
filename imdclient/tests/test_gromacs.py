@@ -80,10 +80,8 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
 
     @pytest.fixture()
     def post_simulation_command(self):
-        # Match the mol-whole coordinates sent by default in GROMACS IMD v2.
+        # Match GROMACS IMD v2 mol-shifted whole coords using pbc whole.
         return (
             "echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_whole.trr -pbc whole && "
-            "mv ci_whole.trr ci.trr && "
-            "echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_nopbc.trr -pbc mol && "
-            "mv ci_nopbc.trr ci.trr"
+            "mv ci_whole.trr ci.trr"
         )
