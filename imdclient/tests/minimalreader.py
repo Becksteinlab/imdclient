@@ -1,7 +1,9 @@
 import logging
 import copy
 
+import numpy as np
 from MDAnalysis.coordinates import core
+from MDAnalysis.lib import distances
 
 from imdclient.IMDClient import IMDClient
 from imdclient.utils import parse_host_port
@@ -81,6 +83,27 @@ class MinimalReader:
                 )
             except EOFError:
                 break
+
+    def _wrap_frame(self, frame, box):
+        if box is None:
+            return
+        frame.positions = distances.apply_PBC(
+            np.asarray(frame.positions, dtype=np.float32),
+            box,
+        )
+
+    def _wrap_trajectory(self, true_u=None, first_frame=0):
+        """Wrap each stored IMD frame into the primary box (per atom)."""
+        if true_u is None:
+            for frame in self.trajectory:
+                self._wrap_frame(frame, frame.dimensions)
+            return
+
+        for i in range(first_frame, len(true_u.trajectory)):
+            self._wrap_frame(
+                self.trajectory[i - first_frame],
+                true_u.trajectory[i].dimensions,
+            )
 
     def close(self):
         """Gracefully shut down the reader. Stops the producer thread."""

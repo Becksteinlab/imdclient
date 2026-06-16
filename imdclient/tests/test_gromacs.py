@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 
 import pytest
+import MDAnalysis as mda
 
 from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
 from .datafiles import (
@@ -79,9 +80,11 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
         return request.param
 
     @pytest.fixture()
-    def post_simulation_command(self):
-        # Match GROMACS IMD v2 mol-shifted whole coords using pbc whole.
-        return (
-            "echo '0' | gmx trjconv -f ci.trr -s topol.tpr -o ci_whole.trr -pbc whole && "
-            "mv ci_whole.trr ci.trr"
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
+        docker_client.wait()
+        u = mda.Universe(
+            (tmp_path / topol),
+            (tmp_path / traj),
         )
+        imd_u._wrap_trajectory(u, first_frame)
+        yield u
