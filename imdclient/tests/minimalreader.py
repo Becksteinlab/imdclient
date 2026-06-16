@@ -50,6 +50,10 @@ class MinimalReader:
         if process_stream:
             self._process_stream()
 
+    @property
+    def imdsinfo(self):
+        return self._imdclient.get_imdsessioninfo()
+
     def _read_next_frame(self):
         try:
             imd_frame = self._imdclient.get_imdframe()

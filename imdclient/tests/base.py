@@ -10,6 +10,8 @@ from numpy.testing import (
 import docker
 import MDAnalysis as mda
 
+from MDAnalysis.transformations.wrap import wrap
+
 from .utils import get_free_port
 from .minimalreader import MinimalReader
 
@@ -132,6 +134,10 @@ class IMDIntegrationTest:
             pass
 
     @pytest.fixture()
+    def first_frame(self):
+        return 0
+
+    @pytest.fixture()
     def imd_u(self, docker_client, topol, tmp_path, port):
         n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
         u = MinimalReader(
@@ -140,7 +146,7 @@ class IMDIntegrationTest:
         yield u
 
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path, docker_client):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
         # imd_u finishes when the IMD stream closes; wait for any post-processing in post_simulation_command
         # in the container before reading the reference trajectory from disk.
         docker_client.wait()
@@ -148,6 +154,9 @@ class IMDIntegrationTest:
             (tmp_path / topol),
             (tmp_path / traj),
         )
+        if not imd_u.imdsinfo.wrapped_coords:
+            u.trajectory.add_transformations(wrap(u.atoms, compound="atoms"))
+            imd_u._wrap_trajectory(u, first_frame)
         yield u
 
 

@@ -3,7 +3,6 @@ from pathlib import Path
 import re
 
 import pytest
-import MDAnalysis as mda
 
 from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
 from .datafiles import (
@@ -57,14 +56,6 @@ class IMDGromacsTest:
                     return float(match.group(1))
         raise ValueError(f"No dt found in {mdp}")
 
-    # @pytest.fixture()
-    # def match_string(self):
-    #     return "IMD: Will wait until I have a connection and IMD_GO orders."
-
-    @pytest.fixture()
-    def first_frame(self):
-        return 0
-
 
 class TestIMDv3Gromacs(IMDGromacsTest, IMDv3IntegrationTest):
 
@@ -78,13 +69,3 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
     @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
     def mdp(self, request):
         return request.param
-
-    @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
-        docker_client.wait()
-        u = mda.Universe(
-            (tmp_path / topol),
-            (tmp_path / traj),
-        )
-        imd_u._wrap_trajectory(u, first_frame)
-        yield u

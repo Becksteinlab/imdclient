@@ -7,6 +7,7 @@ from numpy.testing import (
     assert_allclose,
 )
 import MDAnalysis as mda
+from MDAnalysis.transformations.wrap import wrap
 
 from .base import (
     IMDv2IntegrationTest,
@@ -64,11 +65,14 @@ class IMDNAMDTest:
         raise ValueError(f"No dt found in {inp}")
 
     @pytest.fixture()
-    def true_u(self, topol, imd_u, tmp_path):
+    def true_u(self, topol, imd_u, tmp_path, first_frame):
         u = mda.Universe(
             (tmp_path / topol),
             (tmp_path / "alanin.dcd"),
         )
+        if not imd_u.imdsinfo.wrapped_coords:
+            u.trajectory.add_transformations(wrap(u.atoms, compound="atoms"))
+            imd_u._wrap_trajectory(u, first_frame)
         yield u
 
     @pytest.fixture()
