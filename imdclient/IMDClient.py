@@ -577,10 +577,13 @@ class IMDProducerV2(BaseIMDProducer):
                 f"IMDProducer: Received {leading_energies} leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
             )
 
-        if (
-            header.type == IMDHeaderType.IMD_FCOORDS
-            and header.length == self._n_atoms
-        ):
+        if header.type == IMDHeaderType.IMD_FCOORDS:
+            # check if the number of atoms is correct
+            if header.length != self._n_atoms:
+                raise RuntimeError(
+                    f"IMDProducer: Expected n_atoms value {self._n_atoms}, got {header.length}. "
+                    + "Ensure you are using the correct topology file."
+                )
             # If we received positions but no energies
             # use the last energies received
             if self._prev_energies is not None:
@@ -595,7 +598,7 @@ class IMDProducerV2(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
         else:
-            raise RuntimeError("IMDProducer: Unexpected packet type or length")
+            raise RuntimeError("IMDProducer: Unexpected packet type")
 
     def _pause(self):
         logger.debug(
