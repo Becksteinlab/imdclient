@@ -69,3 +69,13 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
     @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
     def mdp(self, request):
         return request.param
+
+    @pytest.fixture()
+    def imd_nst(self, mdp):
+        pattern = re.compile(r"^\s*IMD-nst\s*=\s*(\S+)")
+        with open(mdp, "r") as file:
+            for line in file:
+                match = pattern.match(line)
+                if match:
+                    return int(match.group(1))
+        raise ValueError(f"No IMD-nst found in {mdp}")

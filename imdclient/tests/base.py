@@ -138,10 +138,17 @@ class IMDIntegrationTest:
         return 0
 
     @pytest.fixture()
-    def imd_u(self, docker_client, topol, tmp_path, port):
+    def imd_nst(self):
+        return None
+
+    @pytest.fixture()
+    def imd_u(self, docker_client, topol, tmp_path, port, imd_nst):
         n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
         u = MinimalReader(
-            f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            process_stream=True,
+            transmission_rate=imd_nst,
         )
         yield u
 

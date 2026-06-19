@@ -4,6 +4,7 @@ import re
 
 import pytest
 import MDAnalysis as mda
+from MDAnalysis.transformations.wrap import wrap
 
 from .minimalreader import MinimalReader
 from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
@@ -59,7 +60,7 @@ class IMDLammpsTest:
 
     # This must wait until after imd stream and post-simulation processing has ended
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path, docker_client):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
         docker_client.wait()
         u = mda.Universe(
             (tmp_path / topol),
@@ -67,6 +68,9 @@ class IMDLammpsTest:
             atom_style="id type x y z",
             convert_units=False,
         )
+        if not imd_u.imdsinfo.wrapped_coords:
+            u.trajectory.add_transformations(wrap(u.atoms, compound="atoms"))
+            imd_u._wrap_trajectory(u, first_frame)
         yield u
 
     @pytest.fixture()

@@ -71,6 +71,7 @@ class IMDClient:
         socket_bufsize=None,
         multithreaded=True,
         continue_after_disconnect=None,
+        transmission_rate=None,
         **kwargs,
     ):
         self._stopped = False
@@ -111,6 +112,9 @@ class IMDClient:
             )
 
         self._go()
+
+        if transmission_rate is not None and self._imdsinfo.version == 2:
+            self._trate(transmission_rate)
 
         if self._multithreaded:
             # Disconnect MUST occur. This covers typical cases (Python, IPython interpreter)
@@ -297,6 +301,11 @@ class IMDClient:
             logger.debug(f"IMDClient: Received IMDv3 session info: {sinfo}")
 
         return sinfo
+
+    def _trate(self, rate):
+        trate = create_header_bytes(IMDHeaderType.IMD_TRATE, rate)
+        self._conn.sendall(trate)
+        logger.debug("IMDClient: Sent transmission rate %s", rate)
 
     def _go(self):
         """
@@ -563,7 +572,7 @@ class IMDProducerV2(BaseIMDProducer):
 
             header = self._get_header()
 
-        if (leading_energies == 0 or leading_energies > 1):
+        if leading_energies == 0 or leading_energies > 1:
             logger.warning(
                 f"IMDProducer: Received {leading_energies} leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
             )
