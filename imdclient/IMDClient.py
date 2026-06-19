@@ -275,13 +275,13 @@ class IMDClient:
             sinfo = IMDSessionInfo(
                 version=ver,
                 endianness=end,
-                wrapped_coords=False,
                 time=False,
                 energies=True,
                 box=False,
                 positions=True,
                 velocities=False,
                 forces=False,
+                wrapped_coords=False,
             )
 
         elif ver == 3:

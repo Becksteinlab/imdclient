@@ -10,12 +10,13 @@ def create_default_imdsinfo_v2():
     return IMDSessionInfo(
         version=2,
         endianness="<",
-        wrapped_coords=True,
+        time=False,
         energies=True,
         box=False,
         positions=True,
         velocities=False,
         forces=False,
+        wrapped_coords=True,
     )
 
 
