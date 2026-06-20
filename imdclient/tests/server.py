@@ -202,6 +202,10 @@ class InThreadIMDServer:
                 f"Expected packet length {expected_length}, got {header.length}"
             )
 
+    def expect_no_packet(self, timeout=0):
+        if sock_contains_data(self.conn, timeout):
+            raise ValueError("Expected no packet here")
+
     def disconnect(self):
         self.conn.shutdown(socket.SHUT_RD)
         self.conn.close()

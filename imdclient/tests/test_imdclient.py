@@ -204,8 +204,39 @@ class TestIMDClientV3(IMDClientTest):
             IMDHeaderType.IMD_WAIT, expected_length=int(not cont)
         )
 
+    def test_trate_not_sent_for_v3(self, universe, imdsinfo):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        client = IMDClient(
+            "localhost",
+            server.port,
+            universe.atoms.n_atoms,
+            transmission_rate=8,
+        )
+        server.join_accept_thread()
+        server.expect_no_packet()
+        client.stop()
+        server.cleanup()
+
 
 class TestIMDClientV2(IMDClientTest):
+    @pytest.mark.parametrize("rate", [1, 8])
+    def test_trate_sent_after_go_for_v2(self, universe, imdsinfo, rate):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        client = IMDClient(
+            "localhost",
+            server.port,
+            universe.atoms.n_atoms,
+            transmission_rate=rate,
+        )
+        server.join_accept_thread()
+        server.expect_packet(IMDHeaderType.IMD_TRATE, expected_length=rate)
+        client.stop()
+        server.cleanup()
+
     def test_pause_pause_continue(self, server_client_two_frame_buf):
         server, client = server_client_two_frame_buf
         server.send_frames(0, 2)
@@ -343,6 +374,26 @@ class TestIMDClientV2(IMDClientTest):
         assert second.energies is not None
         assert second.energies["step"] == prev_step
         assert_allclose(pos, second.positions)
+
+    @pytest.mark.parametrize(
+        "packet_type",
+        [
+            IMDHeaderType.IMD_TIME,
+            IMDHeaderType.IMD_BOX,
+            IMDHeaderType.IMD_VELOCITIES,
+            IMDHeaderType.IMD_FORCES,
+        ],
+    )
+    def test_unexpected_packet_type_in_v2(self, server_client, packet_type):
+        """IMDv2 rejects v3-only packet types received before coordinates."""
+        server, client = server_client
+
+        server.conn.sendall(create_header_bytes(packet_type, 1))
+
+        with pytest.raises(EOFError) as exc_info:
+            client.get_imdframe()
+
+        assert f"Unexpected packet type {packet_type.name}" in str(exc_info.value)
 
 
 class TestIMDClientV3ContextManager(IMDClientTest):

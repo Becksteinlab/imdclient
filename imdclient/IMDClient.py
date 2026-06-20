@@ -598,7 +598,9 @@ class IMDProducerV2(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
         else:
-            raise RuntimeError("IMDProducer: Unexpected packet type")
+            raise RuntimeError(
+                f"IMDProducer: Unexpected packet type {header.type.name}"
+            )
 
     def _pause(self):
         logger.debug(
