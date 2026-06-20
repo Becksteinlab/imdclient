@@ -9,15 +9,14 @@ first use the appropriate input options on the simulation engine
 to prepare it for the IMDClient receiver.
 
 Below, we have provided brief instructions on how to setup the various 
-simulation engine to output stream data using IMDv3.
+simulation engines to output stream data using IMDv3.
 
 GROMACS
 -------
 The IMDv3 protocol is currently not available as part of the official GROMACS release
 or source code repository. However, the feature is currently available for use in 
-the *imd-v3* branch of the forked repository
-https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/tree/imd-v3 ; clone the 
-repository and build GROMACS from source.
+the *imd-v3* branch of the forked repository:
+https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/tree/imd-v3.
 
 In GROMACS, you can use ``gmx mdrun`` with the ``-imdwait`` flag
 to ensure that GROMACS will wait for a client before starting the simulation.
@@ -41,14 +40,53 @@ You are now ready to connect to the simulation engine with a client.
    https://gitlab.com/heydenlabasu/streaming-md/gromacs/-/blob/imd-v3/docs/user-guide/mdp-options.rst?ref_type=heads&plain=1
 
 
+LAMMPS
+------
+The IMDv3 protocol implementation is part of the official LAMMPS distribution since **patch_4Feb2025**.
+It is available in the LAMMPS source code repository: https://github.com/lammps/lammps.
+However, the above version lacks kokkos support for IMDv3. 
+The latest version with kokkos compatible optimization for IMDv3 is available 
+here: https://github.com/Becksteinlab/lammps/tree/fix-imdv3-kokkos
+
+Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation for 
+`fix imd`_.
+
+LAMMPS does *not* support multiple concurrent connections to the same IMD port.
+
+To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
+
+.. code-block:: none
+
+    fix ID group-ID imd <port> trate <frequency> version 3 unwrap <on/off> time <on/off> box <on/off> coordinates <on/off> velocities <on/off> forces <on/off>
+
+Once the simulation is ready for a client connection, it will print 
+following terminal message:
+
+.. code-block:: none
+
+    Waiting for IMD connection on port <port>
+
+You are now ready to connect to the simulation engine with a client.
+
+.. _`fix imd`: https://docs.lammps.org/fix_imd.html
+.. _`raise an issue`: https://github.com/Becksteinlab/imdclient/issues
+
 
 NAMD
 ----
-The IMDv3 protocol has been implementaed in NAMD and will be made available through the
+The IMDv3 protocol has been implemented in NAMD and will be made available through the
 official NAMD release in the near future. It is currently available as a part of the
-official NAMD GitLab repository https://gitlab.com/tcbgUIUC/namd .
+official NAMD GitLab repository: https://gitlab.com/tcbgUIUC/namd.
+However, the above version lacks complete GPU Resident mode support for IMDv3. 
+The latest version with GPU Resident mode compatible optimization for IMDv3 is available 
+in a branch of the official NAMD repository: https://gitlab.com/tcbgUIUC/namd/-/tree/fix-imdv3-gpures.
 
-NAMD *does* in principle support multiple concurrent connections to the same IMD port, however, this behavior has not been tested with IMDv3 and therefore should not relied upon. Instead, we suggest rewriting a singular client's trajectory data processing code to perform all tasks that multiple clients would have performed. This method will likely also reduce the TCP latency overhead of maintaining multiple client connections. If you have a use-case that this method doesn't cover, please `raise an issue`_.
+NAMD *does* in principle support multiple concurrent connections to the same IMD port, 
+however, this behavior has not been tested with IMDv3 and therefore should not be relied upon. 
+Instead, we suggest rewriting a singular client's trajectory processing code to perform 
+all tasks that multiple clients would have performed. 
+This method will likely also reduce the TCP latency overhead of maintaining multiple client connections. 
+If you have a use-case that this method doesn't cover, please `raise an issue`_.
 
 To use IMDv3 with NAMD, add the following lines to your NAMD configuration file:
 
@@ -77,32 +115,6 @@ following terminal message:
 
 You are now ready to connect to the simulation engine with the IMDClient.
 
-LAMMPS
-------
-The IMDv3 protocol is part of the official LAMMPS distribution since **patch_4Feb2025**.
-It is available in the LAMMPS source code repository https://github.com/lammps/lammps.
-Information on using IMDv3 with LAMMPS can be found in the LAMMPS documentation for 
-`fix imd`_.
-
-LAMMPS does *not* support multiple concurrent connections to the same IMD port.
-
-To use IMDv3 with LAMMPS, add the following lines to your LAMMPS input script:
-
-.. code-block:: none
-
-    fix ID group-ID imd <port> trate <frequency> version 3 unwrap <on/off> time <on/off> box <on/off> coordinates <on/off> velocities <on/off> forces <on/off>
-
-Once the simulation is ready for a client connection, it will print 
-following terminal message:
-
-.. code-block:: none
-
-    Waiting for IMD connection on port <port>
-
-You are now ready to connect to the simulation engine with a client.
-
-.. _`fix imd`: https://docs.lammps.org/fix_imd.html
-.. _`raise an issue`: https://github.com/Becksteinlab/imdclient/issues
 Using IMDClient
 ^^^^^^^^^^^^^^^
 
