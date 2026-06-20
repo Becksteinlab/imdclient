@@ -393,7 +393,9 @@ class TestIMDClientV2(IMDClientTest):
         with pytest.raises(EOFError) as exc_info:
             client.get_imdframe()
 
-        assert f"Unexpected packet type {packet_type.name}" in str(exc_info.value)
+        assert f"Unexpected packet type {packet_type.name}" in str(
+            exc_info.value
+        )
 
 
 class TestIMDClientV3ContextManager(IMDClientTest):
