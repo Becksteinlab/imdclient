@@ -59,6 +59,11 @@ class IMDClient:
         If True, the client will attempt to change the simulation engine's waiting behavior to
         non-blocking after the client disconnects. If False, the client will attempt to change it
         to blocking. If None, the client will not attempt to change the simulation engine's behavior.
+    transmission_rate : int, optional [``None``]
+        IMD transmission rate to be set after client send go signal. 
+        This parameter is only set to the server when using IMDv2. Default behavior is to not set the transmission rate. 
+        This parameter is useful when running GROMACS with IMDv2, where transmission rate can only be set via the client. 
+        IMDv2 implementations in LAMMPS and NAMD support setting the transmission rate via relevant input file parameters.
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
     """
@@ -303,13 +308,16 @@ class IMDClient:
         return sinfo
 
     def _trate(self, rate):
+        """
+        Send a trate packet to the server to set transmission rate.
+        """
         trate = create_header_bytes(IMDHeaderType.IMD_TRATE, rate)
         self._conn.sendall(trate)
         logger.debug("IMDClient: Sent transmission rate %s", rate)
 
     def _go(self):
         """
-        Send a go packet to the client to start the simulation
+        Send a go packet to the server to start the simulation
         and begin receiving data.
         """
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
