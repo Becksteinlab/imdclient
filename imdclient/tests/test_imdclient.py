@@ -323,6 +323,15 @@ class TestIMDFrameBuffer:
         with pytest.raises(EOFError, match="Consumer has finished"):
             buffer.pop_empty_imdframe()
 
+    def test_pop_full_imdframe_raises_when_producer_finished(self, imdsinfo):
+        buffer_size = imdframe_memsize(1, imdsinfo)
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
+
+        buffer.notify_producer_finished()
+
+        with pytest.raises(EOFError, match="Producer has finished"):
+            buffer.pop_full_imdframe()
+
 
 class TestBaseIMDProducer:
     @pytest.fixture
