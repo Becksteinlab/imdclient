@@ -172,7 +172,14 @@ class IMDClient:
         Raises
         ------
         EOFError
-            If there are no more frames to read from the stream
+            If there are no more frames to read from the stream, or if the
+            producer thread stopped due to an error.
+
+            For API stability, errors raised in the producer thread (including
+            :class:`RuntimeError` for mismatches such as incorrect
+            atom counts) are raised eventually as ``EOFError``s. The original
+            exception message in the case fo a multithreaded client is available 
+            in the error queue.
         """
         if self._multithreaded:
             try:
