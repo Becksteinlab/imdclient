@@ -12,8 +12,8 @@ from MDAnalysisTests.datafiles import (
     COORDINATES_H5MD,
 )
 
-from imdclient.IMDClient import imdframe_memsize, IMDClient
-from imdclient.IMDProtocol import IMDHeaderType
+from imdclient.IMDClient import IMDClient
+from imdclient.IMDProtocol import IMDHeaderType, imdframe_memsize
 from .utils import (
     create_default_imdsinfo_v3,
 )
@@ -178,16 +178,20 @@ class TestIMDClientV3:
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
 
-    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
+    def test_incorrect_atom_count(
+        self, server_client_incorrect_atoms, universe
+    ):
         server, client = server_client_incorrect_atoms
-        
+
         server.send_frame(0)
-        
+
         with pytest.raises(EOFError) as exc_info:
             client.get_imdframe()
-        
+
         error_msg = str(exc_info.value)
-        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        assert (
+            f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        )
         assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
 
