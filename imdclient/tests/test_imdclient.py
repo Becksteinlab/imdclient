@@ -1,6 +1,7 @@
 """Test for IMDClient functionality"""
 
 import logging
+import sys
 import time
 
 import pytest
@@ -181,6 +182,28 @@ class TestIMDClientV3:
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
 
+    @pytest.mark.parametrize("read_error", [TimeoutError, ConnectionError])
+    def test_await_IMD_handshake_error_on_read_buf_failure(
+        self, server_client, monkeypatch, read_error
+    ):
+        _, client = server_client()
+
+        def _raise_read_error(sock, buf):
+            raise read_error()
+
+        monkeypatch.setattr(
+            sys.modules[client.__class__.__module__],
+            "read_into_buf",
+            _raise_read_error,
+        )
+
+        with pytest.raises(
+            ConnectionError, match="No handshake packet received"
+        ) as exc_info:
+            client._await_IMD_handshake()
+
+        assert isinstance(exc_info.value.__cause__, read_error)
+
     def test_timeout_warning_low_value(self, server_client, caplog):
         """Test that warning is issued for timeout values <= 1 second"""
         with caplog.at_level(logging.WARNING):
@@ -260,6 +283,38 @@ class TestIMDClientV3:
         with pytest.raises(EOFError):
             client.get_imdframe()
 
+    def test_single_threaded_get_imdframe_reraises_eoferror(
+        self, server_client, monkeypatch
+    ):
+        _server, client = server_client(multithreaded=False)
+
+        def _raise_eoferror():
+            raise EOFError("test EOF")
+
+        monkeypatch.setattr(
+            client._producer, "_parse_imdframe", _raise_eoferror
+        )
+
+        with pytest.raises(EOFError):
+            client._producer._get_imdframe()
+
+    def test_single_threaded_get_imdframe_wraps_unexpected_errors(
+        self, server_client, monkeypatch
+    ):
+        _server, client = server_client(multithreaded=False)
+
+        def _raise_valueerror():
+            raise ValueError("test ValueError")
+
+        monkeypatch.setattr(
+            client._producer,
+            "_parse_imdframe",
+            _raise_valueerror,
+        )
+
+        with pytest.raises(RuntimeError, match="An unexpected error occurred"):
+            client._producer._get_imdframe()
+
 
 class TestIMDClientV3ContextManager:
     @pytest.fixture
@@ -332,76 +387,22 @@ class TestIMDFrameBuffer:
         with pytest.raises(EOFError, match="Producer has finished"):
             buffer.pop_full_imdframe()
 
+    # simple test below to cover Error raising but doesn't test if the Error is raised
+    # when consumer finishes while the `wait_for_space()` is running
+    # TODO: add threaded test to properly test this scenario    
+    def test_wait_for_space_raises_when_consumer_finished(self, imdsinfo):
+        buffer_size = imdframe_memsize(1, imdsinfo) * 2
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
 
-class TestBaseIMDProducer:
-    @pytest.fixture
-    def universe(self):
-        return mda.Universe(COORDINATES_TOPOLOGY, COORDINATES_H5MD)
+        # Drain empty slots so buffer is below unpause threshold
+        buffer.pop_empty_imdframe()
+        buffer.pop_empty_imdframe()
+        buffer.notify_consumer_finished()
 
-    @pytest.fixture
-    def imdsinfo(self):
-        return create_default_imdsinfo_v3()
+        with pytest.raises(
+            RuntimeError, match="Error waiting for space in buffer"
+        ) as exc_info:
+            buffer.wait_for_space()
 
-    @pytest.fixture
-    def server_client(self, universe, imdsinfo):
-        created = []
-
-        def _server_client(endianness=None, **client_kwargs):
-            server = InThreadIMDServer(universe.trajectory)
-            if endianness is not None:
-                imdsinfo.endianness = endianness
-            server.set_imdsessioninfo(imdsinfo)
-
-            n_atoms = client_kwargs.pop("n_atoms", universe.atoms.n_atoms)
-            server.handshake_sequence("localhost", first_frame=False)
-            client = IMDClient(
-                "localhost",
-                server.port,
-                n_atoms,
-                **client_kwargs,
-            )
-            server.join_accept_thread()
-            created.append((server, client))
-            return server, client
-
-        yield _server_client
-
-        for server, client in created:
-            try:
-                client.stop()
-            except Exception:
-                pass
-            try:
-                server.cleanup()
-            except Exception:
-                pass
-
-    def test_get_imdframe_reraises_eoferror(self, server_client, monkeypatch):
-        server, client = server_client(multithreaded=False)
-
-        def _raise_eoferror():
-            raise EOFError("test EOF")
-
-        monkeypatch.setattr(
-            client._producer, "_parse_imdframe", _raise_eoferror
-        )
-
-        with pytest.raises(EOFError):
-            client._producer._get_imdframe()
-
-    def test_get_imdframe_wraps_unexpected_errors(
-        self, server_client, monkeypatch
-    ):
-        server, client = server_client(multithreaded=False)
-
-        def _raise_valueerror():
-            raise ValueError("test ValueError")
-
-        monkeypatch.setattr(
-            client._producer,
-            "_parse_imdframe",
-            _raise_valueerror,
-        )
-
-        with pytest.raises(RuntimeError, match="An unexpected error occurred"):
-            client._producer._get_imdframe()
+        assert isinstance(exc_info.value.__cause__, EOFError)
+        assert "Consumer has finished" in str(exc_info.value.__cause__)
