@@ -21,7 +21,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash -l {0} 
+    shell: bash -el {0} 
 
 jobs:
   environment-config:
@@ -31,7 +31,7 @@ jobs:
       stable-python-version: ${{ steps.get-compatible-python.outputs.stable-python }}
       python-matrix: ${{ steps.get-compatible-python.outputs.python-versions }}
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
@@ -51,7 +51,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Build information
       run: |
@@ -65,7 +65,7 @@ jobs:
 
     # More info on options: https://github.com/conda-incubator/setup-miniconda
     - name: Install conda dependencies
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v4
       with:
         python-version: ${{ matrix.python-version }}
         environment-file: devtools/conda-envs/test_env.yaml
@@ -73,12 +73,14 @@ jobs:
         architecture: ${{ env.ARCHITECTURE }}
 
         channels: conda-forge
+        conda-remove-defaults: true
 
         activate-environment: imdclient-test
         auto-update-conda: true
         auto-activate-base: false
         show-channel-urls: true
         miniconda-version: latest
+        conda-solver: libmamba
 
     - name: Install imdclient
       run: |
@@ -99,7 +101,7 @@ jobs:
 
     - name: codecov
       if: github.event_name != 'schedule'
-      uses: codecov/codecov-action@v5.4.3
+      uses: codecov/codecov-action@v7.0.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.xml
@@ -129,7 +131,7 @@ jobs:
       packages: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build information
         run: |
@@ -138,14 +140,14 @@ jobs:
           ulimit -a
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.NAMD_DOCKER_TOKEN }}
 
       - name: Install conda dependencies
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v4
         with:
           python-version: "3.14"
           environment-file: devtools/conda-envs/test_env.yaml
@@ -153,13 +155,15 @@ jobs:
           architecture: x64
 
           channels: conda-forge
-
+          conda-remove-defaults: true
+        
           activate-environment: imdclient-test
           auto-update-conda: true
           auto-activate-base: false
           show-channel-urls: true
           miniconda-version: latest
-
+          conda-solver: libmamba
+        
       - name: Install package
         run: |
           python --version
@@ -175,7 +179,7 @@ jobs:
 
       - name: codecov
         if: github.event_name != 'schedule'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
@@ -188,10 +192,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ needs.environment-config.outputs.stable-python-version }}
 
@@ -214,10 +218,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Python ${{ needs.environment-config.outputs.stable-python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ needs.environment-config.outputs.stable-python-version }}
 
