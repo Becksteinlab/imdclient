@@ -1,6 +1,8 @@
 """Test for IMDClient functionality"""
 
 import logging
+import sys
+import time
 
 import pytest
 from numpy.testing import (
@@ -12,7 +14,11 @@ from MDAnalysisTests.datafiles import (
     COORDINATES_H5MD,
 )
 
-from imdclient.IMDClient import imdframe_memsize, IMDClient
+from imdclient.IMDClient import (
+    IMDFrameBuffer,
+    imdframe_memsize,
+    IMDClient,
+)
 from imdclient.IMDProtocol import IMDHeaderType
 from .utils import (
     create_default_imdsinfo_v3,
@@ -54,55 +60,62 @@ class TestIMDClientV3:
         return create_default_imdsinfo_v3()
 
     @pytest.fixture
-    def server_client_two_frame_buf(self, universe, imdsinfo):
-        server = InThreadIMDServer(universe.trajectory)
-        server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", first_frame=False)
-        client = IMDClient(
-            f"localhost",
-            server.port,
-            universe.trajectory.n_atoms,
-            buffer_size=imdframe_memsize(universe.trajectory.n_atoms, imdsinfo)
-            * 2,
-        )
-        server.join_accept_thread()
-        yield server, client
-        client.stop()
-        server.cleanup()
+    def server_client(self, universe, imdsinfo):
+        created = []
 
-    @pytest.fixture(params=[">", "<"])
-    def server_client(self, universe, imdsinfo, request):
-        server = InThreadIMDServer(universe.trajectory)
-        imdsinfo.endianness = request.param
-        server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", first_frame=False)
-        client = IMDClient(
-            f"localhost",
-            server.port,
-            universe.atoms.n_atoms,
-        )
-        server.join_accept_thread()
-        yield server, client
-        client.stop()
-        server.cleanup()
+        def _server_client(endianness=None, **client_kwargs):
+            server = InThreadIMDServer(universe.trajectory)
+            if endianness is not None:
+                imdsinfo.endianness = endianness
+            server.set_imdsessioninfo(imdsinfo)
+
+            n_atoms = client_kwargs.pop("n_atoms", universe.atoms.n_atoms)
+            server.handshake_sequence("localhost", first_frame=False)
+            client = IMDClient(
+                "localhost",
+                server.port,
+                n_atoms,
+                **client_kwargs,
+            )
+            server.join_accept_thread()
+            created.append((server, client))
+            return server, client
+
+        yield _server_client
+
+        # Teardown: stop clients and cleanup servers
+        for server, client in created:
+            try:
+                client.stop()
+            except Exception:
+                pass
+            try:
+                server.cleanup()
+            except Exception:
+                pass
 
     @pytest.fixture
-    def server_client_incorrect_atoms(self, universe, imdsinfo):
-        server = InThreadIMDServer(universe.trajectory)
-        server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", first_frame=False)
-        client = IMDClient(
-            f"localhost",
-            server.port,
-            universe.atoms.n_atoms + 1,
+    def server_client_two_frame_buf(self, server_client, universe, imdsinfo):
+        # Calculate the buffer size
+        buffer_size = (
+            imdframe_memsize(universe.trajectory.n_atoms, imdsinfo) * 2
         )
-        server.join_accept_thread()
+        timeout = 5  # to speed up no disconnect test
+        server, client = server_client(buffer_size=buffer_size, timeout=timeout)
         yield server, client
-        client.stop()
-        server.cleanup()
 
-    def test_traj_unchanged(self, server_client, universe):
-        server, client = server_client
+    @pytest.fixture(params=["<", ">"])
+    def server_client_endianness(self, server_client, request):
+        server, client = server_client(endianness=request.param)
+        yield server, client
+
+    @pytest.fixture
+    def server_client_incorrect_atoms(self, server_client, universe):
+        server, client = server_client(n_atoms=universe.trajectory.n_atoms + 1)
+        yield server, client
+
+    def test_traj_unchanged(self, server_client_endianness, universe):
+        server, client = server_client_endianness
         server.send_frames(0, 5)
         for i in range(5):
             imdf = client.get_imdframe()
@@ -163,33 +176,144 @@ class TestIMDClientV3:
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
 
     @pytest.mark.parametrize("cont", [True, False])
-    def test_continue_after_disconnect(self, universe, imdsinfo, cont):
-        server = InThreadIMDServer(universe.trajectory)
-        server.set_imdsessioninfo(imdsinfo)
-        server.handshake_sequence("localhost", first_frame=False)
-        client = IMDClient(
-            f"localhost",
-            server.port,
-            universe.trajectory.n_atoms,
-            continue_after_disconnect=cont,
-        )
-        server.join_accept_thread()
+    def test_continue_after_disconnect(self, server_client, cont):
+        server, client = server_client(continue_after_disconnect=cont)
         server.expect_packet(
             IMDHeaderType.IMD_WAIT, expected_length=(int)(not cont)
         )
 
-    def test_incorrect_atom_count(self, server_client_incorrect_atoms, universe):
-        server, client = server_client_incorrect_atoms
-        
+    @pytest.mark.parametrize("read_error", [TimeoutError, ConnectionError])
+    def test_await_IMD_handshake_error_on_read_buf_failure(
+        self, server_client, monkeypatch, read_error
+    ):
+        _, client = server_client()
+
+        def _raise_read_error(sock, buf):
+            raise read_error()
+
+        monkeypatch.setattr(
+            sys.modules[client.__class__.__module__],
+            "read_into_buf",
+            _raise_read_error,
+        )
+
+        with pytest.raises(
+            ConnectionError, match="No handshake packet received"
+        ) as exc_info:
+            client._await_IMD_handshake()
+
+        assert isinstance(exc_info.value.__cause__, read_error)
+
+    def test_timeout_warning_low_value(self, server_client, caplog):
+        """Test that warning is issued for timeout values <= 1 second"""
+        with caplog.at_level(logging.WARNING):
+            server, client = server_client(timeout=1)
+
+        # Check that warning was logged
+        assert any(
+            "timeout value of 1 second(s) is very low" in record.message
+            for record in caplog.records
+        )
+
+    @pytest.mark.parametrize("timeout_val", [2, 10])
+    def test_timeout_within_limit(self, server_client, universe, timeout_val):
+        """Test that timeout does not trigger when server responds within timeout period"""
+        server, client = server_client(timeout=timeout_val)
+
+        # Sleep for less than timeout before sending frames
+        time.sleep(timeout_val - 1)
         server.send_frame(0)
-        
+
+        # Should successfully receive frame without timeout
+        imdf = client.get_imdframe()
+        assert_allclose(universe.trajectory[0].positions, imdf.positions)
+
+    @pytest.mark.parametrize("timeout_val", [2, 10])
+    def test_timeout_when_exceeded(self, server_client, timeout_val):
+        """Test that timeout triggers EOFError when server doesn't respond within timeout period"""
+        server, client = server_client(timeout=timeout_val)
+
+        # Sleep for longer than timeout without sending any frames
+        time.sleep(timeout_val + 1)
+
+        # Client should timeout and raise EOFError when trying to get first frame
         with pytest.raises(EOFError) as exc_info:
             client.get_imdframe()
-        
+
+        # Verify TimeoutError is somewhere in the exception chain
+        exception_chain = []
+        current = exc_info.value
+        while current is not None:
+            exception_chain.append(type(current))
+            current = current.__cause__
+
+        assert TimeoutError in exception_chain
+
+    def test_incorrect_atom_count(
+        self, server_client_incorrect_atoms, universe
+    ):
+        server, client = server_client_incorrect_atoms
+
+        server.send_frame(0)
+
+        with pytest.raises(EOFError) as exc_info:
+            client.get_imdframe()
+
         error_msg = str(exc_info.value)
-        assert f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        assert (
+            f"Expected n_atoms value {universe.atoms.n_atoms + 1}" in error_msg
+        )
         assert f"got {universe.atoms.n_atoms}" in error_msg
         assert "Ensure you are using the correct topology file" in error_msg
+
+    def test_single_threaded_client_reads_frame_and_eof(
+        self, server_client, universe
+    ):
+        server, client = server_client(multithreaded=False)
+
+        server.send_frame(0)
+
+        # Check one frame data by comparing positions
+        imdf = client.get_imdframe()
+        assert_allclose(universe.trajectory[0].positions, imdf.positions)
+
+        # diconnect to check EOF handling in singlethreaded code
+        server.disconnect()
+
+        with pytest.raises(EOFError):
+            client.get_imdframe()
+
+    def test_single_threaded_get_imdframe_reraises_eoferror(
+        self, server_client, monkeypatch
+    ):
+        _server, client = server_client(multithreaded=False)
+
+        def _raise_eoferror():
+            raise EOFError("test EOF")
+
+        monkeypatch.setattr(
+            client._producer, "_parse_imdframe", _raise_eoferror
+        )
+
+        with pytest.raises(EOFError):
+            client._producer._get_imdframe()
+
+    def test_single_threaded_get_imdframe_wraps_unexpected_errors(
+        self, server_client, monkeypatch
+    ):
+        _server, client = server_client(multithreaded=False)
+
+        def _raise_valueerror():
+            raise ValueError("test ValueError")
+
+        monkeypatch.setattr(
+            client._producer,
+            "_parse_imdframe",
+            _raise_valueerror,
+        )
+
+        with pytest.raises(RuntimeError, match="An unexpected error occurred"):
+            client._producer._get_imdframe()
 
 
 class TestIMDClientV3ContextManager:
@@ -237,3 +361,48 @@ class TestIMDClientV3ContextManager:
                 i += 1
         server.expect_packet(IMDHeaderType.IMD_DISCONNECT)
         assert i == 5
+
+
+class TestIMDFrameBuffer:
+    @pytest.fixture
+    def imdsinfo(self):
+        return create_default_imdsinfo_v3()
+
+    def test_pop_empty_imdframe_raises_when_consumer_finished(self, imdsinfo):
+        buffer_size = imdframe_memsize(1, imdsinfo)
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
+
+        buffer.pop_empty_imdframe()
+        buffer.notify_consumer_finished()
+
+        with pytest.raises(EOFError, match="Consumer has finished"):
+            buffer.pop_empty_imdframe()
+
+    def test_pop_full_imdframe_raises_when_producer_finished(self, imdsinfo):
+        buffer_size = imdframe_memsize(1, imdsinfo)
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
+
+        buffer.notify_producer_finished()
+
+        with pytest.raises(EOFError, match="Producer has finished"):
+            buffer.pop_full_imdframe()
+
+    # simple test below to cover Error raising but doesn't test if the Error is raised
+    # when consumer finishes while the `wait_for_space()` is running
+    # TODO: add threaded test to properly test this scenario    
+    def test_wait_for_space_raises_when_consumer_finished(self, imdsinfo):
+        buffer_size = imdframe_memsize(1, imdsinfo) * 2
+        buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
+
+        # Drain empty slots so buffer is below unpause threshold
+        buffer.pop_empty_imdframe()
+        buffer.pop_empty_imdframe()
+        buffer.notify_consumer_finished()
+
+        with pytest.raises(
+            RuntimeError, match="Error waiting for space in buffer"
+        ) as exc_info:
+            buffer.wait_for_space()
+
+        assert isinstance(exc_info.value.__cause__, EOFError)
+        assert "Consumer has finished" in str(exc_info.value.__cause__)
