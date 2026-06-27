@@ -4,12 +4,14 @@ import re
 
 import pytest
 
-from .base import IMDv3IntegrationTest
+from .base import IMDv2IntegrationTest, IMDv3IntegrationTest
 from .datafiles import (
     GROMACS_GRO,
     GROMACS_TOP,
-    GROMACS_MDP_NST_1,
-    GROMACS_MDP_NST_8,
+    GROMACS_MDP_V3_NST_1,
+    GROMACS_MDP_V3_NST_8,
+    GROMACS_MDP_V2_NST_1,
+    GROMACS_MDP_V2_NST_8,
 )
 
 logger = logging.getLogger("imdclient.IMDClient")
@@ -22,11 +24,7 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
-class TestIMDv3Gromacs(IMDv3IntegrationTest):
-
-    @pytest.fixture(params=[GROMACS_MDP_NST_1, GROMACS_MDP_NST_8])
-    def mdp(self, request):
-        return request.param
+class IMDGromacsTest:
 
     @pytest.fixture()
     def setup_command(self, mdp):
@@ -58,10 +56,26 @@ class TestIMDv3Gromacs(IMDv3IntegrationTest):
                     return float(match.group(1))
         raise ValueError(f"No dt found in {mdp}")
 
-    # @pytest.fixture()
-    # def match_string(self):
-    #     return "IMD: Will wait until I have a connection and IMD_GO orders."
+
+class TestIMDv3Gromacs(IMDGromacsTest, IMDv3IntegrationTest):
+
+    @pytest.fixture(params=[GROMACS_MDP_V3_NST_1, GROMACS_MDP_V3_NST_8])
+    def mdp(self, request):
+        return request.param
+
+
+class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
+
+    @pytest.fixture(params=[GROMACS_MDP_V2_NST_1, GROMACS_MDP_V2_NST_8])
+    def mdp(self, request):
+        return request.param
 
     @pytest.fixture()
-    def first_frame(self):
-        return 0
+    def imd_nst(self, mdp):
+        pattern = re.compile(r"^\s*IMD-nst\s*=\s*(\S+)")
+        with open(mdp, "r") as file:
+            for line in file:
+                match = pattern.match(line)
+                if match:
+                    return int(match.group(1))
+        raise ValueError(f"No IMD-nst found in {mdp}")

@@ -10,6 +10,8 @@ from numpy.testing import (
 import docker
 import MDAnalysis as mda
 
+from MDAnalysis.transformations.wrap import wrap
+
 from .utils import get_free_port
 from .minimalreader import MinimalReader
 
@@ -59,7 +61,7 @@ def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
         print("All values are within tolerance.")
 
 
-class IMDv3IntegrationTest:
+class IMDIntegrationTest:
 
     @pytest.fixture()
     def container_name(self):
@@ -67,6 +69,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def setup_command(self):
+        return None
+
+    @pytest.fixture()
+    def post_simulation_command(self):
         return None
 
     @pytest.fixture()
@@ -80,6 +86,7 @@ class IMDv3IntegrationTest:
         input_files,
         setup_command,
         simulation_command,
+        post_simulation_command,
         port,
         container_name,
     ):
@@ -100,6 +107,8 @@ class IMDv3IntegrationTest:
             cmdstring += " && " + setup_command
 
         cmdstring += " && " + simulation_command
+        if post_simulation_command is not None:
+            cmdstring += " && " + post_simulation_command
 
         # Start the container, mount tmp_path, run simulation
         container = docker_client.containers.run(
@@ -117,27 +126,48 @@ class IMDv3IntegrationTest:
         # a container
         time.sleep(30)
 
-        yield
+        yield container
+
         try:
             container.stop()
         except docker.errors.NotFound:
             pass
 
     @pytest.fixture()
-    def imd_u(self, docker_client, topol, tmp_path, port):
+    def first_frame(self):
+        return 0
+
+    @pytest.fixture()
+    def imd_nst(self):
+        return None
+
+    @pytest.fixture()
+    def imd_u(self, docker_client, topol, tmp_path, port, imd_nst):
         n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
         u = MinimalReader(
-            f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
+            f"imd://localhost:{port}",
+            n_atoms=n_atoms,
+            process_stream=True,
+            transmission_rate=imd_nst,
         )
         yield u
 
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
+        # imd_u finishes when the IMD stream closes; wait for any post-processing in post_simulation_command
+        # in the container before reading the reference trajectory from disk.
+        docker_client.wait()
         u = mda.Universe(
             (tmp_path / topol),
             (tmp_path / traj),
         )
+        if not imd_u.imdsinfo.wrapped_coords:
+            u.trajectory.add_transformations(wrap(u.atoms, compound="atoms"))
+            imd_u._wrap_trajectory(u, first_frame)
         yield u
+
+
+class IMDv3IntegrationTest(IMDIntegrationTest):
 
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
@@ -233,3 +263,15 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         ).atoms.n_atoms
         u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+
+
+class IMDv2IntegrationTest(IMDIntegrationTest):
+
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
+        for i in range(first_frame, len(true_u.trajectory)):
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].positions,
+                atol=1e-03,
+            )

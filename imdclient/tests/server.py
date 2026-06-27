@@ -37,7 +37,7 @@ class InThreadIMDServer:
     @property
     def port(self):
         """Get the port the server is bound to.
-        
+
         Returns:
             int: The port number, or None if not bound yet.
         """
@@ -47,7 +47,9 @@ class InThreadIMDServer:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((host, 0))  # Bind to port 0 to get a free port
         self._bound_port = s.getsockname()[1]  # Store the actual bound port
-        logger.debug(f"InThreadIMDServer: Listening on {host}:{self._bound_port}")
+        logger.debug(
+            f"InThreadIMDServer: Listening on {host}:{self._bound_port}"
+        )
         s.listen(60)
         self.listen_socket = s
 
@@ -199,6 +201,10 @@ class InThreadIMDServer:
             raise ValueError(
                 f"Expected packet length {expected_length}, got {header.length}"
             )
+
+    def expect_no_packet(self, timeout=0):
+        if sock_contains_data(self.conn, timeout):
+            raise ValueError("Expected no packet here")
 
     def disconnect(self):
         self.conn.shutdown(socket.SHUT_RD)
