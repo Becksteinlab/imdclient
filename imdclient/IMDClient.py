@@ -216,7 +216,9 @@ class IMDClient:
             # /proc/sys/net/core/rmem_default
             # Max (linux):
             # /proc/sys/net/core/rmem_max
-            conn.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize)
+            conn.setsockopt(
+                socket.SOL_SOCKET, socket.SO_RCVBUF, socket_bufsize
+            )
         try:
             logger.debug(f"IMDClient: Connecting to {host}:{port}")
             conn.connect((host, port))
@@ -787,7 +789,9 @@ class IMDFrameBuffer:
             raise ValueError("pause_empty_proportion must be between 0 and 1")
         self._pause_empty_proportion = pause_empty_proportion
         if unpause_empty_proportion < 0 or unpause_empty_proportion > 1:
-            raise ValueError("unpause_empty_proportion must be between 0 and 1")
+            raise ValueError(
+                "unpause_empty_proportion must be between 0 and 1"
+            )
         self._unpause_empty_proportion = unpause_empty_proportion
 
         if buffer_size <= 0:
@@ -854,7 +858,9 @@ class IMDFrameBuffer:
                 logger.debug("IMDProducer: Noticing consumer finished")
                 raise EOFError
         except Exception as e:
-            logger.debug(f"IMDProducer: Error waiting for space in buffer: {e}")
+            logger.debug(
+                f"IMDProducer: Error waiting for space in buffer: {e}"
+            )
 
     def pop_empty_imdframe(self):
         logger.debug("IMDProducer: Getting empty frame")
@@ -900,7 +906,9 @@ class IMDFrameBuffer:
             imdf = self._full_q.get()
         else:
             with self._full_imdf_avail:
-                while self._full_q.qsize() == 0 and not self._producer_finished:
+                while (
+                    self._full_q.qsize() == 0 and not self._producer_finished
+                ):
                     self._full_imdf_avail.wait()
 
             if self._producer_finished and self._full_q.qsize() == 0:
@@ -929,67 +937,3 @@ class IMDFrameBuffer:
         with self._empty_imdf_avail:
             # noop if producer isn't waiting
             self._empty_imdf_avail.notify()
-
-
-class IMDFrame:
-    def __init__(self, n_atoms, imdsinfo):
-        if imdsinfo.time:
-            self.time = 0.0
-            self.dt = 0.0
-            self.step = 0.0
-        else:
-            self.time = None
-            self.dt = None
-            self.step = None
-        if imdsinfo.energies:
-            self.energies = {
-                "step": 0,
-                "temperature": 0.0,
-                "total_energy": 0.0,
-                "potential_energy": 0.0,
-                "van_der_walls_energy": 0.0,
-                "coulomb_energy": 0.0,
-                "bonds_energy": 0.0,
-                "angles_energy": 0.0,
-                "dihedrals_energy": 0.0,
-                "improper_dihedrals_energy": 0.0,
-            }
-        else:
-            self.energies = None
-        if imdsinfo.box:
-            self.box = np.empty((3, 3), dtype=np.float32)
-        else:
-            self.box = None
-        if imdsinfo.positions:
-            self.positions = np.empty((n_atoms, 3), dtype=np.float32)
-        else:
-            self.positions = None
-        if imdsinfo.velocities:
-            self.velocities = np.empty((n_atoms, 3), dtype=np.float32)
-        else:
-            self.velocities = None
-        if imdsinfo.forces:
-            self.forces = np.empty((n_atoms, 3), dtype=np.float32)
-        else:
-            self.forces = None
-
-
-def imdframe_memsize(n_atoms, imdsinfo) -> int:
-    """
-    Calculate the memory size of an IMDFrame in bytes
-    """
-    memsize = 0
-    if imdsinfo.time:
-        memsize += 8 * 3
-    if imdsinfo.energies:
-        memsize += 4 * 10
-    if imdsinfo.box:
-        memsize += 4 * 9
-    if imdsinfo.positions:
-        memsize += 4 * 3 * n_atoms
-    if imdsinfo.velocities:
-        memsize += 4 * 3 * n_atoms
-    if imdsinfo.forces:
-        memsize += 4 * 3 * n_atoms
-
-    return memsize
