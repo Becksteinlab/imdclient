@@ -389,7 +389,7 @@ class TestIMDFrameBuffer:
 
     # simple test below to cover Error raising but doesn't test if the Error is raised
     # when consumer finishes while the `wait_for_space()` is running
-    # TODO: add threaded test to properly test this scenario    
+    # TODO: add threaded test to properly test this scenario
     def test_wait_for_space_raises_when_consumer_finished(self, imdsinfo):
         buffer_size = imdframe_memsize(1, imdsinfo) * 2
         buffer = IMDFrameBuffer(imdsinfo, n_atoms=1, buffer_size=buffer_size)
