@@ -17,9 +17,13 @@ The rules for this file:
 -->
 ## [v0.2.4] - UNPUBLISHED
 @orbeckst
+@amruthesht
 
 ### Changed
 * support Python 3.11--3.14 following SPEC0 (#124)
+
+### Added
+* Imporvements to error propagation and chaining; tests for timeout feature (Issue #111, PR #120)
 
 ## [v0.2.3] - 2025-11-08
 ### Authors
