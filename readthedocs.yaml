@@ -8,7 +8,7 @@ sphinx:
 build:
   os: ubuntu-lts-latest
   tools:
-    python: ""miniforge3-latest"
+    python: "miniforge3-latest"
 
 python:
   install:
