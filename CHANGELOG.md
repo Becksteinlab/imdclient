@@ -14,12 +14,21 @@ The rules for this file:
     * 79 char width
     * YYYY-MM-DD date format (following ISO 8601)
   * accompany each entry with github issue/PR number (Issue #xyz)
+-------------------------------------------------------------------------------
 -->
+
 ## [v0.2.4] - UNPUBLISHED
-@orbeckst
+### Authors
+@orbeckst @amruthesht
 
 ### Changed
 * support Python 3.11--3.14 following SPEC0 (#124)
+* timeout default value changed to 600s (was 5s) so that stream from a running
+  simulation is not prematurely killed with infrequent updates (#111)
+
+### Added
+* improved error propagation and chaining (PR #120)
+* warn if timeout < 1s (overly optimistic) (Issue #111, PR #120)
 
 ## [v0.2.3] - 2025-11-08
 ### Authors
@@ -32,7 +41,7 @@ The rules for this file:
 ### Fixed
 * Changed signal handler method to accept arbitrary args to prevent
   error being raised in new jupyter version (Issue #116, PR #117)
-* Removed timeout changes during pause/resume for IMDv2 and IMv3
+* Removed timeout changes during pause/resume for IMDv2 and IMDv3
   (Issue #96, PR #118)
 
 ### Deprecated
