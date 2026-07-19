@@ -30,6 +30,10 @@ The rules for this file:
 * improved error propagation and chaining (PR #120)
 * warn if timeout < 1s (overly optimistic) (Issue #111, PR #120)
 
+### Fixed
+* `IMDServer.disconnect` call now properly sends EOF to client
+  in all cases (PR #149)
+
 ## [v0.2.3] - 2025-11-08
 ### Authors
 @ljwoods2
