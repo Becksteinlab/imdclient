@@ -207,7 +207,9 @@ class InThreadIMDServer:
             raise ValueError("Expected no packet here")
 
     def disconnect(self):
-        self.conn.shutdown(socket.SHUT_RD)
+        # send EOF to the client, marking end of stream
+        self.conn.shutdown(socket.SHUT_RDWR)
+        # release fd associated with socket
         self.conn.close()
 
     def cleanup(self):
