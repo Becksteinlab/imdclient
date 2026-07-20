@@ -16,6 +16,14 @@ The rules for this file:
   * accompany each entry with github issue/PR number (Issue #xyz)
 -------------------------------------------------------------------------------
 -->
+## [v0.2.5] - UNPUBLISHED
+### Authors
+@ljwoods2
+
+### Fixed
+* `IMDServer.disconnect` call now properly sends EOF to client
+  in all cases (PR #149, see also MDAnalysis/mdanalysis#5442)
+
 
 ## [v0.2.4] - 2026-07-13
 ### Authors
@@ -29,6 +37,7 @@ The rules for this file:
 ### Added
 * improved error propagation and chaining (PR #120)
 * warn if timeout < 1s (overly optimistic) (Issue #111, PR #120)
+
 
 ## [v0.2.3] - 2025-11-08
 ### Authors
