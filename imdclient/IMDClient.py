@@ -61,12 +61,31 @@ class IMDClient:
         to blocking. If None, the client will not attempt to change the simulation engine's behavior.
         Only supported for IMDv3; must be ``None`` for IMDv2 connections.
     transmission_rate : int, optional [``None``]
-        IMD transmission rate to be set after client send go signal. 
-        This parameter is only set to the server when using IMDv2. Default behavior is to not set the transmission rate. 
-        This parameter is useful when running GROMACS with IMDv2, where transmission rate can only be set via the client. 
-        IMDv2 implementations in LAMMPS and NAMD support setting the transmission rate via relevant input file parameters.
+        IMD :ref:`transmission rate <transmission-rate>` to send after the go
+        packet (for IMDv2 only). The transmission rate is the number of
+        integration steps between each IMD frame; see :doc:`protocol_v3` for
+        more details.
+
+        If ``None``, no ``IMD_TRATE`` packet is sent. IMDv2 in LAMMPS and NAMD
+        allow setting the rate in the simulation input file instead.
+        GROMACS IMDv2 ignores ``IMD-nst`` in the ``*.mdp`` file; the engine
+        starts with a default rate of 1 until the client sends ``IMD_TRATE``.
+
+        .. versionadded:: 0.3.0
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
+
+    .. warning::
+
+        When using GROMACS with IMDv2, users should set `transmission_rate` explicitly.
+        Otherwise the GROMACS default of 1 will be chosen. This default setting will send
+        every integrator time step and may impact performance substantially.
+
+    .. versionadded:: 0.3.0
+    
+        Added ``transmission_rate`` parameter to set the IMDv2 transmission
+        rate from the client (via an ``IMD_TRATE`` packet) after the go packet
+        is sent.
     """
 
     def __init__(
@@ -342,6 +361,9 @@ class IMDClient:
     def _trate(self, rate):
         """
         Send a trate packet to the server to set transmission rate.
+
+
+        .. versionadded:: 0.3.0
         """
         trate = create_header_bytes(IMDHeaderType.IMD_TRATE, rate)
         self._conn.sendall(trate)
@@ -356,7 +378,10 @@ class IMDClient:
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
 
-        if self._continue_after_disconnect is not None and self._imdsinfo.version == 3:  
+        if (
+            self._continue_after_disconnect is not None
+            and self._imdsinfo.version == 3
+        ):
             wait_behavior = (int)(not self._continue_after_disconnect)
             wait_packet = create_header_bytes(
                 IMDHeaderType.IMD_WAIT, wait_behavior
@@ -607,6 +632,16 @@ class IMDProducerV2(BaseIMDProducer):
         # cache the last energies received
 
         # Consume any leading energy packets first, then handle positions.
+        # NOTE:
+        # IMDv3 implementations define a fixed per-frame packet order, but IMDv2
+        # implementations in simulation engines do not enforce ordering between
+        # packet types. Under stream connectivity issues, or in rare parallel
+        # execution cases in some engines (e.g. NAMD), an extra energy
+        # packet can slip through before the coordinate packet. We keep
+        # the last energy values seen and also warn when the leading energy packet
+        # count is more than 1, since energies may then be out of sync with the
+        # coordinates that follow. This behavior i.e. possible multiple consecutive
+        # IMD_ENERGIES packets before coordinates is an IMDv2-only exception.
         header = self._get_header()
         leading_energies = 0
         while header.type == IMDHeaderType.IMD_ENERGIES and header.length == 1:
