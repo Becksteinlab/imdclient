@@ -349,6 +349,25 @@ class TestIMDClientV3(IMDClientTest):
 
 
 class TestIMDClientV2(IMDClientTest):
+    @pytest.mark.parametrize("cont", [True, False])
+    def test_continue_after_disconnect_not_supported_for_v2(
+        self, universe, imdsinfo, cont
+    ):
+        server = InThreadIMDServer(universe.trajectory)
+        server.set_imdsessioninfo(imdsinfo)
+        server.handshake_sequence("localhost", first_frame=False)
+        with pytest.raises(
+            ValueError,
+            match="continue_after_disconnect is only supported for IMDv3",
+        ):
+            IMDClient(
+                "localhost",
+                server.port,
+                universe.atoms.n_atoms,
+                continue_after_disconnect=cont,
+            )
+        server.cleanup()
+
     @pytest.mark.parametrize("rate", [1, 8])
     def test_trate_sent_after_go_for_v2(self, universe, imdsinfo, rate):
         server = InThreadIMDServer(universe.trajectory)

@@ -59,6 +59,7 @@ class IMDClient:
         If True, the client will attempt to change the simulation engine's waiting behavior to
         non-blocking after the client disconnects. If False, the client will attempt to change it
         to blocking. If None, the client will not attempt to change the simulation engine's behavior.
+        Only supported for IMDv3; must be ``None`` for IMDv2 connections.
     transmission_rate : int, optional [``None``]
         IMD transmission rate to be set after client send go signal. 
         This parameter is only set to the server when using IMDv2. Default behavior is to not set the transmission rate. 
@@ -92,6 +93,15 @@ class IMDClient:
         self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
         self._continue_after_disconnect = continue_after_disconnect
+
+        if (
+            self._imdsinfo.version == 2
+            and self._continue_after_disconnect is not None
+        ):
+            self._conn.close()
+            raise ValueError(
+                "IMDClient: continue_after_disconnect is only supported for IMDv3"
+            )
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -346,7 +356,7 @@ class IMDClient:
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
 
-        if self._continue_after_disconnect is not None:
+        if self._continue_after_disconnect is not None and self._imdsinfo.version == 3:  
             wait_behavior = (int)(not self._continue_after_disconnect)
             wait_packet = create_header_bytes(
                 IMDHeaderType.IMD_WAIT, wait_behavior
