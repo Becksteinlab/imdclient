@@ -82,7 +82,7 @@ class IMDClient:
         every integrator time step and may impact performance substantially.
 
     .. versionadded:: 0.3.0
-    
+
         Added ``transmission_rate`` parameter to set the IMDv2 transmission
         rate from the client (via an ``IMD_TRATE`` packet) after the go packet
         is sent.
@@ -155,8 +155,15 @@ class IMDClient:
 
         self._go()
 
-        if transmission_rate is not None and self._imdsinfo.version == 2:
-            self._trate(transmission_rate)
+        if transmission_rate is not None:
+            if self._imdsinfo.version == 2:
+                self._trate(transmission_rate)
+            elif self._imdsinfo.version == 3:
+                logger.warning(
+                    "IMDClient: transmission_rate=%s was provided but is ignored for "
+                    "IMDv3 and not automatically sent/set on the server.",
+                    transmission_rate,
+                )
 
         if self._multithreaded:
             # Disconnect MUST occur. This covers typical cases (Python, IPython interpreter)
