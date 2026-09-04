@@ -28,7 +28,6 @@ from .utils import (
     create_default_imdsinfo_v3,
 )
 
-
 logger = logging.getLogger("imdclient.IMDClient")
 file_handler = logging.FileHandler("test.log")
 formatter = logging.Formatter(
@@ -332,18 +331,24 @@ class TestIMDClientV3(IMDClientTest):
         with pytest.raises(RuntimeError, match="An unexpected error occurred"):
             client._producer._get_imdframe()
 
-    def test_trate_not_sent_for_v3(self, universe, imdsinfo):
+    def test_trate_not_sent_for_v3(self, universe, imdsinfo, caplog):
         server = InThreadIMDServer(universe.trajectory)
         server.set_imdsessioninfo(imdsinfo)
         server.handshake_sequence("localhost", first_frame=False)
-        client = IMDClient(
-            "localhost",
-            server.port,
-            universe.atoms.n_atoms,
-            transmission_rate=8,
-        )
+        with caplog.at_level(logging.WARNING):
+            client = IMDClient(
+                "localhost",
+                server.port,
+                universe.atoms.n_atoms,
+                transmission_rate=8,
+            )
         server.join_accept_thread()
         server.expect_no_packet()
+        assert any(
+            "transmission_rate=8 was provided but is ignored for IMDv3"
+            in record.message
+            for record in caplog.records
+        )
         client.stop()
         server.cleanup()
 

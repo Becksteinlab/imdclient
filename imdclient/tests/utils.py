@@ -2,7 +2,6 @@ from imdclient.IMDProtocol import *
 import socket
 import logging
 
-
 logger = logging.getLogger("imdclient.IMDClient")
 
 
