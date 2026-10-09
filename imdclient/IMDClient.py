@@ -59,8 +59,33 @@ class IMDClient:
         If True, the client will attempt to change the simulation engine's waiting behavior to
         non-blocking after the client disconnects. If False, the client will attempt to change it
         to blocking. If None, the client will not attempt to change the simulation engine's behavior.
+        Only supported for IMDv3; must be ``None`` for IMDv2 connections.
+    transmission_rate : int, optional [``None``]
+        IMD :ref:`transmission rate <transmission-rate>` to send after the go
+        packet (for IMDv2 only). The transmission rate is the number of
+        integration steps between each IMD frame; see :doc:`protocol_v3` for
+        more details.
+
+        If ``None``, no ``IMD_TRATE`` packet is sent. IMDv2 in LAMMPS and NAMD
+        allow setting the rate in the simulation input file instead.
+        GROMACS IMDv2 ignores ``IMD-nst`` in the ``*.mdp`` file; the engine
+        starts with a default rate of 1 until the client sends ``IMD_TRATE``.
+
+        .. versionadded:: 0.3.0
     **kwargs : dict (optional)
         Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
+
+    .. warning::
+
+        When using GROMACS with IMDv2, users should set `transmission_rate` explicitly.
+        Otherwise the GROMACS default of 1 will be chosen. This default setting will send
+        every integrator time step and may impact performance substantially.
+
+    .. versionadded:: 0.3.0
+
+        Added ``transmission_rate`` parameter to set the IMDv2 transmission
+        rate from the client (via an ``IMD_TRATE`` packet) after the go packet
+        is sent.
     """
 
     def __init__(
@@ -71,6 +96,7 @@ class IMDClient:
         socket_bufsize=None,
         multithreaded=True,
         continue_after_disconnect=None,
+        transmission_rate=None,
         **kwargs,
     ):
 
@@ -86,6 +112,15 @@ class IMDClient:
         self._imdsinfo = self._await_IMD_handshake()
         self._multithreaded = multithreaded
         self._continue_after_disconnect = continue_after_disconnect
+
+        if (
+            self._imdsinfo.version == 2
+            and self._continue_after_disconnect is not None
+        ):
+            self._conn.close()
+            raise ValueError(
+                "IMDClient: continue_after_disconnect is only supported for IMDv3"
+            )
 
         if self._multithreaded:
             self._buf = IMDFrameBuffer(
@@ -119,6 +154,16 @@ class IMDClient:
             )
 
         self._go()
+
+        if transmission_rate is not None:
+            if self._imdsinfo.version == 2:
+                self._trate(transmission_rate)
+            elif self._imdsinfo.version == 3:
+                logger.warning(
+                    "IMDClient: transmission_rate=%s was provided but is ignored for "
+                    "IMDv3 and not automatically sent/set on the server.",
+                    transmission_rate,
+                )
 
         if self._multithreaded:
             # Disconnect MUST occur. This covers typical cases (Python, IPython interpreter)
@@ -293,13 +338,13 @@ class IMDClient:
             sinfo = IMDSessionInfo(
                 version=ver,
                 endianness=end,
-                wrapped_coords=False,
                 time=False,
                 energies=True,
                 box=False,
                 positions=True,
                 velocities=False,
                 forces=False,
+                wrapped_coords=False,
             )
 
         elif ver == 3:
@@ -320,16 +365,30 @@ class IMDClient:
 
         return sinfo
 
+    def _trate(self, rate):
+        """
+        Send a trate packet to the server to set transmission rate.
+
+
+        .. versionadded:: 0.3.0
+        """
+        trate = create_header_bytes(IMDHeaderType.IMD_TRATE, rate)
+        self._conn.sendall(trate)
+        logger.debug("IMDClient: Sent transmission rate %s", rate)
+
     def _go(self):
         """
-        Send a go packet to the client to start the simulation
+        Send a go packet to the server to start the simulation
         and begin receiving data.
         """
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
         self._conn.sendall(go)
         logger.debug("IMDClient: Sent go packet to server")
 
-        if self._continue_after_disconnect is not None:
+        if (
+            self._continue_after_disconnect is not None
+            and self._imdsinfo.version == 3
+        ):
             wait_behavior = (int)(not self._continue_after_disconnect)
             wait_packet = create_header_bytes(
                 IMDHeaderType.IMD_WAIT, wait_behavior
@@ -579,9 +638,20 @@ class IMDProducerV2(BaseIMDProducer):
         # Even if they are sent, energies might not be sent every frame
         # cache the last energies received
 
-        # Either receive energies + positions or just positions
+        # Consume any leading energy packets first, then handle positions.
+        # NOTE:
+        # IMDv3 implementations define a fixed per-frame packet order, but IMDv2
+        # implementations in simulation engines do not enforce ordering between
+        # packet types. Under stream connectivity issues, or in rare parallel
+        # execution cases in some engines (e.g. NAMD), an extra energy
+        # packet can slip through before the coordinate packet. We keep
+        # the last energy values seen and also warn when the leading energy packet
+        # count is more than 1, since energies may then be out of sync with the
+        # coordinates that follow. This behavior i.e. possible multiple consecutive
+        # IMD_ENERGIES packets before coordinates is an IMDv2-only exception.
         header = self._get_header()
-        if header.type == IMDHeaderType.IMD_ENERGIES and header.length == 1:
+        leading_energies = 0
+        while header.type == IMDHeaderType.IMD_ENERGIES and header.length == 1:
             self._imdsinfo.energies = True
             self._read(self._energies)
             self._imdf.energies.update(
@@ -589,20 +659,22 @@ class IMDProducerV2(BaseIMDProducer):
             )
             self._prev_energies = self._imdf.energies
 
-            self._expect_header(
-                IMDHeaderType.IMD_FCOORDS, expected_value=self._n_atoms
+            leading_energies += 1
+
+            header = self._get_header()
+
+        if leading_energies == 0 or leading_energies > 1:
+            logger.warning(
+                f"IMDProducer: Received {leading_energies} leading IMDv2 energy packets before coordinates, energy values may be out of sync with coordinates"
             )
-            self._read(self._positions)
-            np.copyto(
-                self._imdf.positions,
-                np.frombuffer(
-                    self._positions, dtype=f"{self._imdsinfo.endianness}f"
-                ).reshape((self._n_atoms, 3)),
-            )
-        elif (
-            header.type == IMDHeaderType.IMD_FCOORDS
-            and header.length == self._n_atoms
-        ):
+
+        if header.type == IMDHeaderType.IMD_FCOORDS:
+            # check if the number of atoms is correct
+            if header.length != self._n_atoms:
+                raise RuntimeError(
+                    f"IMDProducer: Expected n_atoms value {self._n_atoms}, got {header.length}. "
+                    + "Ensure you are using the correct topology file."
+                )
             # If we received positions but no energies
             # use the last energies received
             if self._prev_energies is not None:
@@ -617,7 +689,9 @@ class IMDProducerV2(BaseIMDProducer):
                 ).reshape((self._n_atoms, 3)),
             )
         else:
-            raise RuntimeError("IMDProducer: Unexpected packet type or length")
+            raise RuntimeError(
+                f"IMDProducer: Unexpected packet type {header.type.name}"
+            )
 
     def _pause(self):
         logger.debug(
