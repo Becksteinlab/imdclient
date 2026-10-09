@@ -48,4 +48,3 @@ pbc                     = xyz       ; 3-D PBC
 gen_vel                 = no
 IMD-group               = System
 IMD-nst                 = 8
-IMD-version             = 2

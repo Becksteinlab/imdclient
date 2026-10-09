@@ -29,8 +29,8 @@ logger.setLevel(logging.DEBUG)
 class IMDLammpsTest:
 
     @pytest.fixture()
-    def simulation_command(self, inp):
-        return f"lmp < {Path(inp).name}"
+    def simulation_command(self, inp, imd_version):
+        return f"lmp-{imd_version} < {Path(inp).name}"
 
     @pytest.fixture()
     def topol(self):

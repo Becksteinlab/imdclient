@@ -27,12 +27,12 @@ logger.setLevel(logging.DEBUG)
 class IMDGromacsTest:
 
     @pytest.fixture()
-    def setup_command(self, mdp):
-        return f"gmx grompp -f {Path(mdp).name} -c {Path(GROMACS_GRO).name} -p {Path(GROMACS_TOP).name} -o topol.tpr"
+    def setup_command(self, mdp, imd_version):
+        return f"gmx-{imd_version} grompp -f {Path(mdp).name} -c {Path(GROMACS_GRO).name} -p {Path(GROMACS_TOP).name} -o topol.tpr"
 
     @pytest.fixture()
-    def simulation_command(self):
-        return f"gmx mdrun -s topol.tpr -o ci.trr -imdport 8888 -imdwait"
+    def simulation_command(self, imd_version):
+        return f"gmx-{imd_version} mdrun -s topol.tpr -o ci.trr -imdport 8888 -imdwait"
 
     @pytest.fixture()
     def input_files(self, mdp):

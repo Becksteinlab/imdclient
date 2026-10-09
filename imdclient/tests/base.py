@@ -169,6 +169,11 @@ class IMDIntegrationTest:
 
 class IMDv3IntegrationTest(IMDIntegrationTest):
 
+    @pytest.fixture()
+    def imd_version(self):
+        # Suffix of the engine commands in the container (gmx-imdv3, lmp-imdv3, namd3-imdv3)
+        return "imdv3"
+
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
 
@@ -266,6 +271,11 @@ class IMDv3IntegrationTest(IMDIntegrationTest):
 
 
 class IMDv2IntegrationTest(IMDIntegrationTest):
+
+    @pytest.fixture()
+    def imd_version(self):
+        # Suffix of the engine commands in the container (gmx-imdv2, lmp-imdv2, namd3-imdv2)
+        return "imdv2"
 
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
         for i in range(first_frame, len(true_u.trajectory)):

@@ -41,8 +41,8 @@ class IMDNAMDTest:
         return "ghcr.io/becksteinlab/streaming-namd-docker:main-common-cpu"
 
     @pytest.fixture()
-    def simulation_command(self, inp):
-        return f"namd3 {Path(inp).name}"
+    def simulation_command(self, inp, imd_version):
+        return f"namd3-{imd_version} {Path(inp).name}"
 
     @pytest.fixture()
     def input_files(self, inp):
