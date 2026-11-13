@@ -155,7 +155,8 @@ class TestIMDv3NAMD(IMDNAMDTest, IMDv3IntegrationTest):
         for i in range(first_frame, len(true_u_force.trajectory)):
 
             assert_allclose_with_logging(
-                true_u_force.trajectory[i].positions,
+                # Unit conversion
+                true_u_force.trajectory[i].positions * 4.184,
                 imd_u.trajectory[i - first_frame].forces,
                 atol=1e-03,
             )
