@@ -17,6 +17,39 @@ from .minimalreader import MinimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
 
+# Cap bytes written to CI logs (avoid multi-MB dumps).
+_CONTAINER_LOG_TAIL = 256_000
+
+
+def _dump_container_debug(container, *, image, command, host_port):
+    """Print engine container state and logs for CI / local pytest (-s)."""
+    header = "=== IMD integration container debug ==="
+    print(header)
+    print(f"image: {image}")
+    print(f"host port (maps to container 8888): {host_port}")
+    print(f"shell command: {command}")
+    try:
+        container.reload()
+        state = container.attrs.get("State", {})
+        print(
+            "state:",
+            f"status={state.get('Status')!r}",
+            f"exit_code={state.get('ExitCode')!r}",
+            f"error={state.get('Error')!r}",
+            f"oom_killed={state.get('OOMKilled')!r}",
+        )
+        raw = container.logs(stdout=True, stderr=True, tail=_CONTAINER_LOG_TAIL)
+        text = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
+        if not text.strip():
+            print("(container logs empty)")
+        else:
+            print("--- container logs (tail) ---")
+            print(text)
+        print("=== end container debug ===")
+    except Exception as exc:
+        print(f"Could not fetch container debug info: {exc}")
+        print("=== end container debug ===")
+
 
 def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
     """
@@ -110,10 +143,13 @@ class IMDIntegrationTest:
         if post_simulation_command is not None:
             cmdstring += " && " + post_simulation_command
 
+        shell_cmd = f"/bin/sh -c '{cmdstring}'"
+        print(f"Starting container {container_name!r} with command: {cmdstring}")
+
         # Start the container, mount tmp_path, run simulation
         container = docker_client.containers.run(
             img,
-            f"/bin/sh -c '{cmdstring}'",
+            shell_cmd,
             detach=True,
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
             ports={"8888/tcp": port},
@@ -126,12 +162,19 @@ class IMDIntegrationTest:
         # a container
         time.sleep(30)
 
-        yield container
-
         try:
-            container.stop()
-        except docker.errors.NotFound:
-            pass
+            yield container
+        finally:
+            _dump_container_debug(
+                container,
+                image=container_name,
+                command=cmdstring,
+                host_port=port,
+            )
+            try:
+                container.stop()
+            except docker.errors.NotFound:
+                pass
 
     @pytest.fixture()
     def first_frame(self):
