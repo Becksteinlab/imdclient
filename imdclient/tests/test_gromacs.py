@@ -72,10 +72,9 @@ class TestIMDv2Gromacs(IMDGromacsTest, IMDv2IntegrationTest):
 
     @pytest.fixture()
     def imd_nst(self, mdp):
-        pattern = re.compile(r"^\s*IMD-nst\s*=\s*(\S+)")
-        with open(mdp, "r") as file:
-            for line in file:
-                match = pattern.match(line)
-                if match:
-                    return int(match.group(1))
-        raise ValueError(f"No IMD-nst found in {mdp}")
+        # IMDv2 has no IMD-nst in the mdp; rate is sent by the client after handshake.
+        if mdp == GROMACS_MDP_V2_NST_1:
+            return 1
+        if mdp == GROMACS_MDP_V2_NST_8:
+            return 8
+        raise ValueError(f"Unknown IMDv2 mdp: {mdp}")

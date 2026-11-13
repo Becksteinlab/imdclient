@@ -47,4 +47,4 @@ pbc                     = xyz       ; 3-D PBC
 ; Velocity generation
 gen_vel                 = no
 IMD-group               = System
-IMD-nst                 = 1
+; IMDv2 transmission rate is set by client

@@ -57,7 +57,7 @@ dump_modify h5md1 unwrap no
 
 ## IMD settings
 # https://docs.lammps.org/fix_imd.html
-fix 2 all imd 8888 version 2 nowait off trate 8
+fix 2 all imd 8888 nowait off trate 8
 
 ## Run MD sim
 run 100
