@@ -114,7 +114,8 @@ def test_compare_imd_to_true_traj_vel(imd_u, true_u_vel, first_frame):
 def test_compare_imd_to_true_traj_forces(imd_u, true_u_force, first_frame):
     for i in range(first_frame, len(true_u_force.trajectory)):
         assert_allclose_with_logging(
-            true_u_force.trajectory[i].positions,
+            # Manually convert unit
+            true_u_force.trajectory[i].positions * 4.184,
             imd_u.trajectory[i - first_frame].forces,
             atol=1e-03,
         )

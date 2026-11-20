@@ -1,7 +1,9 @@
 import logging
 import copy
 
+import numpy as np
 from MDAnalysis.coordinates import core
+from MDAnalysis.lib import distances
 
 from imdclient.IMDClient import IMDClient
 from imdclient.utils import parse_host_port
@@ -48,6 +50,10 @@ class MinimalReader:
         if process_stream:
             self._process_stream()
 
+    @property
+    def imdsinfo(self):
+        return self._imdclient.get_imdsessioninfo()
+
     def _read_next_frame(self):
         try:
             imd_frame = self._imdclient.get_imdframe()
@@ -58,13 +64,16 @@ class MinimalReader:
         self.imd_frame = imd_frame
 
         # Modify the box dimensions to be triclinic
-        self._modify_box_dimesions()
+        self._modify_box_dimensions()
 
         logger.debug(f"MinimalReader: Loaded frame {self._frame}")
 
         return self.imd_frame
 
-    def _modify_box_dimesions(self):
+    def _modify_box_dimensions(self):
+        if self.imd_frame.box is None:
+            self.imd_frame.dimensions = None
+            return
         self.imd_frame.dimensions = core.triclinic_box(*self.imd_frame.box)
 
     def _process_stream(self):
@@ -78,6 +87,27 @@ class MinimalReader:
                 )
             except EOFError:
                 break
+
+    def _wrap_frame(self, frame, box):
+        if box is None:
+            return
+        frame.positions = distances.apply_PBC(
+            np.asarray(frame.positions, dtype=np.float32),
+            box,
+        )
+
+    def _wrap_trajectory(self, true_u=None, first_frame=0):
+        """Wrap each stored IMD frame into the primary box (per atom)."""
+        if true_u is None:
+            for frame in self.trajectory:
+                self._wrap_frame(frame, frame.dimensions)
+            return
+
+        for i in range(first_frame, len(true_u.trajectory)):
+            self._wrap_frame(
+                self.trajectory[i - first_frame],
+                true_u.trajectory[i].dimensions,
+            )
 
     def close(self):
         """Gracefully shut down the reader. Stops the producer thread."""

@@ -57,7 +57,7 @@ dump_modify h5md1 unwrap no
 
 ## IMD settings
 # https://docs.lammps.org/fix_imd.html
-fix 2 all imd 8888 version 3 unwrap off nowait off
+fix 2 all imd 8888 version 3 unwrap off nowait off trate 1 time on box on coordinates on velocities on forces on
 
 ## Run MD sim
 run 100
