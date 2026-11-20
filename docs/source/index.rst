@@ -9,11 +9,14 @@ supported simulation engines with regard to transmitted data and is processed in
 `units <protocol_v3.html#units>`_. See `IMDv3 Protocol <protocol_v3.html>`_ for more details. IMDClient is ideal for
 developers looking to produce on-the-fly analysis, avoiding storage of large trajectories.
 
+For IMDv2 setup and usage, see :doc:`usage_v2`.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    getting_started
+   usage_v2
    usage
    api
    protocol_v3
