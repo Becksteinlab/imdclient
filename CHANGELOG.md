@@ -39,13 +39,6 @@ The rules for this file:
   kcal/(mol·Å) to kJ/(mol·Å) to match IMDv3 streamed units (PR #141)
 * Simulation container logs captured in engine integration tests when
   engines fail to start (PR #141)
-
-
-## [v0.2.5] - UNPUBLISHED
-### Authors
-@ljwoods2
-
-### Fixed
 * `IMDServer.disconnect` call now properly sends EOF to client
   in all cases (PR #149, see also MDAnalysis/mdanalysis#5442)
 
