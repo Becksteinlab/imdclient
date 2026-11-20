@@ -39,6 +39,12 @@ following:
   desired interval as
   :paramref:`~imdclient.IMDClient.IMDClient.transmission_rate`.
 
+  * **Units** — The units of energies received over IMDv2 and stored
+  by IMDClient are not standardized and depend on the simulation engine. 
+  NAMD's implementation of IMDv2 streams energies in kcal/mol, while 
+  GROMACS' streams energies in kJ/mol. LAMMPS on the other hand does not 
+  stream energies at all.
+
 Configuring the simulation for IMDv2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
