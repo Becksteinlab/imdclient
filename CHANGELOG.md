@@ -18,7 +18,7 @@ The rules for this file:
 -->
 ## [v0.3.0] - UNPUBLISHED
 ### Authors
-@amruthesht @ljwoods2
+@ljwoods2 @amruthesht
 
 ### Added
 * IMDv2 streaming support in :class:`~imdclient.IMDClient.IMDClient`
