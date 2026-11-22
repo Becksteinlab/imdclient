@@ -26,7 +26,7 @@ project = "IMDClient"
 copyright = (
     "2024, Lawson. "
     "Project structure based on the "
-    "MDAnalysis Cookiecutter version 0.1"
+    "MDAnalysis Cookiecutter"
 )
 author = "Lawson"
 
@@ -101,22 +101,18 @@ pygments_style = "default"
 #
 html_theme = "mdanalysis_sphinx_theme"
 
-# IMDClient brand colors (see _static/README.md).
+# IMDClient brand colors (see _static/README.md / _static/custom.css).
 # Maps onto mdanalysis-sphinx-theme site.sass roles:
 #   $primary → stream blue, $blue → deep navy, $accent → deep navy
-_STREAM_BLUE = "#0788D1"
 _DEEP_NAVY = "#062B4A"
-_STREAM_BLUE_DARK_5 = "#0678B8"
-_STREAM_BLUE_DARK_10 = "#0568A0"
-_STREAM_BLUE_LIGHT = "#D6EEF9"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 # color_accent / mobile_navbar_background accept hex (or named theme colors).
-# $primary and $blue are hardcoded in the theme's site.sass, so we remap them
-# in the compiled site.css after the build (see setup() below).
+# $primary / $blue are hardcoded in the theme's site.sass; override those
+# (and related UI) in _static/custom.css via html_css_files below.
 html_theme_options = {
     "mda_official": False,
     "color_accent": _DEEP_NAVY,
@@ -132,59 +128,7 @@ html_logo = "_static/imdclient-logo.png"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-
-# Remap hardcoded MDAnalysis orange/blue in the compiled theme CSS to IMDClient
-# brand colors. Applied after mdanalysis_sphinx_theme compiles site.sass.
-_THEME_COLOR_REMAP = {
-    # $primary ($mdanalysis-orange) and common darken/lighten derivatives
-    "#FF9200": _STREAM_BLUE,
-    "#E68300": _STREAM_BLUE_DARK_5,
-    "#CC7500": _STREAM_BLUE_DARK_10,
-    "#CC5300": _STREAM_BLUE_DARK_10,
-    "#FFC31A": "#3BB0F0",
-    "#FFEBD0": _STREAM_BLUE_LIGHT,
-    "#FFF6EB": _STREAM_BLUE_LIGHT,
-    "#FFE0B8": "#B8DFF5",
-    "#FFB264": "#4EACDF",
-    "#A35D00": _DEEP_NAVY,
-    # $mdanalysis-code-orange (API headers, literal code) → deep navy
-    "#CA6500": _DEEP_NAVY,
-    # $blue ($mdanalysis-blue)
-    "#007EE7": _DEEP_NAVY,
-}
-_THEME_RGBA_REMAP = {
-    # $primary as rgba()
-    "rgba(255, 146, 0,": "rgba(7, 136, 209,",
-    # $mdanalysis-blue as rgba()
-    "rgba(0, 126, 231,": "rgba(6, 43, 74,",
-}
-
-
-def _remap_theme_colors(app, exception):
-    """Replace theme primary/blue hex values in the compiled site.css."""
-    if exception is not None:
-        return
-
-    css_path = os.path.join(app.outdir, "_static", "site.css")
-    if not os.path.isfile(css_path):
-        return
-
-    with open(css_path, encoding="utf-8") as handle:
-        css = handle.read()
-
-    for old, new in _THEME_COLOR_REMAP.items():
-        css = css.replace(old, new)
-        css = css.replace(old.lower(), new.lower())
-
-    for old, new in _THEME_RGBA_REMAP.items():
-        css = css.replace(old, new)
-
-    with open(css_path, "w", encoding="utf-8") as handle:
-        handle.write(css)
-
-
-def setup(app):
-    app.connect("build-finished", _remap_theme_colors)
+html_css_files = ["custom.css"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

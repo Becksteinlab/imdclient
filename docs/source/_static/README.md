@@ -37,6 +37,10 @@ These map onto variables in the theme’s
 | `$accent` (`color_accent`) | Deep navy (`#062B4A`) |
 
 `color_accent` and `mobile_navbar_background` are set in `conf.py` via
-`html_theme_options`. `$primary` / `$blue` are hardcoded in the theme, so
-`conf.py` remaps them in the compiled `_static/site.css` after each build.
+`html_theme_options`. `$primary` / `$blue` are hardcoded in the theme’s
+compiled CSS, so brand overrides live in `custom.css` and are loaded with:
+
+```python
+html_css_files = ["custom.css"]
+```
 
