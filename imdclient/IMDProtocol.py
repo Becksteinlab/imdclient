@@ -1,3 +1,30 @@
+"""
+IMDProtocol module
+==================
+
+Low-level IMDv2 / IMDv3 packet types, session metadata, and parsers.
+
+.. autoclass:: IMDHeaderType
+   :members:
+   :undoc-members:
+
+.. autoclass:: IMDHeader
+   :members:
+
+.. autoclass:: IMDTime
+   :members:
+
+.. autoclass:: IMDSessionInfo
+   :members:
+
+.. autofunction:: parse_energy_bytes
+.. autofunction:: create_energy_bytes
+.. autofunction:: parse_box_bytes
+.. autofunction:: parse_imdv3_session_info
+.. autofunction:: create_header_bytes
+.. autofunction:: parse_header_bytes
+"""
+
 import struct
 import logging
 from enum import Enum, auto

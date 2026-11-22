@@ -177,7 +177,7 @@ class IMDClient:
 
             For API stability, errors raised in the producer thread (including
             :class:`RuntimeError` for mismatches such as incorrect
-            atom counts) are raised eventually as ``EOFError``s. The original
+            atom counts) are raised eventually as :exc:`EOFError`. The original
             exception message in the case for a multithreaded client is available
             in the error queue.
         """
@@ -972,6 +972,123 @@ class IMDFrameBuffer:
 
 
 class IMDFrame:
+    """One simulation frame received over an IMD connection.
+
+    :class:`IMDFrame` is the value returned by
+    :meth:`IMDClient.get_imdframe`. Which attributes are present depends on the
+    negotiated :class:`~imdclient.IMDProtocol.IMDSessionInfo`: fields that the
+    engine did not offer for the session are set to ``None``. Available array
+    attributes are pre-allocated and then filled in-place each frame.
+
+    Typical consumer loop for extracting the streamed data into ``frame``::
+
+        client = IMDClient(host, port, n_atoms=n_atoms)
+        while True:
+            try:
+                frame = client.get_imdframe()
+            except EOFError:
+                break
+            # use frame.time, frame.positions, frame.energies, ...
+
+    .. rubric:: Buffer reuse (multithreaded client)
+    
+    In the default multithreaded mode,
+    frame objects are pooled by :class:`IMDFrameBuffer`. The instance returned
+    by :meth:`~IMDClient.get_imdframe` is valid only until the next call; that
+    call returns the previous frame to the pool, where the producer may
+    overwrite it. Copy any data you need to keep
+    (e.g. ``frame.positions.copy()``).
+
+    .. rubric:: Units
+    
+    MD engines send payloads in fixed units (see :doc:`protocol_v3`):
+
+    ===========  =====================
+    Quantity     Unit
+    ===========  =====================
+    Length       Å
+    Velocity     Å/ps
+    Force        kJ mol⁻¹ Å⁻¹
+    Time         ps
+    Energy       kJ/mol
+    Temperature  K (absolute)
+    ===========  =====================
+
+    .. attention::
+        IMDv2 engines may use engine-native units for *Energy*; interpret those 
+        values accordingly.
+
+    .. rubric:: Integration step
+    
+    Prefer :attr:`step` from the time packet (64-bit) over ``energies["step"]`` 
+    (32-bit, carried for IMDv2 compatibility). See the energies packet notes in 
+    :doc:`protocol_v3` for more details.
+
+    Parameters
+    ----------
+    n_atoms : int
+        Number of atoms expected in coordinate / velocity / force arrays.
+        Must match the topology used with the live simulation.
+    imdsinfo : IMDSessionInfo
+        Session flags from the handshake that decide which attributes are
+        allocated versus left as ``None``.
+
+    Attributes
+    ----------
+    time : float or None
+        Current simulation time in ps (IMDv3). ``None`` if the session has no
+        time packets (typical for IMDv2).
+    dt : float or None
+        Integrator time step in ps (IMDv3). ``None`` if time packets are
+        absent.
+    step : int or float or None
+        Current integration step from the time packet (IMDv3, 64-bit when 
+        transmitted). ``None`` if time packets are absent. 
+        Initialized to ``0.0`` before the first frame is parsed.
+    energies : dict or None
+        Energy block for this frame, or ``None`` if the session does not send
+        energies. After parsing, keys are:
+
+        * ``step`` (*int*): integration step (int32 when transmitted; prefer
+          :attr:`step` for IMDv3 analysis)
+        * ``temperature`` (*float*): absolute temperature
+        * ``total_energy`` (*float*): total energy
+        * ``potential_energy`` (*float*): potential energy
+        * ``van_der_walls_energy`` (*float*): van der Waals energy.
+          The key spelling (``walls``) is historical and matches field name used
+          by IMDClient.
+        * ``coulomb_energy`` (*float*): Coulomb / electrostatic energy
+        * ``bonds_energy`` (*float*): bond energy
+        * ``angles_energy`` (*float*): angle energy
+        * ``dihedrals_energy`` (*float*): dihedral energy
+        * ``improper_dihedrals_energy`` (*float*): improper dihedral energy
+
+        Under IMDv2, energies may be omitted on some frames; the producer then
+        reuses the last received block when possible, or sets :attr:`energies`
+        to ``None`` if none has been seen yet.
+    box : ndarray or None
+        Triclinic box vectors as a ``(3, 3)`` ``float32`` array, or ``None``
+        if box packets are not part of the session. Layout matches the IMDv3
+        box packet (three cell vectors).
+    positions : ndarray or None
+        Atomic coordinates as ``(n_atoms, 3)`` ``float32``, or ``None`` if
+        coordinates are not sent. Values are in Å. Whether
+        coordinates are wrapped is indicated by the session's
+        ``wrapped_coords`` flag from :meth:`IMDClient.get_imdsessioninfo`.
+    velocities : ndarray or None
+        Atomic velocities as ``(n_atoms, 3)`` ``float32``, or ``None`` if not
+        sent. IMDv3 unit: Å/ps.
+    forces : ndarray or None
+        Atomic forces as ``(n_atoms, 3)`` ``float32``, or ``None`` if not
+        sent. IMDv3 unit: kJ mol⁻¹ Å⁻¹.
+
+    See Also
+    --------
+    IMDClient.get_imdframe : Obtain the next frame from a live connection.
+    IMDClient.get_imdsessioninfo : Inspect which fields the session provides.
+    IMDFrameBuffer : Multithreaded frame pool that recycles these objects.
+    """
+
     def __init__(self, n_atoms, imdsinfo):
         if imdsinfo.time:
             self.time = 0.0
