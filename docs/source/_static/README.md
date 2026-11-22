@@ -25,3 +25,18 @@ html_static_path = ['_static']
 | White | `#FFFFFF` | `rgb(255, 255, 255)` |
 | Background | Transparent | `rgba(0, 0, 0, 0)` |
 
+### `mdanalysis-sphinx-theme` mapping
+
+These map onto variables in the theme’s
+[`site.sass`](https://github.com/MDAnalysis/mdanalysis-sphinx-theme/blob/main/mdanalysis_sphinx_theme/sass/site.sass):
+
+| `site.sass` | IMDClient color |
+|---|---|
+| `$primary` | Stream blue (`#0788D1`) |
+| `$blue` | Deep navy (`#062B4A`) |
+| `$accent` (`color_accent`) | Deep navy (`#062B4A`) |
+
+`color_accent` and `mobile_navbar_background` are set in `conf.py` via
+`html_theme_options`. `$primary` / `$blue` are hardcoded in the theme, so
+`conf.py` remaps them in the compiled `_static/site.css` after each build.
+
