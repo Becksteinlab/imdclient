@@ -109,7 +109,7 @@ html_theme_options = {
     "mda_official": False,
 }
 # Set your logo and favicon here -- replace the placeholders!
-# html_logo = "_static/logo/placeholder_logo.png"
+html_logo = "_static/imdclient-logo.png"
 # html_favicon = "_static/logo/placeholder_favicon.svg"
 
 
