@@ -15,6 +15,16 @@ html_static_path = ['_static']
 * Custom JavaScript code
 * Static logo images
 
+## Logo
+
+The logo font is "Avenir Next" bold.
+
+See below for logo colors.
+
+The PDF image `imdclient-logo.pdf` is editable. 
+The PNG image `imdclient-logo.png` is rendered at 
+300dpi on a solid white background.
+
 ## Theme colors
 
 | Role | Hex | RGB |
