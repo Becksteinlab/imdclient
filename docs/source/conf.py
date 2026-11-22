@@ -15,6 +15,7 @@
 # In case the project was not installed
 import os
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../.."))
 import imdclient  # noqa
@@ -23,17 +24,23 @@ import imdclient  # noqa
 # -- Project information -----------------------------------------------------
 
 project = "IMDClient"
+author = "Lawson Woods, Amruthesh Thirumalaiswamy, and the imdclient team"
 copyright = (
-    "2024, Lawson. "
+    f"2024-{datetime.now().year}, {author}. "
     "Project structure based on the "
     "MDAnalysis Cookiecutter"
 )
-author = "Lawson"
+license = "MIT License"
 
-# The short X.Y version
-version = ""
 # The full version, including alpha/beta/rc tags
-release = ""
+release = imdclient.__version__
+# The short X.Y version
+version = ".".join(release.split(".")[:2])
+
+# Make |license| available in RST (version/release/today are built-in).
+rst_epilog = f"""
+.. |license| replace:: {license}
+"""
 
 
 # -- General configuration ---------------------------------------------------
