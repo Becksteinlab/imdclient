@@ -248,8 +248,11 @@ class IMDClient:
 
     def _await_IMD_handshake(self) -> IMDSessionInfo:
         """
-        Wait for the server to send a handshake packet, then determine
-        IMD session information.
+        Wait for the server to send
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_HANDSHAKE`, then
+        determine IMD session information (including
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_SESSIONINFO` for
+        IMDv3).
         """
         end = ">"
         ver = None
@@ -322,8 +325,10 @@ class IMDClient:
 
     def _go(self):
         """
-        Send a go packet to the client to start the simulation
-        and begin receiving data.
+        Send an :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_GO` packet to
+        start the simulation and begin receiving data. When
+        ``continue_after_disconnect`` is set, also sends
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_WAIT`.
         """
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
         self._conn.sendall(go)

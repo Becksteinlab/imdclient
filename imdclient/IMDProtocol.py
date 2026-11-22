@@ -44,24 +44,114 @@ logger = logging.getLogger("imdclient.IMDClient")
 
 
 class IMDHeaderType(Enum):
+    """IMD packet header type codes (32-bit enum values when transmitted).
+
+    Each member is the header type for one IMD packet. Authoritative packet
+    layouts and semantics are in :doc:`protocol_v3`.
+    """
+
     IMD_DISCONNECT = 0
+    """Disconnect packet: receiver asks the engine to close the socket.
+
+    See :ref:`disconnect`.
+    """
+
     IMD_ENERGIES = 1
+    """Energies packet: optional per-frame IMD energy block from the engine.
+
+    See :ref:`energies`.
+    """
+
     IMD_FCOORDS = 2
+    """Coordinates packet: optional per-frame atomic positions from the engine.
+
+    See :ref:`coordinates`.
+    """
+
     IMD_GO = 3
+    """Go packet: receiver signals it is ready; engine may start sending frames.
+
+    See :ref:`go`.
+    """
+
     IMD_HANDSHAKE = 4
+    """Handshake packet: engine announces IMD version and native endianness.
+
+    See :ref:`handshake`.
+    """
+
     IMD_KILL = 5
+    """Kill packet: receiver requests that the engine stop and exit.
+
+    See :ref:`kill`.
+    """
+
     IMD_MDCOMM = 6
+    """MD communication packet: receiver sends forces to apply to IMD atoms.
+
+    See :ref:`md-communication`.
+    """
+
     IMD_PAUSE = 7
+    """Pause packet: receiver requests that the engine pause until resume.
+
+    See :ref:`pause`.
+    """
+
     IMD_TRATE = 8
+    """Transmission-rate packet: receiver sets the IMD frame spacing.
+
+    See :ref:`transmission-rate`.
+    """
+
     IMD_IOERROR = 9
+    """IO error code: not exchanged on the wire; for internal error signaling.
+
+    See :ref:`io-error`.
+    """
+
     # New in IMD v3
     IMD_SESSIONINFO = 10
+    """Session-info packet (IMDv3): which per-frame data the engine will send.
+
+    See :ref:`session-info`.
+    """
+
     IMD_RESUME = 11
+    """Resume packet (IMDv3): receiver requests resume after pause.
+
+    See :ref:`resume`.
+    """
+
     IMD_TIME = 12
+    """Time packet (IMDv3): optional per-frame ``dt``, time, and step.
+
+    See :ref:`time`.
+    """
+
     IMD_BOX = 13
+    """Box packet (IMDv3): optional per-frame triclinic box vectors.
+
+    See :ref:`box`.
+    """
+
     IMD_VELOCITIES = 14
+    """Velocities packet (IMDv3): optional per-frame atomic velocities.
+
+    See :ref:`velocities`.
+    """
+
     IMD_FORCES = 15
+    """Forces packet (IMDv3): optional per-frame atomic forces from the engine.
+
+    See :ref:`forces`.
+    """
+
     IMD_WAIT = 16
+    """Wait packet (IMDv3): receiver sets blocking vs non-blocking wait behavior.
+
+    See :ref:`wait`.
+    """
 
 
 def parse_energy_bytes(data, endianness):

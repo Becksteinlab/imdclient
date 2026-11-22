@@ -119,7 +119,9 @@ Using IMDClient
 ^^^^^^^^^^^^^^^
 
 Once the simulation is ready for a client connection, one can setup
-the client using the :class:`~imdclient.IMDClient` class: ::
+the client using the :class:`~imdclient.IMDClient` class.
+Constructing the client forms the connection and starts the simulation
+by sending :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_GO`::
 
     from imdclient.utils import parse_host_port
     from imdclient.IMDClient import IMDClient
@@ -128,9 +130,6 @@ the client using the :class:`~imdclient.IMDClient` class: ::
 
     # `n_atoms` is the number of atoms in the simulation
     # Adjust this value according to your simulation setup
-
-    # This forms the connection and starts the simulation 
-    # by sending the `IMD_GO`
     client = IMDClient(host, port, n_atoms=1000)
 
     # Read trajectory data from the IMDBuffer which stores
