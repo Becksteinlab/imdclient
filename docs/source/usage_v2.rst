@@ -1,21 +1,64 @@
-Streaming trajectories with IMDv2
-=================================
+Streaming trajectories with legacy IMDv2
+========================================
 
-IMDv2 is the long-standing interactive MD socket protocol used with VMD,
-NAMD, GROMACS, and LAMMPS. IMDClient can connect to an IMDv2 simulation
-and read coordinate (and optionally energy) streams over TCP.
+IMDv2 is the legacy interactive MD socket protocol used with VMD,
+NAMD, GROMACS, and LAMMPS. :class:`~imdclient.IMDClient.IMDClient` can
+connect to an IMDv2 simulation and read coordinate (and optionally
+energy) streams over TCP.
 
-For new projects, :doc:`usage` (IMDv3) is recommended: it has a published
-specification, consistent wire units, and richer per-frame data (time,
-box, velocities, forces). Use IMDv2 when your simulation is already set
-up for the older protocol or your engine build only exposes v2.
+For new projects, :doc:`usage` (IMDv3) is recommended: it has a
+published specification, consistent units, and richer per-frame data
+(time, box, velocities, forces). Use IMDv2 when your simulation is
+already set up for the older protocol or your engine build only
+exposes v2, and your use case is not impacted by the :ref:`inherent
+limitations <limitations_v2>` of the IMDv2 data stream.
+
+
+.. _limitations_v2:
 
 Limitations of IMDv2
 ^^^^^^^^^^^^^^^^^^^^
 
 There is no formal IMDv2 protocol document; behavior is inferred from
-engine implementations. Relative to IMDv3, users should be aware of the
-following:
+engine implementations (the :ref:`imdv3_protocol` description notes
+differences to IMDv2). Relative to IMDv3, users should be aware of the
+following limitations and differences:
+
+* **only positions** are available (no velocities or forces)
+
+* **no unit cell (box) information** (thus any analysis that does
+  calculations under periodic boundary conditions cannot be performed)
+  
+* **no simulation time** available
+
+* **energy units** — The units of energies received over IMDv2 and stored
+  by IMDClient are not standardized and depend on the simulation engine.
+
+  .. warning::
+     
+     NAMD's implementation of IMDv2 streams energies in kcal/mol,
+     while GROMACS' streams energies in kJ/mol. LAMMPS does not stream
+     energies at all.
+
+Managing connections:
+
+* **Pause control** — IMDv2 uses a single pause toggle (``IMD_PAUSE``,
+  :ref:`pause`) instead of separate pause and resume packets.
+
+* **After disconnect** — ``continue_after_disconnect`` and ``IMD_WAIT``
+  apply only to IMDv3. Leave ``continue_after_disconnect`` unset
+  (``None``) for v2 connections.
+
+* **Transmission rate** — In LAMMPS (``trate``) and NAMD (``IMDfreq``), the
+  frame interval is usually set in the simulation input. For **GROMACS IMDv2**,
+  ``IMD-nst`` in the ``.mdp`` file is **not** supported (that option is for
+  IMDv3). GROMACS IMDv2 defaults to sending every integrator step until the
+  client sends ``IMD_TRATE`` (:ref:`transmission-rate`) after the :ref:`go`
+  packet; pass the desired interval as `transmission_rate` for
+  :class:`~imdclient.IMDClient.IMDClient`.
+  
+  
+Additional technical differences:
 
 * **Session metadata** — There is no handshake “session info” packet. The
   client cannot ask the engine which fields will appear in each frame.
@@ -24,26 +67,7 @@ following:
   types per frame. Multiple energy packets can appear before coordinates
   (IMDClient keeps the latest energies and may warn).
 
-* **Pause control** — IMDv2 uses a single pause toggle (``IMD_PAUSE``)
-  instead of separate pause and resume packets.
 
-* **After disconnect** — ``continue_after_disconnect`` and ``IMD_WAIT``
-  apply only to IMDv3. Leave ``continue_after_disconnect`` unset
-  (``None``) for v2 connections.
-
-* **Transmission rate** — In LAMMPS (``trate``) and NAMD (``IMDfreq``),
-  the frame interval is usually set in the simulation input. For **GROMACS
-  IMDv2**, ``IMD-nst`` in the ``.mdp`` file is **not** supported (that
-  option is for IMDv3). GROMACS v2 defaults to sending every integrator
-  step until the client sends ``IMD_TRATE`` after the go packet; pass the
-  desired interval as
-  :paramref:`~imdclient.IMDClient.IMDClient.transmission_rate`.
-
-  * **Units** — The units of energies received over IMDv2 and stored
-  by IMDClient are not standardized and depend on the simulation engine. 
-  NAMD's implementation of IMDv2 streams energies in kcal/mol, while 
-  GROMACS' streams energies in kJ/mol. LAMMPS on the other hand does not 
-  stream energies at all.
 
 Configuring the simulation for IMDv2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,6 +98,7 @@ file, for example::
 Once the simulation is waiting for a client, connect from your analysis
 script or application.
 
+
 Using IMDClient with IMDv2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -83,7 +108,7 @@ you read frames with :meth:`~imdclient.IMDClient.IMDClient.get_imdframe`.
 
 .. note::
 
-    **GROMACS (IMDv2-only builds)** — You cannot set the IMD frame interval
+   **GROMACS (IMDv2-only builds)** — You cannot set the IMD frame interval
    with ``IMD-nst`` in the ``.mdp`` file. The GROMACS engine starts with 
    a default interval of **one integrator step** until the client sends an 
    ``IMD_TRATE`` packet explicitly.
@@ -103,6 +128,3 @@ you read frames with :meth:`~imdclient.IMDClient.IMDClient.get_imdframe`.
 For **LAMMPS** and **NAMD** v2, the interval is usually set in the
 simulation input (``trate`` or ``IMDfreq``). ``transmission_rate`` is
 optional on the client in that case.
-
-See :doc:`protocol_v3` for the IMDv3 specification and how it extends 
-on IMDv2.
