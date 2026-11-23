@@ -40,7 +40,7 @@ IMDENERGYKEYS = [
     "temperature",
     "total_energy",
     "potential_energy",
-    "van_der_walls_energy",
+    "van_der_waals_energy",
     "coulomb_energy",
     "bonds_energy",
     "angles_energy",
