@@ -1,0 +1,233 @@
+/*
+ * IMDClient brand overrides for mdanalysis-sphinx-theme.
+ *
+ * Theme roles (see site.sass):
+ *   $primary → stream blue  #0788D1
+ *   $blue    → deep navy    #062B4A
+ *   $accent  → deep navy    #062B4A  (also set via html_theme_options.color_accent)
+ *
+ * Loaded after site.css via html_css_files in conf.py.
+ */
+
+:root {
+  --imd-stream-blue: #0788D1;
+  --imd-stream-blue-dark: #0678B8;
+  --imd-stream-blue-darker: #0568A0;
+  --imd-stream-blue-light: #d6eef9;
+  --imd-stream-blue-muted: #9ad4f5; /* readable on deep navy */
+  --imd-deep-navy: #062B4A;
+  --imd-deep-navy-soft: #0a3a5c;
+}
+
+/* $primary: header / navbar */
+header,
+.navbar.is-primary,
+.navbar.is-primary.has-shadow,
+header .navbar.is-primary .navbar-brand > a.navbar-item:hover {
+  background-color: var(--imd-stream-blue) !important;
+}
+
+header,
+.navbar.is-primary.has-shadow {
+  box-shadow: 0 2px 3px 0 var(--imd-stream-blue);
+}
+
+.navbar.is-primary .navbar-brand > a.navbar-item:focus,
+.navbar.is-primary .navbar-brand > a.navbar-item:hover,
+.navbar.is-primary .navbar-brand > a.navbar-item.is-active {
+  background-color: var(--imd-stream-blue-dark) !important;
+}
+
+/* Search field on primary navbar */
+header .nav-search input {
+  background-color: var(--imd-stream-blue-darker);
+}
+
+header .nav-search input:hover,
+header .nav-search input:focus,
+header .nav-search input:active {
+  color: var(--imd-stream-blue-darker);
+}
+
+/* ------------------------------------------------------------------ */
+/* RTD sidebar                                                         */
+/* ------------------------------------------------------------------ */
+
+.wy-nav-side {
+  background: var(--imd-deep-navy);
+  color: var(--imd-stream-blue-muted);
+}
+
+.wy-menu-vertical header,
+.wy-menu-vertical p.caption,
+.wy-menu .caption-text {
+  color: var(--imd-stream-blue-light) !important;
+}
+
+/* Default / nested sidebar links: light blue on navy (not primary) */
+.wy-menu-vertical a,
+.wy-nav .wy-menu-vertical a,
+.wy-menu-vertical li.toctree-l1 > a,
+.wy-menu-vertical li.toctree-l2 > a,
+.wy-menu-vertical li.toctree-l3 > a {
+  color: var(--imd-stream-blue-muted) !important;
+}
+
+.wy-menu a:hover,
+.wy-menu a:hover:not(.is-active) code,
+.wy-menu-vertical a:hover,
+.wy-nav .wy-menu-vertical a:hover {
+  color: var(--imd-stream-blue-light) !important;
+  background-color: var(--imd-deep-navy-soft);
+}
+
+.wy-menu-vertical a:active,
+.wy-nav .wy-menu-vertical a:active {
+  background-color: var(--imd-stream-blue) !important;
+  color: #fff !important;
+}
+
+/* Current-page strip: keep light surfaces, brand the border/indicator */
+.wy-menu-vertical li.current {
+  background: var(--imd-deep-navy-soft);
+}
+
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.on a {
+  background: #fcfcfc !important;
+  color: var(--imd-deep-navy) !important;
+  border-left: 3px solid var(--imd-stream-blue);
+}
+
+/* Unselected nested items (+ submenus) sit on navy — use light gray */
+.wy-menu-vertical li.current ul a {
+  color: #d0d0d0 !important;
+  background: transparent !important;
+  border-right-color: transparent;
+}
+
+.wy-menu-vertical li.current ul a:hover {
+  color: #f0f0f0 !important;
+  background: var(--imd-deep-navy-soft) !important;
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.wy-menu-vertical li.toctree-l2.current > a,
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
+  background: #e8f5fc !important;
+  color: var(--imd-deep-navy) !important;
+}
+
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
+  background: #d6eef9 !important;
+  color: var(--imd-deep-navy) !important;
+}
+
+.wy-menu-vertical li.current > a button.toctree-expand,
+.wy-menu-vertical li.on a button.toctree-expand,
+.wy-menu-vertical a button.toctree-expand {
+  color: var(--imd-stream-blue-muted);
+}
+
+.wy-menu-vertical a:hover button.toctree-expand,
+.wy-menu-vertical li.current > a:hover button.toctree-expand {
+  color: var(--imd-stream-blue);
+}
+
+/* ------------------------------------------------------------------ */
+/* Content links + link indicators (¶ / headerlink / viewcode)         */
+/* Scoped to .rst-content so sidebar links stay light-on-navy.         */
+/* ------------------------------------------------------------------ */
+
+.rst-content a,
+.rst-content a::before {
+  color: var(--imd-stream-blue);
+}
+
+.rst-content a:hover,
+.rst-content a:focus {
+  color: var(--imd-deep-navy);
+}
+
+.rst-content .headerlink,
+.rst-content *:hover > .headerlink,
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt .headerlink,
+html.writer-html4 .rst-content dl:not(.docutils) > dt .headerlink {
+  color: var(--imd-stream-blue) !important;
+}
+
+.rst-content .headerlink:hover,
+.viewcode-back,
+.viewcode-link,
+html.writer-html5 .rst-content dl[class] > dt .viewcode-link .pre:hover,
+html.writer-html4 .rst-content dl:not(.docutils) > dt .viewcode-link .pre:hover {
+  color: var(--imd-stream-blue) !important;
+}
+
+/* API / autodoc headers ($mdanalysis-code-orange → deep navy) */
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt,
+html.writer-html4 .rst-content dl:not(.docutils) > dt {
+  border-top-color: var(--imd-deep-navy);
+  background-color: var(--imd-stream-blue-light);
+}
+
+.rst-content code.literal {
+  color: var(--imd-deep-navy);
+}
+
+.rst-content .guilabel {
+  background: var(--imd-stream-blue-light);
+}
+
+/* Admonitions that used MDAnalysis orange */
+.rst-content .admonition.note,
+.rst-content .admonition.tip,
+.rst-content .admonition.hint,
+.rst-content .admonition.important,
+.rst-content .admonition.seealso {
+  border-left-color: var(--imd-stream-blue);
+}
+
+.rst-content .admonition.note > .admonition-title,
+.rst-content .admonition.tip > .admonition-title,
+.rst-content .admonition.hint > .admonition-title,
+.rst-content .admonition.important > .admonition-title,
+.rst-content .admonition.seealso > .admonition-title {
+  background-color: var(--imd-stream-blue);
+  border-left-color: var(--imd-stream-blue);
+}
+
+/* Bulma helpers that bake in $primary / $blue */
+.has-text-primary,
+a.has-text-primary:hover,
+a.has-text-primary:focus {
+  color: var(--imd-stream-blue) !important;
+}
+
+.has-background-primary {
+  background-color: var(--imd-stream-blue) !important;
+}
+
+.has-text-link,
+a.has-text-link:hover,
+a.has-text-link:focus {
+  color: var(--imd-stream-blue) !important;
+}
+
+.has-text-info,
+.is-info {
+  color: var(--imd-deep-navy) !important;
+}
+
+.has-background-info,
+.button.is-info,
+.tag.is-info,
+.notification.is-info,
+.message.is-info .message-header {
+  background-color: var(--imd-deep-navy) !important;
+}

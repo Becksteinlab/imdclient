@@ -1,6 +1,11 @@
 Welcome to IMDClient's documentation!
 =========================================================
 
+:Release: |release|
+:Version: |version|
+:Date: |today|
+:License: |license|
+
 IMDClient is a Python-based client library designed to interact with simulation engines making interactive molecular dynamics
 (IMD) possible. It provides tools for communicating with the IMDv2 and new IMDv3 protocols, enabling seamless integration
 between its API with simulation engines such as NAMD, LAMMPS, and GROMACS. Users can leverage this library to build
