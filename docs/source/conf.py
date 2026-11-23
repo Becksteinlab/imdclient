@@ -15,6 +15,7 @@
 # In case the project was not installed
 import os
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../.."))
 import imdclient  # noqa
@@ -23,17 +24,23 @@ import imdclient  # noqa
 # -- Project information -----------------------------------------------------
 
 project = "IMDClient"
+author = "Lawson Woods, Amruthesh Thirumalaiswamy, and the imdclient team"
 copyright = (
-    "2024, Lawson. "
+    f"2024-{datetime.now().year}, {author}. "
     "Project structure based on the "
-    "MDAnalysis Cookiecutter version 0.1"
+    "MDAnalysis Cookiecutter"
 )
-author = "Lawson"
+license = "MIT License"
 
-# The short X.Y version
-version = ""
 # The full version, including alpha/beta/rc tags
-release = ""
+release = imdclient.__version__
+# The short X.Y version
+version = ".".join(release.split(".")[:2])
+
+# Make |license| available in RST (version/release/today are built-in).
+rst_epilog = f"""
+.. |license| replace:: {license}
+"""
 
 
 # -- General configuration ---------------------------------------------------
@@ -101,15 +108,26 @@ pygments_style = "default"
 #
 html_theme = "mdanalysis_sphinx_theme"
 
+# IMDClient brand colors (see _static/README.md / _static/custom.css).
+# Maps onto mdanalysis-sphinx-theme site.sass roles:
+#   $primary → stream blue, $blue → deep navy, $accent → deep navy
+_DEEP_NAVY = "#062B4A"
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
+# color_accent / mobile_navbar_background accept hex (or named theme colors).
+# $primary / $blue are hardcoded in the theme's site.sass; override those
+# (and related UI) in _static/custom.css via html_css_files below.
 html_theme_options = {
     "mda_official": False,
+    "color_accent": _DEEP_NAVY,
+    "sidebar_logo_background": "white",
+    "mobile_navbar_background": _DEEP_NAVY,
 }
 # Set your logo and favicon here -- replace the placeholders!
-# html_logo = "_static/logo/placeholder_logo.png"
+html_logo = "_static/imdclient-logo.png"
 # html_favicon = "_static/logo/placeholder_favicon.svg"
 
 
@@ -117,6 +135,7 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
