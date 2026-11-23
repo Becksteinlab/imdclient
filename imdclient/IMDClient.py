@@ -222,7 +222,7 @@ class IMDClient:
 
             For API stability, errors raised in the producer thread (including
             :class:`RuntimeError` for mismatches such as incorrect
-            atom counts) are raised eventually as ``EOFError``s. The original
+            atom counts) are raised eventually as :exc:`EOFError`. The original
             exception message in the case for a multithreaded client is available
             in the error queue.
         """

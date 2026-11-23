@@ -1,6 +1,11 @@
 imdclient documentation
 =======================
 
+:Release: |release|
+:Version: |version|
+:Date: |today|
+:License: |license|
+
 :mod:`imdclient` is a Python-based client library designed to interact with
 simulation engines that use the *interactive molecular dynamics* (IMD) protocol
 for **streaming trajectory data while a simulation is running**.

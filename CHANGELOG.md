@@ -42,6 +42,8 @@ The rules for this file:
 * `IMDServer.disconnect` call now properly sends EOF to client
   in all cases (PR #149, see also MDAnalysis/mdanalysis#5442)
 
+### Added
+* imdclient logo and theme colors (#159)
 
 ## [v0.2.4] - 2026-07-13
 ### Authors
