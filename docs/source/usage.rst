@@ -1,6 +1,11 @@
 Streaming trajectories from a simulation engine with IMDv3
 ==========================================================
 
+.. note::
+
+   For the legacy **IMDv2** protocol (separate engine keywords and
+   limitations), see :doc:`usage_v2`.
+
 Configuring the simulation engine for IMDv3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
