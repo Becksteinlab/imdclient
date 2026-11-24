@@ -16,11 +16,29 @@ The rules for this file:
   * accompany each entry with github issue/PR number (Issue #xyz)
 -------------------------------------------------------------------------------
 -->
-## [v0.2.5] - UNPUBLISHED
+## [v0.3.0] - UNPUBLISHED
 ### Authors
-@ljwoods2
+@ljwoods2 @amruthesht @orbeckst
+
+### Added
+* IMDv2 streaming support in :class:`~imdclient.IMDClient.IMDClient`
+  (alongside existing IMDv3) (PR #141)
+* ``transmission_rate`` keyword: send ``IMD_TRATE`` after handshake on
+  IMDv2 (needed for GROMACS v2 frame interval; optional on LAMMPS/NAMD
+  where transmission rate is set in the input deck) (PR #141)
+* Docker integration tests for IMDv2 with GROMACS, LAMMPS, and NAMD compatible with imdv2-only builds
+  (PR #141)
+* Minimal documentation ``usage_v2`` (IMDv2 setup and usage) (PR #141)
+
+### Changed
+* ``continue_after_disconnect`` raises :class:`ValueError` for IMDv2
+  connections (IMDv3-only feature) (PR #141)
 
 ### Fixed
+* NAMD integration tests: convert force DCD reference from
+  kcal/(mol·Å) to kJ/(mol·Å) to match IMDv3 streamed units (PR #141)
+* Simulation container logs captured in engine integration tests when
+  engines fail to start (PR #141)
 * `IMDServer.disconnect` call now properly sends EOF to client
   in all cases (PR #149, see also MDAnalysis/mdanalysis#5442)
 

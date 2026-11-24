@@ -1,3 +1,5 @@
+.. _`imdv3_protocol`:
+
 IMDv3 Protocol
 ==============
 
@@ -195,11 +197,14 @@ Energies
 Sent from the simulation engine to the receiver each IMD frame if 
 energies were previously specified for this session in the :ref:`session info packet <session-info>`.
 
-.. note:: 
-  While the integration step is included in this
-  packet, this is a result of inheriting the IMD energy block from IMDv2. It is recommended
-  to make use of the 64-bit integer integration step value from the :ref:`time packet <time>`
-  in analysis code instead.
+.. note::   
+   While the integration step is included in this packet, this is a result of
+   inheriting the IMD energy block from IMDv2. It is recommended to make use of
+   the 64-bit integer integration step value from the :ref:`time packet <time>`
+   in analysis code instead.
+
+.. note::
+   Not all simulation engines send energy packets.
 
 .. code-block:: none
 
@@ -218,6 +223,13 @@ energies were previously specified for this session in the :ref:`session info pa
       <val> (float32) Angles energy
       <val> (float32) Dihedrals energy
       <val> (float32) Improper dihedrals energy
+
+.. versionchanged:: 3		    
+   In IMDv2, the *units* of the transmitted energies depend on the simulation
+   engine. NAMD uses kcal/mol whereas GROMACS uses kJ/mol. LAMMPS does not send
+   energies. In IMDv3, the :ref:`units` are explicitly specified and must be
+   adhered to by the MD engine.
+
 
 .. _coordinates:
 
@@ -572,6 +584,9 @@ remaining packets in the session.
    For example, an IMD frame in which only energies are sent can be followed by 
    an IMD frame in which only coordinates are sent. In IMDv3, all packets 
    specified in the session info must be sent for every IMD frame and in the same order.
+
+
+.. _units:
 
 Units
 -----

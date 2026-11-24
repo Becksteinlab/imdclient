@@ -32,7 +32,6 @@ from typing import Union
 from dataclasses import dataclass
 import numpy as np
 
-
 IMDHEADERSIZE = 8
 IMDENERGYPACKETLENGTH = 40
 IMDBOXPACKETLENGTH = 36

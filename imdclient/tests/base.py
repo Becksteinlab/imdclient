@@ -10,10 +10,66 @@ from numpy.testing import (
 import docker
 import MDAnalysis as mda
 
+from MDAnalysis.transformations.wrap import wrap
+
 from .utils import get_free_port
 from .minimalreader import MinimalReader
 
 logger = logging.getLogger("imdclient.IMDClient")
+
+# Cap bytes written to CI logs (avoid multi-MB dumps).
+_CONTAINER_LOG_MAX_BYTES = 1_024_000
+
+
+def _dump_container_debug(container, *, image=None, command=None, host_port=None, phase=""):
+    """Print engine container state and logs for CI / local pytest (-s)."""
+    meta = getattr(container, "imd_test_debug", None) or {}
+    image = image if image is not None else meta.get("image")
+    command = command if command is not None else meta.get("command")
+    host_port = host_port if host_port is not None else meta.get("host_port")
+    container_id = getattr(container, "id", None) or meta.get("container_id")
+
+    header = "=== IMD integration container debug ==="
+    print(header)
+    if phase:
+        print(f"phase: {phase}")
+    print(f"container_id: {container_id}")
+    print(f"image: {image}")
+    print(f"host port (maps to container 8888): {host_port}")
+    print(f"shell command: {command}")
+    try:
+        container.reload()
+        state = container.attrs.get("State", {})
+        print(
+            "state:",
+            f"status={state.get('Status')!r}",
+            f"exit_code={state.get('ExitCode')!r}",
+            f"error={state.get('Error')!r}",
+            f"oom_killed={state.get('OOMKilled')!r}",
+        )
+        raw = container.logs(stdout=True, stderr=True)
+        if isinstance(raw, bytes) and len(raw) > _CONTAINER_LOG_MAX_BYTES:
+            raw = raw[-_CONTAINER_LOG_MAX_BYTES :]
+            print(
+                f"--- container logs (truncated to last {_CONTAINER_LOG_MAX_BYTES} bytes) ---"
+            )
+        else:
+            print("--- container logs ---")
+        text = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
+        if not text.strip():
+            print("(container logs empty)")
+        else:
+            print(text)
+        print("=== end container debug ===")
+    except docker.errors.NotFound:
+        print(
+            "Could not fetch container debug info: container no longer exists "
+            f"(id={container_id!r})"
+        )
+        print("=== end container debug ===")
+    except Exception as exc:
+        print(f"Could not fetch container debug info: {exc}")
+        print("=== end container debug ===")
 
 
 def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
@@ -59,7 +115,7 @@ def assert_allclose_with_logging(a, b, rtol=1e-07, atol=0, equal_nan=False):
         print("All values are within tolerance.")
 
 
-class IMDv3IntegrationTest:
+class IMDIntegrationTest:
 
     @pytest.fixture()
     def container_name(self):
@@ -67,6 +123,10 @@ class IMDv3IntegrationTest:
 
     @pytest.fixture()
     def setup_command(self):
+        return None
+
+    @pytest.fixture()
+    def post_simulation_command(self):
         return None
 
     @pytest.fixture()
@@ -80,6 +140,7 @@ class IMDv3IntegrationTest:
         input_files,
         setup_command,
         simulation_command,
+        post_simulation_command,
         port,
         container_name,
     ):
@@ -100,44 +161,98 @@ class IMDv3IntegrationTest:
             cmdstring += " && " + setup_command
 
         cmdstring += " && " + simulation_command
+        if post_simulation_command is not None:
+            cmdstring += " && " + post_simulation_command
 
-        # Start the container, mount tmp_path, run simulation
+        shell_cmd = f"/bin/sh -c '{cmdstring}'"
+        print(f"Starting container {container_name!r} with command: {cmdstring}")
+
+        # Keep the container until we explicitly remove it so logs/state survive
+        # early engine exit (remove=True races with teardown log collection).
         container = docker_client.containers.run(
             img,
-            f"/bin/sh -c '{cmdstring}'",
+            shell_cmd,
             detach=True,
             volumes={tmp_path.as_posix(): {"bind": "/tmp", "mode": "rw"}},
             ports={"8888/tcp": port},
-            name="sim",
-            remove=True,
+            name=f"imd-sim-{port}",
+            remove=False,
         )
+        container.imd_test_debug = {
+            "image": container_name,
+            "command": cmdstring,
+            "host_port": port,
+            "container_id": container.id,
+        }
 
         # For now, just wait 30 seconds
         # life is too short to figure out how to redirect all stdout from inside
         # a container
         time.sleep(30)
+        _dump_container_debug(container, phase="after 30s startup wait")
 
-        yield
         try:
-            container.stop()
-        except docker.errors.NotFound:
-            pass
+            yield container
+        finally:
+            _dump_container_debug(container, phase="teardown")
+            try:
+                container.reload()
+                if container.attrs.get("State", {}).get("Status") == "running":
+                    container.stop(timeout=30)
+            except docker.errors.NotFound:
+                pass
+            try:
+                container.remove(force=True)
+            except docker.errors.NotFound:
+                pass
 
     @pytest.fixture()
-    def imd_u(self, docker_client, topol, tmp_path, port):
+    def first_frame(self):
+        return 0
+
+    @pytest.fixture()
+    def imd_nst(self):
+        return None
+
+    @pytest.fixture()
+    def imd_u(self, docker_client, topol, tmp_path, port, imd_nst):
         n_atoms = mda.Universe(tmp_path / topol).atoms.n_atoms
-        u = MinimalReader(
-            f"imd://localhost:{port}", n_atoms=n_atoms, process_stream=True
-        )
+        try:
+            u = MinimalReader(
+                f"imd://localhost:{port}",
+                n_atoms=n_atoms,
+                process_stream=True,
+                transmission_rate=imd_nst,
+            )
+        except ConnectionRefusedError:
+            _dump_container_debug(
+                docker_client,
+                phase="imd_u connect failed (connection refused)",
+            )
+            raise
         yield u
 
     @pytest.fixture()
-    def true_u(self, topol, traj, imd_u, tmp_path):
+    def true_u(self, topol, traj, imd_u, tmp_path, docker_client, first_frame):
+        # imd_u finishes when the IMD stream closes; wait for any post-processing in post_simulation_command
+        # in the container before reading the reference trajectory from disk.
+        docker_client.wait()
         u = mda.Universe(
             (tmp_path / topol),
             (tmp_path / traj),
         )
+        if not imd_u.imdsinfo.wrapped_coords:
+            u.trajectory.add_transformations(wrap(u.atoms, compound="atoms"))
+            imd_u._wrap_trajectory(u, first_frame)
         yield u
+
+
+class IMDv3IntegrationTest(IMDIntegrationTest):
+
+    @pytest.fixture()
+    def imd_version(self):
+        # Suffix of the engine commands in the container (gmx-imdv3, lmp-imdv3, namd3-imdv3)
+        return "imdv3"
 
     def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame, dt):
         for i in range(first_frame, len(true_u.trajectory)):
@@ -233,3 +348,20 @@ class IMDv3IntegrationTest:
             atom_style="id type x y z",
         ).atoms.n_atoms
         u = MinimalReader(f"imd://localhost:{port}", n_atoms=n_atoms)
+
+
+class IMDv2IntegrationTest(IMDIntegrationTest):
+
+    @pytest.fixture()
+    def imd_version(self):
+        # Suffix of the engine commands in the container (gmx-imdv2, lmp-imdv2, namd3-imdv2)
+        return "imdv2"
+
+    def test_compare_imd_to_true_traj(self, imd_u, true_u, first_frame):
+        for i in range(first_frame, len(true_u.trajectory)):
+
+            assert_allclose_with_logging(
+                true_u.trajectory[i].positions,
+                imd_u.trajectory[i - first_frame].positions,
+                atol=1e-03,
+            )
