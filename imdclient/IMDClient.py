@@ -1231,7 +1231,7 @@ class IMDFrame:
                 "temperature": 0.0,
                 "total_energy": 0.0,
                 "potential_energy": 0.0,
-                "van_der_walls_energy": 0.0,
+                "van_der_waals_energy": 0.0,
                 "coulomb_energy": 0.0,
                 "bonds_energy": 0.0,
                 "angles_energy": 0.0,
