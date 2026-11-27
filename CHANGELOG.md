@@ -33,6 +33,7 @@ The rules for this file:
 ### Changed
 * ``continue_after_disconnect`` raises :class:`ValueError` for IMDv2
   connections (IMDv3-only feature) (PR #141)
+* energy key "van_der_walls" now correctly named "van_der_waals" (#161)
 
 ### Fixed
 * NAMD integration tests: convert force DCD reference from
