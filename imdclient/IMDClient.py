@@ -1,8 +1,14 @@
-"""
-IMDClient module
+"""IMDClient module
 ================
 
+The :mod:`IMDClient` module contains the classes for managing IMD
+connections. A user should only need :class:`IMDClient` and understand the data
+format of :class:`IMDFrame`.
+
 .. autoclass:: IMDClient
+   :members:
+
+.. autoclass:: IMDFrame
    :members:
 
 .. autoclass:: BaseIMDProducer
@@ -20,8 +26,6 @@ IMDClient module
 .. autoclass:: IMDFrameBuffer
    :members:
 
-.. autoclass:: IMDFrame
-   :members:
 """
 
 import socket
@@ -41,6 +45,18 @@ logger = logging.getLogger(__name__)
 
 class IMDClient:
     """
+    Class to manage an IMDv3 or IMDv2 connection.
+
+    When the class is instantiated, a connection to the MD engine at the given
+    `host` and `port` is established, the handshake is exchanged, and the go
+    command is issued to the MD engine. The format of the stream (v2 or v3) is
+    detected from the handshake. Other parameters can be used to configure how
+    interruptions to the connection are handled.
+
+    Repeated calls to :meth:`get_imdframe` read the trajectory data from the
+    stream, frame by frame at intervals configured by the transmission rate.
+    
+
     Parameters
     ----------
     host : str
@@ -50,16 +66,19 @@ class IMDClient:
     n_atoms : int
         Number of atoms in the simulation
     socket_bufsize : int, (optional)
-        Size of the socket buffer in bytes. Default is to use the system default
-    buffer_size : int (optional)
-        :class:`IMDFrameBuffer` will be filled with as many :class:`IMDFrame` fit in `buffer_size` bytes [``10MB``]
+        Size of the socket buffer in bytes. Default is to use the system
+        default
+    buffer_size : int (optional)    
+        :class:`IMDFrameBuffer` will be filled with as many :class:`IMDFrame`
+        fit in `buffer_size` bytes [``10MB``]    
     timeout : int, optional
         Timeout for the socket in seconds [``600``]
-    continue_after_disconnect : bool, optional [``None``]
-        If True, the client will attempt to change the simulation engine's waiting behavior to
-        non-blocking after the client disconnects. If False, the client will attempt to change it
-        to blocking. If None, the client will not attempt to change the simulation engine's behavior.
-        Only supported for IMDv3; must be ``None`` for IMDv2 connections.
+    continue_after_disconnect : bool, optional [``None``]    
+        If True, the client will attempt to change the simulation engine's
+        waiting behavior to non-blocking after the client disconnects. If
+        False, the client will attempt to change it to blocking. If None, the
+        client will not attempt to change the simulation engine's behavior.
+        Only supported for IMDv3; must be ``None`` for IMDv2 connections.    
     transmission_rate : int, optional [``None``]
         IMD :ref:`transmission rate <transmission-rate>` to send after the go
         packet (for IMDv2 only). The transmission rate is the number of
@@ -73,19 +92,23 @@ class IMDClient:
 
         .. versionadded:: 0.3.0
     **kwargs : dict (optional)
-        Additional keyword arguments to pass to the :class:`BaseIMDProducer` and :class:`IMDFrameBuffer`
+        Additional keyword arguments to pass to the :class:`BaseIMDProducer`
+        and :class:`IMDFrameBuffer`
 
+
+ 
     .. warning::
 
-        When using GROMACS with IMDv2, users should set `transmission_rate` explicitly.
-        Otherwise the GROMACS default of 1 will be chosen. This default setting will send
-        every integrator time step and may impact performance substantially.
+       When using GROMACS with IMDv2, users should set `transmission_rate`
+       explicitly.  Otherwise the GROMACS default of 1 will be chosen. This
+       default setting will send every integrator time step and may impact
+       performance substantially.    
 
     .. versionadded:: 0.3.0
+       Added ``transmission_rate`` parameter to set the IMDv2 transmission
+       rate from the client (via an ``IMD_TRATE`` packet) after the go packet
+       is sent.
 
-        Added ``transmission_rate`` parameter to set the IMDv2 transmission
-        rate from the client (via an ``IMD_TRATE`` packet) after the go packet
-        is sent.
     """
 
     def __init__(
@@ -200,7 +223,8 @@ class IMDClient:
             self._producer.start()
 
     def signal_handler(self, *args, **kwargs):
-        """Catch SIGINT to allow clean shutdown on CTRL+C.
+        """
+        Catch SIGINT to allow clean shutdown on CTRL+C.
 
         This also ensures that main thread execution doesn't get stuck
         waiting in ``buf.pop_full_imdframe()``"""
@@ -209,11 +233,14 @@ class IMDClient:
         logger.debug("Shutdown success")
 
     def get_imdframe(self):
-        """
+        """Method to read the next trajectory frame from the stream.
+        
         Returns
         -------
         IMDFrame
-            The next frame from the IMD server
+            The next frame from the IMD server; see :class:`IMDFrame` for
+            details of the data structure and how to use it.
+        
         Raises
         ------
         EOFError
@@ -225,6 +252,7 @@ class IMDClient:
             atom counts) are raised eventually as :exc:`EOFError`. The original
             exception message in the case for a multithreaded client is available
             in the error queue.
+
         """
         if self._multithreaded:
             try:
@@ -252,6 +280,8 @@ class IMDClient:
 
     def get_imdsessioninfo(self):
         """
+        Get the session info data structure.
+        
         Returns
         -------
         IMDSessionInfo
@@ -293,8 +323,11 @@ class IMDClient:
 
     def _await_IMD_handshake(self) -> IMDSessionInfo:
         """
-        Wait for the server to send a handshake packet, then determine
-        IMD session information.
+        Wait for the server to send
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_HANDSHAKE`, then
+        determine IMD session information (including
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_SESSIONINFO` for
+        IMDv3).
         """
         end = ">"
         ver = None
@@ -378,8 +411,10 @@ class IMDClient:
 
     def _go(self):
         """
-        Send a go packet to the server to start the simulation
-        and begin receiving data.
+        Send an :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_GO` packet to
+        start the simulation and begin receiving data. When
+        ``continue_after_disconnect`` is set, also sends
+        :attr:`~imdclient.IMDProtocol.IMDHeaderType.IMD_WAIT`.
         """
         go = create_header_bytes(IMDHeaderType.IMD_GO, 0)
         self._conn.sendall(go)
@@ -423,7 +458,11 @@ class IMDClient:
 
 
 class BaseIMDProducer(threading.Thread):
-    """
+    """Base class for a threaded IMD stream data reader.
+
+    The producer reads frame data from the IMD stream and pushes it into the
+    :class:`IMDFrameBuffer` from where :class:`IMDClient` makes it available to
+    the user.
 
     Parameters
     ----------
@@ -444,6 +483,7 @@ class BaseIMDProducer(threading.Thread):
         Queue to hold errors produced by the producer thread
     timeout : int, optional
         Timeout for the socket in seconds [``600``]
+
     """
 
     def __init__(
@@ -613,6 +653,13 @@ class BaseIMDProducer(threading.Thread):
 
 
 class IMDProducerV2(BaseIMDProducer):
+    """Threaded IMDv2 producer.
+
+    SeeAlso
+    -------
+    :class:`BaseIMDProducer`
+
+    """
     def __init__(
         self,
         conn,
@@ -727,6 +774,12 @@ class IMDProducerV2(BaseIMDProducer):
 
 
 class IMDProducerV3(BaseIMDProducer):
+    """Threaded IMDv3 producer.
+
+    SeeAlso
+    -------
+    :class:`BaseIMDProducer`
+    """    
     def __init__(
         self,
         conn,
@@ -856,9 +909,10 @@ class IMDProducerV3(BaseIMDProducer):
 
 
 class IMDFrameBuffer:
-    """
-    Acts as interface between producer (IMDProducer) and consumer (IMDClient) threads
-    when IMDClient runs in multithreaded mode
+    """Buffer for IMD frames
+
+    Acts as interface between producer (:class:`IMDProducer`) and consumer
+    (:class:`IMDClient`) threads when IMDClient runs in multithreaded mode.
 
     Parameters
     ----------
@@ -874,6 +928,7 @@ class IMDFrameBuffer:
     unpause_empty_proportion : float, optional
         Proportion of the buffer's IMDFrames that must be empty
         before the simulation is unpaused [``0.5``]
+
     """
 
     def __init__(
@@ -1046,6 +1101,121 @@ class IMDFrameBuffer:
 
 
 class IMDFrame:
+    """One simulation frame received over an IMD connection.
+
+    :class:`IMDFrame` is the value returned by
+    :meth:`IMDClient.get_imdframe`. Which attributes are present depends on the
+    negotiated :class:`~imdclient.IMDProtocol.IMDSessionInfo`: fields that the
+    engine did not offer for the session are set to ``None``. Available array
+    attributes are pre-allocated and then filled in-place each frame.
+
+    Typical consumer loop for extracting the streamed data into ``frame``::
+
+        client = IMDClient(host, port, n_atoms=n_atoms)
+        while True:
+            try:
+                frame = client.get_imdframe()
+            except EOFError:
+                break
+            # use frame.time, frame.positions, frame.energies, ...
+
+    .. rubric:: Buffer reuse (multithreaded client)
+    
+    In the default multithreaded mode,
+    frame objects are pooled by :class:`IMDFrameBuffer`. The instance returned
+    by :meth:`~IMDClient.get_imdframe` is valid only until the next call; that
+    call returns the previous frame to the pool, where the producer may
+    overwrite it. Copy any data you need to keep
+    (e.g. ``frame.positions.copy()``).
+
+    .. rubric:: Units
+    
+    MD engines send payloads in fixed units (see :doc:`protocol_v3`):
+
+    ===========  =====================
+    Quantity     Unit
+    ===========  =====================
+    Length       Å
+    Velocity     Å/ps
+    Force        kJ mol⁻¹ Å⁻¹
+    Time         ps
+    Energy       kJ/mol
+    Temperature  K (absolute)
+    ===========  =====================
+
+    .. attention::
+        IMDv2 engines may use engine-native units for *Energy*; interpret those 
+        values accordingly.
+
+    .. rubric:: Integration step
+    
+    Prefer :attr:`step` from the time packet (64-bit) over ``energies["step"]`` 
+    (32-bit, carried for IMDv2 compatibility). See the energies packet notes in 
+    :doc:`protocol_v3` for more details.
+
+    Parameters
+    ----------
+    n_atoms : int
+        Number of atoms expected in coordinate / velocity / force arrays.
+        Must match the topology used with the live simulation.
+    imdsinfo : IMDSessionInfo
+        Session flags from the handshake that decide which attributes are
+        allocated versus left as ``None``.
+
+    Attributes
+    ----------
+    time : float or None
+        Current simulation time in ps (IMDv3). ``None`` if the session has no
+        time packets (typical for IMDv2).
+    dt : float or None
+        Integrator time step in ps (IMDv3). ``None`` if time packets are
+        absent.
+    step : int or float or None
+        Current integration step from the time packet (IMDv3, 64-bit when 
+        transmitted). ``None`` if time packets are absent. 
+        Initialized to ``0.0`` before the first frame is parsed.
+    energies : dict or None
+        Energy block for this frame, or ``None`` if the session does not send
+        energies. After parsing, keys are:
+
+        * ``step`` (*int*): integration step (int32 when transmitted; prefer
+          :attr:`step` for IMDv3 analysis)
+        * ``temperature`` (*float*): absolute temperature
+        * ``total_energy`` (*float*): total energy
+        * ``potential_energy`` (*float*): potential energy
+        * ``van_der_waals_energy`` (*float*): van der Waals energy.
+        * ``coulomb_energy`` (*float*): Coulomb / electrostatic energy
+        * ``bonds_energy`` (*float*): bond energy
+        * ``angles_energy`` (*float*): angle energy
+        * ``dihedrals_energy`` (*float*): dihedral energy
+        * ``improper_dihedrals_energy`` (*float*): improper dihedral energy
+
+        Under IMDv2, energies may be omitted on some frames; the producer then
+        reuses the last received block when possible, or sets :attr:`energies`
+        to ``None`` if none has been seen yet.
+    box : ndarray or None
+        Triclinic box vectors as a ``(3, 3)`` ``float32`` array, or ``None``
+        if box packets are not part of the session. Layout matches the IMDv3
+        box packet (three cell vectors).
+    positions : ndarray or None
+        Atomic coordinates as ``(n_atoms, 3)`` ``float32``, or ``None`` if
+        coordinates are not sent. Values are in Å. Whether
+        coordinates are wrapped is indicated by the session's
+        ``wrapped_coords`` flag from :meth:`IMDClient.get_imdsessioninfo`.
+    velocities : ndarray or None
+        Atomic velocities as ``(n_atoms, 3)`` ``float32``, or ``None`` if not
+        sent. IMDv3 unit: Å/ps.
+    forces : ndarray or None
+        Atomic forces as ``(n_atoms, 3)`` ``float32``, or ``None`` if not
+        sent. IMDv3 unit: kJ mol⁻¹ Å⁻¹.
+
+    See Also
+    --------
+    IMDClient.get_imdframe : Obtain the next frame from a live connection.
+    IMDClient.get_imdsessioninfo : Inspect which fields the session provides.
+    IMDFrameBuffer : Multithreaded frame pool that recycles these objects.
+    """
+
     def __init__(self, n_atoms, imdsinfo):
         if imdsinfo.time:
             self.time = 0.0

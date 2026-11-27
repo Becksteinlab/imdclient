@@ -25,6 +25,17 @@ Building from Source
 
 We highly recommend using virtual environments to source-build IMDClient. If possible, we recommend that you use `mamba <https://mamba.readthedocs.io/en/latest/>`_ as your package manager through `miniforge <https://github.com/conda-forge/miniforge>`_.
 
+Getting the sources
+-------------------
+
+Source code is stored in the git repository https://github.com/Becksteinlab/imdclient
+
+Obtain the sources with
+
+    git clone https://github.com/Becksteinlab/imdclient.git
+
+The checked out sources will reside in the directory ``imdclient``.    
+
 Source build with mamba
 -----------------------
 
@@ -37,12 +48,12 @@ Create and activate a new environment::
 
 (Recommended) Install all dependencies using the provided environment YAML files for a clean and reproducible environment::
 
-    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
-    mamba env update --name imdclient --file docs/requirements.yaml
+    mamba env update --name imdclient --file ./imdclient/devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file ./imdclient/docs/requirements.yaml
 
 Build this package from source::
 
-    pip install -e <path/to/repo>
+    pip install -e ./imdclient
 
 Source build with pip
 ---------------------
@@ -62,12 +73,12 @@ For development or documentation builds, use the following commands after activa
 
 To install development and documentation dependencies::
 
-    pip install -e <path/to/repo>[doc,test]
+    pip install -e ./imdclient[doc,test]
 
 To update the development dependencies using mamba::
 
-    mamba env update --name imdclient --file devtools/conda-envs/test_env.yaml
+    mamba env update --name imdclient --file ./imdclient/devtools/conda-envs/test_env.yaml
 
 Or to update the documentation building dependencies::
 
-    mamba env update --name imdclient --file docs/requirements.yaml
+    mamba env update --name imdclient --file ./imdclient/docs/requirements.yaml
