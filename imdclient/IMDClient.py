@@ -1183,9 +1183,7 @@ class IMDFrame:
         * ``temperature`` (*float*): absolute temperature
         * ``total_energy`` (*float*): total energy
         * ``potential_energy`` (*float*): potential energy
-        * ``van_der_walls_energy`` (*float*): van der Waals energy.
-          The key spelling (``walls``) is historical and matches field name used
-          by IMDClient.
+        * ``van_der_waals_energy`` (*float*): van der Waals energy.
         * ``coulomb_energy`` (*float*): Coulomb / electrostatic energy
         * ``bonds_energy`` (*float*): bond energy
         * ``angles_energy`` (*float*): angle energy
